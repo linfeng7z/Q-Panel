@@ -940,12 +940,27 @@
 /* ================= week ================= */
 
 .week-head {
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 13px;
 }
 
 .week-head-copy {
   min-width: 0;
+}
+
+.week-head-titleline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.week-head .page-title {
+  margin-top: 0;
+}
+
+.week-head .page-sub {
+  margin-top: 5px;
 }
 
 .week-head-actions {
@@ -956,30 +971,68 @@
 }
 
 .week-head .week-nav {
-  height: 32px;
+  height: 31px;
   padding: 2px;
+  border-radius: 9px;
 }
 
-.week-head .week-nav .btn.sm {
-  height: 26px;
-  padding: 0 8px;
+.week-nav-arrow {
+  width: 26px;
+  height: 25px;
+  display: grid;
+  place-items: center;
   border: 0;
+  border-radius: 7px;
   background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
 }
 
-.week-head .week-nav .btn.sm:hover {
+.week-nav-arrow:hover:not(:disabled) {
   background: var(--surface-1);
+  color: var(--text-1);
+}
+
+.week-nav-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .week-head .week-nav-label {
-  min-width: 86px;
+  min-width: 88px;
+  padding: 0 4px;
   font-size: 9.5px;
   color: var(--text-3);
+  text-align: center;
 }
 
-.week-head .chip {
-  height: 28px;
-  padding: 0 10px;
+.week-nav-today {
+  height: 25px;
+  margin-left: 2px;
+  padding: 0 8px;
+  border: 0;
+  border-left: 1px solid var(--line-soft);
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.week-nav-today:hover {
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+
+.week-nav-today.active {
+  color: var(--text-2);
 }
 
 .week-nav {
