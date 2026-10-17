@@ -2323,3 +2323,17 @@
   color: var(--bad);
   background: var(--bad-soft);
 }
+
+/* link metadata recognition */
+
+.link-meta-status {
+  color: var(--text-3);
+}
+
+.link-meta-status.success {
+  color: var(--good);
+}
+
+.link-meta-status.muted {
+  color: var(--text-4);
+}

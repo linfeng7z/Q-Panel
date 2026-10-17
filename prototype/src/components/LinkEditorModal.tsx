@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { LinkSimple, LockSimple, X } from '@phosphor-icons/react'
 import type { LinkCategory, LinkCategoryId, LinkItem } from '../types'
@@ -55,6 +55,10 @@ export function LinkEditorModal({
   const [internal, setInternal] = useState(initial?.internal ?? false)
   const [error, setError] = useState('')
   const titleTouched = useRef(Boolean(initial))
+  const descriptionTouched = useRef(Boolean(initial?.description))
+  const initialUrlRef = useRef(initial?.url ? normalizeUrl(initial.url)?.url : undefined)
+  const metadataRequest = useRef(0)
+  const [metadataStatus, setMetadataStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const parsed = normalizeUrl(url)
   const category = resolveCategory(categoryId)
@@ -65,6 +69,43 @@ export function LinkEditorModal({
           normalizeUrl(link.url)?.url.toLowerCase() === parsed.url.toLowerCase(),
       )
     : null
+  useEffect(() => {
+    const bridge = window.qpanel?.metadata
+    const normalized = normalizeUrl(url)
+    if (!bridge || !normalized || internal || normalized.url === initialUrlRef.current) {
+      setMetadataStatus('idle')
+      return
+    }
+    let cancelled = false
+    const request = metadataRequest.current + 1
+    metadataRequest.current = request
+    setMetadataStatus('loading')
+    const timer = window.setTimeout(() => {
+      void bridge.fetch(normalized.url).then((result) => {
+        if (cancelled || metadataRequest.current !== request) return
+        if (!result?.ok) {
+          setMetadataStatus('error')
+          return
+        }
+        setTitle((current) => {
+          if (titleTouched.current && current.trim()) return current
+          return result.title || normalized.domain
+        })
+        setDescription((current) => {
+          if (descriptionTouched.current || current.trim()) return current
+          return result.description || current
+        })
+        setMetadataStatus('success')
+      }).catch(() => {
+        if (!cancelled && metadataRequest.current === request) setMetadataStatus('error')
+      })
+    }, 550)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [url, internal])
+
   const previewTitle = title.trim() || parsed?.domain || '未命名收藏'
   const previewDomain = parsed?.domain || 'example.com'
   const previewLetter = previewTitle.slice(0, 1).toUpperCase()
@@ -170,7 +211,12 @@ export function LinkEditorModal({
                   </label>
                   {error ? <div className="link-form-error">{error}</div> : null}
                   {!error && parsed ? (
-                    <div className="link-form-hint">将保存为 {parsed.domain}</div>
+                    <div className="link-form-hint">
+                      将保存为 {parsed.domain}
+                      {metadataStatus === 'loading' ? <span className="link-meta-status"> · 正在识别网页标题…</span> : null}
+                      {metadataStatus === 'success' ? <span className="link-meta-status success"> · 已识别网页信息</span> : null}
+                      {metadataStatus === 'error' ? <span className="link-meta-status muted"> · 未识别到标题，仍可手动填写</span> : null}
+                    </div>
                   ) : null}
 
                   <div className="field">
@@ -215,7 +261,10 @@ export function LinkEditorModal({
                       className="textarea"
                       rows={2}
                       value={description}
-                      onChange={(event) => setDescription(event.target.value)}
+                      onChange={(event) => {
+                        descriptionTouched.current = true
+                        setDescription(event.target.value)
+                      }}
                       placeholder="为什么收藏它、什么时候会用到…"
                     />
                   </div>

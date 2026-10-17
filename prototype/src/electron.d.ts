@@ -48,6 +48,15 @@ interface QPanelBridge {
   app: {
     version: () => Promise<string>
   }
+  metadata: {
+    fetch: (url: string) => Promise<{
+      ok: boolean
+      title?: string
+      description?: string
+      url?: string
+      error?: string
+    }>
+  }
   reminders: {
     test: () => Promise<{ ok: boolean; entry?: QPanelReminderEntry }>
     snooze: (entry: { key: string }) => Promise<{ ok: boolean; until?: string; error?: string }>

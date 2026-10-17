@@ -245,7 +245,7 @@ export default function App() {
     return true
   }, [])
 
-  const buildWorkspaceSnapshot = (): WorkspaceSnapshot => ({
+  const buildWorkspaceSnapshot = useCallback((): WorkspaceSnapshot => ({
     schemaVersion: WORKSPACE_SCHEMA_VERSION,
     savedAt: new Date().toISOString(),
     theme,
@@ -264,7 +264,23 @@ export default function App() {
     aiModel,
     reminderDefaults,
     calendarAdjustments,
-  })
+  }), [
+    theme,
+    view,
+    year,
+    quarter,
+    weekKey,
+    tasks,
+    objectives,
+    projects,
+    notes,
+    links,
+    linkCategories,
+    sidebarLabels,
+    aiModel,
+    reminderDefaults,
+    calendarAdjustments,
+  ])
 
   useEffect(() => {
     if (!electronMode) return
@@ -348,6 +364,7 @@ export default function App() {
     quarter,
     reminderDefaults,
     showToast,
+    buildWorkspaceSnapshot,
     sidebarLabels,
     tasks,
     theme,

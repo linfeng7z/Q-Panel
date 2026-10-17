@@ -3,6 +3,7 @@ import { closeApp, createUserData, launchApp } from './helpers.mjs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import http from 'node:http'
 
 function collectPageErrors(page) {
   const errors = []
@@ -160,6 +161,30 @@ test.describe('Q-Panel feature regression', () => {
       if (app) await closeApp(app, null)
       await fs.rm(firstUserData, { recursive: true, force: true })
       await fs.rm(ioDir, { recursive: true, force: true })
+    }
+  })
+
+  test('auto-fills link metadata through the native fetch bridge', async () => {
+    const server = http.createServer((_request, response) => {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+      response.end('<html><head><title>本地安全指南</title><meta name="description" content="来自本地 fixture 的简介"></head></html>')
+    })
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const port = server.address().port
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData, { Q_PANEL_METADATA_ALLOW_LOOPBACK: '1' })
+    const errors = collectPageErrors(page)
+    try {
+      await page.locator('.nav-item:has-text("收藏链接")').click()
+      await page.locator('.links-head .btn.primary').click()
+      await page.locator('.link-url-field input').fill(`http://127.0.0.1:${port}/guide`)
+      await expect(page.locator('#link-title')).toHaveValue('本地安全指南')
+      await expect(page.locator('#link-desc')).toHaveValue('来自本地 fixture 的简介')
+      await expect(page.locator('.link-meta-status.success')).toBeVisible()
+      expect(errors).toEqual([])
+    } finally {
+      await closeApp(app, userData)
+      await new Promise((resolve) => server.close(resolve))
     }
   })
 

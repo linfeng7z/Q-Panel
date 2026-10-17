@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { fetchPageMetadata } from './lib/metadata.mjs'
 import { ReminderScheduler } from './lib/reminders.mjs'
 import { ReminderStateStore } from './lib/reminder-state.mjs'
 import { exportWorkspaceFile, importWorkspaceFile, normalizeWorkspace } from './lib/workspace-io.mjs'
@@ -356,6 +357,13 @@ function registerIpc() {
     showWindow()
     return { ok: true }
   })
+  ipcMain.handle('metadata:fetch', async (_event, url) => {
+    if (typeof url !== 'string' || url.length > 2048) return { ok: false, error: 'invalid_url' }
+    return fetchPageMetadata(url, {
+      allowLoopback: process.env.Q_PANEL_METADATA_ALLOW_LOOPBACK === '1',
+    })
+  })
+
   ipcMain.handle('reminders:test', () => {
     const entry = reminderScheduler?.triggerTest()
     return { ok: true, entry }

@@ -98,7 +98,7 @@ npm run shot
 npm run interact
 ```
 
-当前：日历引擎单元测试 5/5 通过；Electron 单测 6/6 通过；Electron 原生壳与功能 E2E 10/10 通过；原型关键交互回归通过、0 console error；DMG 打包通过。
+当前：日历引擎单元测试 5/5 通过；Electron 单测 8/8 通过；Electron 原生壳与功能 E2E 11/11 通过；原型关键交互回归通过、0 console error；DMG 打包通过。
 
 ## 下一步
 

@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('qpanel', {
       return () => ipcRenderer.removeListener('workspace:saved', listener)
     },
   },
+  metadata: {
+    fetch: (url) => ipcRenderer.invoke('metadata:fetch', url),
+  },
   reminders: {
     test: () => ipcRenderer.invoke('reminders:test'),
     snooze: (entry) => ipcRenderer.invoke('reminders:snooze', entry),
