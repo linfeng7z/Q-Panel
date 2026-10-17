@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import type {
   AiProposalTask,
   CategoryId,
@@ -96,6 +97,7 @@ export default function App() {
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [aiModel, setAiModel] = useState('deepseek-chat')
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
+  const viewTransitionRef = useRef<{ finished: Promise<void> } | null>(null)
 
   useEffect(() => {
     const root = document.querySelector('.qp-root') as HTMLElement | null
@@ -289,6 +291,33 @@ export default function App() {
     )
     return () => window.clearTimeout(timer)
   }, [params])
+
+  const runViewTransition = (update: () => void) => {
+    const doc = document as Document & {
+      startViewTransition?: (callback: () => void) => { finished: Promise<void> }
+    }
+    if (!doc.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      update()
+      return
+    }
+    if (viewTransitionRef.current) {
+      update()
+      return
+    }
+    const transition = doc.startViewTransition(() => {
+      flushSync(update)
+    })
+    viewTransitionRef.current = transition
+    transition.finished
+      .catch(() => undefined)
+      .finally(() => {
+        viewTransitionRef.current = null
+      })
+  }
+
+  const changeTheme = (next: ThemeId) => {
+    runViewTransition(() => setTheme(next))
+  }
 
   const navigate = (next: ViewId) => {
     setView(next)
@@ -543,7 +572,7 @@ export default function App() {
                 <TopBar
                   projects={projects}
                   onToggleTheme={() =>
-                    setTheme((value) => THEMES[(THEMES.indexOf(value) + 1) % THEMES.length])
+                    changeTheme(THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length])
                   }
                   year={year}
                   quarter={quarter}
@@ -639,7 +668,7 @@ export default function App() {
           }}
           onOpenAI={() => setAiOpen(true)}
           onOpenSettings={() => openSettings('general')}
-          onToggleTheme={() => setTheme((value) => THEMES[(THEMES.indexOf(value) + 1) % THEMES.length])}
+          onToggleTheme={() => changeTheme(THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length])}
         />
       ) : null}
 
@@ -647,7 +676,7 @@ export default function App() {
         <SettingsModal
           onClose={() => setSettingsOpen(false)}
           theme={theme}
-          onTheme={setTheme}
+          onTheme={changeTheme}
           onTestReminder={() => setReminderOpen(true)}
           onToast={showToast}
           initialTab={settingsInitialTab}

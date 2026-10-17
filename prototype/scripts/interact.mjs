@@ -132,19 +132,19 @@ check('reminder toast', await page.locator('.toast').isVisible().catch(() => fal
 
 // theme switch
 await page.locator('.icon-btn[title="切换皮肤"]').click()
-await page.waitForTimeout(350)
+await page.waitForTimeout(700)
 check('theme ops', await page.locator('.qp-root[data-theme="ops"]').count() === 1)
 await shot('20-ops-week')
 await page.locator('.icon-btn[title="切换皮肤"]').click()
-await page.waitForTimeout(350)
+await page.waitForTimeout(700)
 check('theme aurora', await page.locator('.qp-root[data-theme="aurora"]').count() === 1)
 await shot('20b-aurora')
 await page.locator('.icon-btn[title="切换皮肤"]').click()
-await page.waitForTimeout(350)
+await page.waitForTimeout(700)
 check('theme ember', await page.locator('.qp-root[data-theme="ember"]').count() === 1)
 await shot('20c-ember')
 await page.locator('.icon-btn[title="切换皮肤"]').click()
-await page.waitForTimeout(350)
+await page.waitForTimeout(700)
 check('theme cycles back to noir', await page.locator('.qp-root[data-theme="noir"]').count() === 1)
 
 // command palette

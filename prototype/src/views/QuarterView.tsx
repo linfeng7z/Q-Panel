@@ -40,6 +40,7 @@ import {
   StatusChip,
   catStyle,
 } from '../components/ui'
+import { CountUp } from '../components/CountUp'
 
 interface QuarterViewProps {
   year: number
@@ -257,7 +258,7 @@ export function QuarterView({
                   <div className="capacity-stat stat">
                     <span className="stat-label">可用人日</span>
                     <span className="stat-value num">
-                      {available}
+                      <CountUp value={available} />
                       <small>人日</small>
                     </span>
                     <span className="stat-foot">
@@ -267,7 +268,7 @@ export function QuarterView({
                   <div className="capacity-stat stat">
                     <span className="stat-label">已占用</span>
                     <span className="stat-value num">
-                      {fmtDays(committed)}
+                      <CountUp value={committed} decimals={Number.isInteger(committed) ? 0 : 1} />
                       <small>人日</small>
                     </span>
                     <span className="stat-foot">
@@ -279,7 +280,7 @@ export function QuarterView({
                       {remaining < 0 ? '超载' : '剩余'}
                     </span>
                     <span className={cn('stat-value num', remaining < 0 && 'negative')}>
-                      {fmtDays(remaining)}
+                      <CountUp value={remaining} decimals={Number.isInteger(remaining) ? 0 : 1} />
                       <small>人日</small>
                     </span>
                     <span className={cn('stat-foot', remaining < 0 && 'bad-text')}>
@@ -289,7 +290,7 @@ export function QuarterView({
                   <div className="capacity-stat stat">
                     <span className="stat-label">完成度</span>
                     <span className="stat-value num">
-                      {completion}
+                      <CountUp value={completion} />
                       <small>%</small>
                     </span>
                     <span className="stat-foot">季度任务 + 项目本季事项</span>

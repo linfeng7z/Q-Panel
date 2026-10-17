@@ -142,3 +142,75 @@
     transform: none;
   }
 }
+
+/* Theme changes crossfade as a single composed surface, not a stack of
+   independently repainting components. */
+::view-transition-old(root) {
+  animation: themeOut 0.24s var(--ease) both;
+}
+
+::view-transition-new(root) {
+  animation: themeIn 0.4s var(--ease-soft) both;
+}
+
+@keyframes themeOut {
+  to {
+    opacity: 0;
+    transform: scale(1.004);
+    filter: blur(2px);
+  }
+}
+
+@keyframes themeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.997);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* Donut and stacked capacity bar reveal as data, not chrome. */
+.donut {
+  animation: donutReveal 0.78s var(--ease-soft) both;
+}
+
+@keyframes donutReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.86) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+.stack > * {
+  transform-origin: left center;
+  animation: barGrow 0.8s var(--ease-soft) both;
+}
+
+/* Keyboard focus is visible for real keyboard users, quiet for pointer users. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--info) 72%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donut,
+  .stack > * {
+    animation: none;
+  }
+}

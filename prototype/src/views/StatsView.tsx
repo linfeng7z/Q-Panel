@@ -24,6 +24,7 @@ import {
   sumDays,
 } from '../utils'
 import { Card, Donut, Progress, catStyle } from '../components/ui'
+import { CountUp } from '../components/CountUp'
 
 interface StatsViewProps {
   year: number
@@ -99,7 +100,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
           <div className="stat">
             <span className="stat-label">年度工作日</span>
             <span className="stat-value num">
-              {yearWorkdays}
+              <CountUp value={yearWorkdays} />
               <small>天</small>
             </span>
             <span className="stat-foot">含调休补班，已扣法定假日</span>
@@ -109,7 +110,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
           <div className="stat">
             <span className="stat-label">年度可用人日</span>
             <span className="stat-value num">
-              {yearAvailable}
+              <CountUp value={yearAvailable} />
               <small>人日</small>
             </span>
             <span className="stat-foot">按工作日计 · 请假 2 人日已扣</span>
@@ -119,7 +120,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
           <div className="stat">
             <span className="stat-label">Q{quarter} 已占用</span>
             <span className="stat-value num">
-              {currentRow.allocated}
+              <CountUp value={currentRow.allocated} decimals={Number.isInteger(currentRow.allocated) ? 0 : 1} />
               <small>人日</small>
             </span>
             <span className="stat-foot">
@@ -132,7 +133,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
           <div className="stat">
             <span className="stat-label">Q{quarter} 完成度</span>
             <span className="stat-value num">
-              {currentRow.completion}
+              <CountUp value={currentRow.completion} />
               <small>%</small>
             </span>
             <span className="stat-foot">按季度内事项加权 · {currentObjectives.length} 项季度任务 + Q4 项目排期</span>
