@@ -3,21 +3,22 @@ import {
   Bell,
   CalendarBlank,
   Check,
-  FolderSimple,
   HardDrives,
   Minus,
   Plus,
   SlidersHorizontal,
+  SidebarSimple,
   Sparkle,
   Tag,
   X,
 } from '@phosphor-icons/react'
-import type { ThemeId } from '../types'
+import type { SidebarLabels, ThemeId } from '../types'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
+import { TimeSelect } from './TimeSelect'
 
-export type SettingsTab = 'general' | 'work' | 'categories' | 'reminders' | 'ai' | 'data'
+export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
 interface SettingsModalProps {
   onClose: () => void
@@ -27,12 +28,17 @@ interface SettingsModalProps {
   onToast: (message: string) => void
   initialTab?: SettingsTab
   onAddCategory: (name: string, colorVar: string) => void
+  onExportWorkspace: () => void
+  sidebarLabels: SidebarLabels
+  onUpdateSidebarLabel: (key: keyof SidebarLabels, label: string) => void
+  onResetSidebarLabels: () => void
 }
 
 const tabs: Array<{ id: SettingsTab; label: string; icon: typeof Bell }> = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
   { id: 'work', label: '人日与日历', icon: CalendarBlank },
   { id: 'categories', label: '分类', icon: Tag },
+  { id: 'sidebar', label: '侧边栏', icon: SidebarSimple },
   { id: 'reminders', label: '提醒', icon: Bell },
   { id: 'ai', label: 'AI 助手', icon: Sparkle },
   { id: 'data', label: '数据', icon: HardDrives },
@@ -46,6 +52,10 @@ export function SettingsModal({
   onToast,
   initialTab = 'general',
   onAddCategory,
+  onExportWorkspace,
+  sidebarLabels,
+  onUpdateSidebarLabel,
+  onResetSidebarLabels,
 }: SettingsModalProps) {
   const [tab, setTab] = useState<SettingsTab>(initialTab)
   const [categoryName, setCategoryName] = useState('')
@@ -217,13 +227,7 @@ export function SettingsModal({
                           <div className="settings-label">2026 官方节假日数据</div>
                           <div className="settings-help">来源：国务院办公厅 2025 年 11 月公告 · 已内置 39 条调休记录。</div>
                         </div>
-                        <button
-                          type="button"
-                          className="btn sm"
-                          onClick={() => onToast('节假日数据已是最新（2026 官方版）')}
-                        >
-                          检查更新
-                        </button>
+                        <span className="tag">已内置</span>
                       </div>
                       <div className="settings-row">
                         <div>
@@ -239,9 +243,7 @@ export function SettingsModal({
                           <div className="settings-label">请假 / 占用</div>
                           <div className="settings-help">10/20 – 10/21 年假 · 共扣减 2 人日；10/17 之后的新增会实时影响季度容量。</div>
                         </div>
-                        <button type="button" className="btn sm" onClick={() => onToast('请假管理将在功能版接入')}>
-                          管理
-                        </button>
+                        <span className="tag">已应用</span>
                       </div>
                     </div>
                   </>
@@ -340,6 +342,64 @@ export function SettingsModal({
                   </>
                 ) : null}
 
+                {tab === 'sidebar' ? (
+                  <>
+                    <div className="settings-pane-title">侧边栏</div>
+                    <div className="settings-pane-sub">
+                      只自定义分组标题；导航项和顺序保持固定，避免改变工作路径。原型刷新会重置。
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">分组名称</div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">第一组</div>
+                          <div className="settings-help">季度规划 / 本周安排 / 项目</div>
+                        </div>
+                        <input
+                          className="input sidebar-label-input"
+                          value={sidebarLabels.plan}
+                          maxLength={10}
+                          onChange={(event) => onUpdateSidebarLabel('plan', event.target.value)}
+                          onBlur={(event) => {
+                            if (!event.target.value.trim()) onUpdateSidebarLabel('plan', '规划与推进')
+                          }}
+                          aria-label="侧边栏第一组名称"
+                        />
+                      </div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">第二组</div>
+                          <div className="settings-help">统计与容量 / 临时笔记 / 收藏链接</div>
+                        </div>
+                        <input
+                          className="input sidebar-label-input"
+                          value={sidebarLabels.archive}
+                          maxLength={10}
+                          onChange={(event) => onUpdateSidebarLabel('archive', event.target.value)}
+                          onBlur={(event) => {
+                            if (!event.target.value.trim()) onUpdateSidebarLabel('archive', '回顾与资料')
+                          }}
+                          aria-label="侧边栏第二组名称"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">恢复</div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">恢复默认分组名</div>
+                          <div className="settings-help">只重置名称，不改导航项。</div>
+                        </div>
+                        <button type="button" className="btn ghost sm" onClick={onResetSidebarLabels}>
+                          恢复默认
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+
                 {tab === 'reminders' ? (
                   <>
                     <div className="settings-pane-title">提醒</div>
@@ -365,15 +425,7 @@ export function SettingsModal({
                           <div className="settings-label">提醒时刻</div>
                           <div className="settings-help">24 小时制（HH:mm） · 系统通知精确到分钟。</div>
                         </div>
-                        <input
-                          className="input time-input"
-                          style={{ width: 112 }}
-                          type="time"
-                          step={60}
-                          aria-label="默认提醒时刻，24 小时制"
-                          value={defaultTime}
-                          onChange={(event) => setDefaultTime(event.target.value)}
-                        />
+                        <TimeSelect value={defaultTime} onChange={setDefaultTime} />
                       </div>
                     </div>
 
@@ -471,9 +523,7 @@ export function SettingsModal({
                           <div className="settings-label">连接测试</div>
                           <div className="settings-help">发送一条最小请求，验证 Base URL、模型与 Key。</div>
                         </div>
-                        <button type="button" className="btn sm" onClick={() => onToast('连接成功 · 模型可用（原型模拟）')}>
-                          测试连接
-                        </button>
+                        <span className="card-meta">功能版接入后测试</span>
                       </div>
                     </div>
                   </>
@@ -488,9 +538,6 @@ export function SettingsModal({
                       <div className="settings-section-label">工作区</div>
                       <div className="settings-code">
                         ~/Library/Application Support/Q-Panel/workspace
-                        <button type="button" onClick={() => onToast('已在 Finder 中打开（原型模拟）')}>
-                          <FolderSimple size={14} />
-                        </button>
                       </div>
                       <div className="settings-row">
                         <div>
@@ -512,17 +559,8 @@ export function SettingsModal({
                           <div className="settings-label">导出工作区</div>
                           <div className="settings-help">导出 JSON（包含设置、季度任务、周事项、项目、笔记、链接）。</div>
                         </div>
-                        <button type="button" className="btn sm" onClick={() => onToast('已导出 q-panel-workspace.json（原型模拟）')}>
-                          导出
-                        </button>
-                      </div>
-                      <div className="settings-row">
-                        <div>
-                          <div className="settings-label">导入工作区</div>
-                          <div className="settings-help">导入前会校验 schema 并预览变更，不会直接覆盖。</div>
-                        </div>
-                        <button type="button" className="btn sm" onClick={() => onToast('导入向导将在功能版接入')}>
-                          导入
+                        <button type="button" className="btn sm" onClick={onExportWorkspace}>
+                          导出 JSON
                         </button>
                       </div>
                     </div>

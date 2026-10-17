@@ -106,11 +106,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
     <div className="view notes-view">
       <div className="page-head" style={{ marginBottom: 13 }}>
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            本地 · NOTES
-          </div>
-          <h1 className="page-title">临时笔记</h1>
+                    <h1 className="page-title">临时笔记</h1>
           <p className="page-sub">{notes.length} 条笔记 · 纯本地保存 · 自动写入工作区</p>
         </div>
         <div className="head-actions">

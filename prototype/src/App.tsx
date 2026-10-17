@@ -7,6 +7,7 @@ import type {
   Note,
   Objective,
   Project,
+  SidebarLabels,
   ThemeId,
   ViewId,
   WeekTask,
@@ -43,6 +44,7 @@ import { LinksView } from './views/LinksView'
 
 const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'stats', 'notes', 'links']
 const THEMES: ThemeId[] = ['noir', 'ops']
+const DEFAULT_SIDEBAR_LABELS: SidebarLabels = { plan: '规划与推进', archive: '回顾与资料' }
 
 function firstWeekKeyForQuarter(year: number, quarter: number): string | undefined {
   return Object.keys(WEEKS).find((key) => {
@@ -88,6 +90,7 @@ export default function App() {
   const [notes, setNotes] = useState<Note[]>(NOTES)
   const [links, setLinks] = useState<LinkItem[]>(LINKS)
   const [filter, setFilter] = useState<CategoryId | 'all'>('all')
+  const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [commandOpen, setCommandOpen] = useState(params.get('cmd') === '1')
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')
@@ -135,12 +138,40 @@ export default function App() {
   }
 
   const handleAddCategory = (name: string, colorVar: string) => {
-    addCategory(name, colorVar)
+    const category = addCategory(name, colorVar)
     setCategoryVersion((value) => value + 1)
     showToast(`已新增分类「${name}」`)
+    return category
   }
 
   const manageCategories = () => openSettings('categories')
+
+  const exportWorkspace = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      theme,
+      objectives,
+      tasks,
+      projects,
+      notes,
+      links,
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `q-panel-workspace-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    showToast('工作区已导出为 JSON')
+  }
+  const updateSidebarLabel = (key: keyof SidebarLabels, label: string) => {
+    setSidebarLabels((current) => ({ ...current, [key]: label }))
+  }
+  const resetSidebarLabels = () => setSidebarLabels(DEFAULT_SIDEBAR_LABELS)
 
   useEffect(() => {
     return () => {
@@ -373,7 +404,6 @@ export default function App() {
               setYear(nextYear)
               setQuarter(nextQuarter)
             }}
-            onToast={showToast}
             onOpenStats={() => setView('stats')}
             onManageCategories={manageCategories}
           />
@@ -391,7 +421,8 @@ export default function App() {
             onToggleTask={toggleTask}
             onOpenCreate={setCreateMode}
             onMoveOverdue={moveOverdue}
-            onToast={showToast}
+            onOpenQuarter={() => setView('quarter')}
+            onOpenProjects={() => setView('projects')}
             onToggleWorkItem={toggleProjectWorkItem}
             onManageCategories={manageCategories}
           />
@@ -416,13 +447,7 @@ export default function App() {
         )
       case 'stats':
         return (
-          <StatsView
-            year={year}
-            quarter={quarter}
-            projects={projects}
-            onToast={showToast}
-            onBack={() => setView('quarter')}
-          />
+          <StatsView year={year} quarter={quarter} projects={projects} />
         )
       case 'notes':
         return <NotesView notes={notes} onChange={setNotes} onToast={showToast} />
@@ -480,6 +505,7 @@ export default function App() {
                     weekPlanned={weekPlanned}
                     weekAvailable={weekAvailable}
                     weekLabel={view === 'week' ? `第 ${sideWeekMeta.num} 周容量` : '本周容量'}
+                    groupLabels={sidebarLabels}
                   />
                   <div className="content">
                     <div className="view-scroll scroll" ref={scrollRef}>
@@ -567,6 +593,10 @@ export default function App() {
           onToast={showToast}
           initialTab={settingsInitialTab}
           onAddCategory={handleAddCategory}
+          onExportWorkspace={exportWorkspace}
+          sidebarLabels={sidebarLabels}
+          onUpdateSidebarLabel={updateSidebarLabel}
+          onResetSidebarLabels={resetSidebarLabels}
         />
       ) : null}
 
@@ -579,6 +609,7 @@ export default function App() {
           onCreateObjective={createObjective}
           onCreateTask={createTask}
           onCreateProject={createProject}
+          onAddCategory={handleAddCategory}
         />
       ) : null}
 

@@ -6,13 +6,14 @@ import {
   LinkSimple,
   NotePencil,
 } from '@phosphor-icons/react'
-import type { ViewId } from '../types'
+import type { SidebarGroupKey, SidebarLabels, ViewId } from '../types'
 import { fmtDays } from '../utils'
 import { catStyle } from './ui'
 
 interface SidebarProps {
   view: ViewId
   onView: (view: ViewId) => void
+  groupLabels: SidebarLabels
   weekCount: number
   weekPlanned: number
   weekAvailable: number
@@ -28,13 +29,13 @@ interface NavItem {
 }
 
 interface NavGroup {
-  label: string
+  id: SidebarGroupKey
   items: NavItem[]
 }
 
 const navGroups: NavGroup[] = [
   {
-    label: '规划与推进',
+    id: 'plan',
     items: [
       { id: 'quarter', label: '季度规划', icon: House },
       { id: 'week', label: '本周安排', icon: CalendarDots, badge: 'week' },
@@ -42,7 +43,7 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: '回顾与资料',
+    id: 'archive',
     items: [
       { id: 'stats', label: '统计与容量', icon: ChartLineUp },
       { id: 'notes', label: '临时笔记', icon: NotePencil },
@@ -51,15 +52,15 @@ const navGroups: NavGroup[] = [
   },
 ]
 
-export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, weekLabel }: SidebarProps) {
+export function Sidebar({ view, onView, groupLabels, weekCount, weekPlanned, weekAvailable, weekLabel }: SidebarProps) {
   const ratio = weekAvailable > 0 ? Math.min(100, Math.round((weekPlanned / weekAvailable) * 100)) : 0
   const over = weekPlanned > weekAvailable
 
   return (
     <aside className="sidebar">
       {navGroups.map((group) => (
-        <div className="side-section" key={group.label}>
-          <div className="side-label">{group.label}</div>
+        <div className="side-section" key={group.id}>
+          <div className="side-label">{groupLabels[group.id]}</div>
           <div className="side-group">
             {group.items.map((item) => {
               const Icon = item.icon

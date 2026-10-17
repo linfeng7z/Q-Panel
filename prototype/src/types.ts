@@ -139,3 +139,7 @@ export interface AiProposalTask {
   objectiveId?: string
   projectId?: string
 }
+
+export type SidebarGroupKey = 'plan' | 'archive'
+
+export type SidebarLabels = Record<SidebarGroupKey, string>

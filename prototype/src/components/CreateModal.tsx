@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Check, Clock, X } from '@phosphor-icons/react'
-import type { CategoryId, CreateMode } from '../types'
-import { CATEGORIES, TODAY } from '../data/mock'
+import { Check, Clock, Plus, X } from '@phosphor-icons/react'
+import type { Category, CategoryId, CreateMode } from '../types'
+import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
+import { DateTimeField } from './DateTimeField'
 
 interface CreateModalProps {
   mode: CreateMode
@@ -30,23 +31,21 @@ interface CreateModalProps {
     targetTime: string
     description: string
   }) => void
+  onAddCategory: (name: string, colorVar: string) => Category
 }
 
-const TITLES: Record<CreateMode, { title: string; sub: string; kicker: string }> = {
+const TITLES: Record<CreateMode, { title: string; sub: string }> = {
   objective: {
     title: '新建季度任务',
     sub: '一项季度任务会占用本季度的人日',
-    kicker: 'Quarter task',
   },
   task: {
     title: '新建本周必做',
     sub: '可以关联季度任务或长期项目，提醒默认继承分类设置',
-    kicker: 'Weekly task',
   },
   project: {
     title: '新建长期项目',
     sub: '项目可以跨季度推进，工作项按安排周自动进入本周安排',
-    kicker: 'Long-running project',
   },
 }
 
@@ -58,6 +57,7 @@ export function CreateModal({
   onCreateObjective,
   onCreateTask,
   onCreateProject,
+  onAddCategory,
 }: CreateModalProps) {
   const meta = TITLES[mode]
   const [title, setTitle] = useState('')
@@ -66,6 +66,10 @@ export function CreateModal({
   const [date, setDate] = useState(defaultDate || TODAY)
   const [time, setTime] = useState('18:00')
   const [description, setDescription] = useState('')
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0].value)
+  const [categoryError, setCategoryError] = useState('')
 
   const valid = title.trim().length > 0
 
@@ -107,11 +111,7 @@ export function CreateModal({
           <div className="modal-inner">
             <div className="modal-head">
               <div>
-                <div className="eyebrow" style={{ marginBottom: 6 }}>
-                  <span className="tick" />
-                  {meta.kicker}
-                </div>
-                <div className="modal-title">{meta.title}</div>
+                                <div className="modal-title">{meta.title}</div>
                 <div className="modal-sub">{meta.sub}</div>
               </div>
               <button type="button" className="modal-close" onClick={onClose} aria-label="关闭">
@@ -155,7 +155,93 @@ export function CreateModal({
                       {category.name}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    className={`chip add${newCategoryOpen ? ' active' : ''}`}
+                    onClick={() => {
+                      setNewCategoryOpen((value) => !value)
+                      setCategoryError('')
+                    }}
+                  >
+                    <Plus size={10} />
+                    新建分类
+                  </button>
                 </div>
+                {newCategoryOpen ? (
+                  <div className="inline-category">
+                    <input
+                      className="input"
+                      autoFocus
+                      value={newCategoryName}
+                      onChange={(event) => {
+                        setNewCategoryName(event.target.value)
+                        setCategoryError('')
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault()
+                          const name = newCategoryName.trim()
+                          if (!name) {
+                            setCategoryError('请输入分类名称')
+                            return
+                          }
+                          if (CATEGORIES.some((category) => category.name === name)) {
+                            setCategoryError('已有同名分类')
+                            return
+                          }
+                          const category = onAddCategory(name, newCategoryColor)
+                          setCategoryId(category.id)
+                          setNewCategoryName('')
+                          setNewCategoryOpen(false)
+                        }
+                      }}
+                      placeholder="分类名称"
+                      maxLength={12}
+                    />
+                    <select
+                      className="select"
+                      value={newCategoryColor}
+                      onChange={(event) => setNewCategoryColor(event.target.value)}
+                      aria-label="分类颜色"
+                    >
+                      {CATEGORY_COLORS.map((color) => (
+                        <option value={color.value} key={color.value}>
+                          {color.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="btn primary sm"
+                      onClick={() => {
+                        const name = newCategoryName.trim()
+                        if (!name) {
+                          setCategoryError('请输入分类名称')
+                          return
+                        }
+                        if (CATEGORIES.some((category) => category.name === name)) {
+                          setCategoryError('已有同名分类')
+                          return
+                        }
+                        const category = onAddCategory(name, newCategoryColor)
+                        setCategoryId(category.id)
+                        setNewCategoryName('')
+                        setNewCategoryOpen(false)
+                      }}
+                    >
+                      添加
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn sm"
+                      onClick={() => setNewCategoryOpen(false)}
+                      aria-label="取消新建分类"
+                    >
+                      <X size={12} />
+                    </button>
+                    {categoryError ? <span className="inline-category-error">{categoryError}</span> : null}
+                  </div>
+                ) : null}
               </div>
 
               {mode === 'project' ? (
@@ -170,7 +256,7 @@ export function CreateModal({
                 </div>
               ) : null}
 
-              <div className={mode === 'project' ? 'field-grid two' : 'field-grid three'}>
+              <div className={mode === 'project' ? 'field-grid one' : 'field-grid two'}>
                 {mode !== 'project' ? (
                   <div className="field">
                     <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
@@ -186,28 +272,21 @@ export function CreateModal({
                   </div>
                 ) : null}
                 <div className="field">
-                  <label>{mode === 'project' ? '目标日期' : '截止日期'}</label>
-                  <input
-                    className="input"
-                    type="date"
+                  <label>{mode === 'project' ? '目标日期与时间' : '截止日期与时间'}</label>
+                  <DateTimeField
                     value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>{mode === 'project' ? '目标时间' : '截止时间'}</label>
-                  <input
-                    className="input time-input"
-                    type="time"
-                    step={60}
-                    value={time}
-                    onChange={(event) => setTime(event.target.value)}
+                    time={time}
+                    onChange={(nextDate, nextTime) => {
+                      setDate(nextDate)
+                      setTime(nextTime)
+                    }}
+                    ariaLabel={mode === 'project' ? '选择项目目标日期与时间' : '选择截止日期与时间'}
                   />
                 </div>
               </div>
               <div className="datetime-preview">
                 <Clock size={10} />
-                {mode === 'project' ? '目标' : '截止'} {date} {time} · 24 小时制 · 系统通知精确到分钟
+                24 小时制 · 系统通知精确到分钟
               </div>
             </div>
 

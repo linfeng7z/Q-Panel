@@ -39,7 +39,8 @@ interface WeekViewProps {
   onToggleTask: (id: string) => void
   onOpenCreate: (mode: CreateMode) => void
   onMoveOverdue: (ids: string[]) => void
-  onToast: (message: string) => void
+  onOpenQuarter: () => void
+  onOpenProjects: () => void
   onToggleWorkItem: (projectId: string, itemId: string) => void
   onManageCategories: () => void
 }
@@ -64,13 +65,13 @@ export function WeekView({
   onToggleTask,
   onOpenCreate,
   onMoveOverdue,
-  onToast,
+  onOpenQuarter,
+  onOpenProjects,
   onToggleWorkItem,
   onManageCategories,
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
-  const weekYear = Number(meta.end.slice(0, 4))
   const weekTasks = tasks.filter((task) => task.weekKey === weekKey)
   const autoItems = projectWorkItemsForWeek(projects, weekKey)
   const filteredTasks =
@@ -141,11 +142,7 @@ export function WeekView({
     <div className="view week-view">
       <div className="page-head week-head">
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            本周安排 · Week {meta.num} · {weekYear}
-          </div>
-          <h1 className="page-title">
+                    <h1 className="page-title">
             第 {meta.num} 周
           </h1>
           <p className="page-sub">
@@ -386,7 +383,6 @@ export function WeekView({
                     project={project}
                     objective={objective}
                     onToggle={onToggleTask}
-                    onMenu={(item) => onToast(`「${item.title}」的编辑菜单将在功能版接入`)}
                   />
                 )
               })}
@@ -482,19 +478,16 @@ export function WeekView({
                   <Target size={13} />
                   关联季度任务
                 </div>
-                <button
-                  type="button"
-                  className="card-link"
-                  onClick={() => onToast('季度任务详情在季度规划查看')}
-                >
+                <button type="button" className="card-link" onClick={onOpenQuarter}>
                   季度规划 <ArrowRight size={10} />
                 </button>
               </div>
               {sideObjectives.map((objective) => (
-                <div
+                <button
+                  type="button"
                   className="objective-mini"
                   key={objective.id}
-                  onClick={() => onToast(`季度任务：${objective.title} · ${objective.progress}%`)}
+                  onClick={onOpenQuarter}
                 >
                   <div className="objective-mini-top" style={catStyle(objective.categoryId)}>
                     <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
@@ -502,7 +495,7 @@ export function WeekView({
                     <span className="obj-pct">{objective.progress}%</span>
                   </div>
                   <Progress value={objective.progress} catId={objective.categoryId} />
-                </div>
+                </button>
               ))}
               {sideObjectives.length === 0 ? (
                 <div className="task-empty">本周还没有关联季度任务。</div>
@@ -517,11 +510,7 @@ export function WeekView({
                   <FolderSimple size={13} />
                   项目推进
                 </div>
-                <button
-                  type="button"
-                  className="card-link"
-                  onClick={() => onToast('去项目页查看全部里程碑')}
-                >
+                <button type="button" className="card-link" onClick={onOpenProjects}>
                   全部 <ArrowRight size={10} />
                 </button>
               </div>

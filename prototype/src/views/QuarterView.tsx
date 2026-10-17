@@ -2,7 +2,6 @@ import { useState } from 'react'
 import {
   ArrowRight,
   CalendarBlank,
-  ChartLineUp,
   Clock,
   FolderSimple,
   Plus,
@@ -51,7 +50,6 @@ interface QuarterViewProps {
   onFilter: (filter: CategoryId | 'all') => void
   onOpenCreate: (mode: CreateMode) => void
   onSelectPeriod: (year: number, quarter: number) => void
-  onToast: (message: string) => void
   onOpenStats: () => void
   onManageCategories: () => void
 }
@@ -69,7 +67,6 @@ export function QuarterView({
   onFilter,
   onOpenCreate,
   onSelectPeriod,
-  onToast,
   onOpenStats,
   onManageCategories,
 }: QuarterViewProps) {
@@ -142,11 +139,7 @@ export function QuarterView({
     <div className="view quarter-view">
       <div className="page-head" style={{ marginBottom: yearOverview ? 18 : 14 }}>
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            {yearOverview ? `Year overview · ${year}` : `本季度 · PLAN · ${year}`}
-          </div>
-          <h1 className="page-title">
+                    <h1 className="page-title">
             {yearOverview ? (
               <>
                 {year} <span className="light">年度总览</span>
@@ -165,10 +158,6 @@ export function QuarterView({
           </p>
         </div>
         <div className="head-actions">
-          <button type="button" className="btn ghost" onClick={onOpenStats}>
-            <ChartLineUp size={14} />
-            统计
-          </button>
           <button
             type="button"
             className="btn ghost"
@@ -566,11 +555,7 @@ export function QuarterView({
               <div className="modal-inner">
                 <div className="modal-head">
                   <div>
-                    <div className="eyebrow" style={{ marginBottom: 6 }}>
-                      <span className="tick" />
-                      Quarter task
-                    </div>
-                    <div className="modal-title">{selectedObjective.title}</div>
+                                        <div className="modal-title">{selectedObjective.title}</div>
                     <div className="modal-sub">
                       {getCategory(selectedObjective.categoryId).name} · Q{quarter} {year} · 截止{' '}
                       {fmtDue(selectedObjective.dueDate, selectedObjective.dueTime)}
@@ -613,16 +598,6 @@ export function QuarterView({
                 <div className="modal-foot">
                   <button type="button" className="btn ghost" onClick={() => setSelectedObjective(null)}>
                     关闭
-                  </button>
-                  <button
-                    type="button"
-                    className="btn primary"
-                    onClick={() => {
-                      onToast('编辑表单将在功能版接入，原型先展示详情')
-                      setSelectedObjective(null)
-                    }}
-                  >
-                    编辑
                   </button>
                 </div>
               </div>

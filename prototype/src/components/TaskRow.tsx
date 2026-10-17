@@ -1,4 +1,4 @@
-import { Clock, DotsThree, Target } from '@phosphor-icons/react'
+import { Clock, Target } from '@phosphor-icons/react'
 import type { Objective, Project, WeekTask } from '../types'
 import { getCategory } from '../data/mock'
 import { cn, fmtDays, fmtDue, isOverdue } from '../utils'
@@ -10,7 +10,6 @@ interface TaskRowProps {
   project?: Project
   objective?: Objective
   onToggle: (id: string) => void
-  onMenu?: (task: WeekTask) => void
 }
 
 function shortReminder(value?: string): string {
@@ -18,7 +17,7 @@ function shortReminder(value?: string): string {
   return value.split('·')[0].trim()
 }
 
-export function TaskRow({ task, project, objective, onToggle, onMenu }: TaskRowProps) {
+export function TaskRow({ task, project, objective, onToggle }: TaskRowProps) {
   const category = getCategory(task.categoryId)
   const overdue = isOverdue(task)
   const today = task.dueDate === '2026-10-17'
@@ -62,17 +61,6 @@ export function TaskRow({ task, project, objective, onToggle, onMenu }: TaskRowP
         <b>{fmtDays(task.estimateDays)}</b>
         <span>人日</span>
       </div>
-      <button
-        type="button"
-        className="task-menu"
-        aria-label="更多操作"
-        onClick={(event) => {
-          event.stopPropagation()
-          onMenu?.(task)
-        }}
-      >
-        <DotsThree size={15} />
-      </button>
     </div>
   )
 }

@@ -1,8 +1,6 @@
 import {
   CalendarBlank,
-  CaretLeft,
   ChartLineUp,
-  Export,
   Target,
 } from '@phosphor-icons/react'
 import type { Objective, Project } from '../types'
@@ -31,8 +29,6 @@ interface StatsViewProps {
   year: number
   quarter: number
   projects: Project[]
-  onToast: (message: string) => void
-  onBack: () => void
 }
 
 function monthWorkdays(year: number, month: number): number {
@@ -44,7 +40,7 @@ function monthWorkdays(year: number, month: number): number {
   return count
 }
 
-export function StatsView({ year, quarter, projects, onToast, onBack }: StatsViewProps) {
+export function StatsView({ year, quarter, projects }: StatsViewProps) {
   const quarterRows = [1, 2, 3, 4].map((q) => {
     const key = quarterKey(year, q)
     const stats = QUARTER_STATS[key]
@@ -89,30 +85,12 @@ export function StatsView({ year, quarter, projects, onToast, onBack }: StatsVie
     <div className="view stats-view">
       <div className="page-head">
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            分析 · {year}
-          </div>
-          <h1 className="page-title">
+                    <h1 className="page-title">
             统计与容量 <span className="light">· Q{quarter}</span>
           </h1>
           <p className="page-sub">
             {year} 年已录入 {yearWorkdays} 个工作日 · {yearAvailable} 人日可用（已扣请假）· 数据源：中国法定节假日 + 调休补班
           </p>
-        </div>
-        <div className="head-actions">
-          <button type="button" className="btn ghost" onClick={onBack}>
-            <CaretLeft size={14} />
-            返回季度规划
-          </button>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => onToast('季度摘要已复制为 Markdown（原型模拟）')}
-          >
-            <Export size={14} />
-            导出季度摘要
-          </button>
         </div>
       </div>
 

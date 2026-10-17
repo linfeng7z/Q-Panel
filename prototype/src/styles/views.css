@@ -2992,3 +2992,10 @@
 .project-overview-row:has(.status.risk) {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--bad) 70%, transparent);
 }
+
+.week-side .objective-mini {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}

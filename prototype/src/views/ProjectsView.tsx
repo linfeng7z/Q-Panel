@@ -6,7 +6,6 @@ import {
   Check,
   FolderSimple,
   Plus,
-  Tag,
   Target,
   Trash,
   WarningCircle,
@@ -112,20 +111,12 @@ export function ProjectsView({
     <div className="view projects-view">
       <div className="page-head">
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            全局 · PROJECTS · {year}
-          </div>
-          <h1 className="page-title">全局项目</h1>
+                    <h1 className="page-title">全局项目</h1>
           <p className="page-sub">
             跨季度项目按全局维度管理 · 本季度只统计 Q{quarter} 排期
           </p>
         </div>
         <div className="head-actions">
-          <button type="button" className="btn ghost" onClick={onManageCategories}>
-            <Tag size={14} />
-            分类管理
-          </button>
           <button type="button" className="btn primary" onClick={() => onOpenCreate('project')}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
@@ -357,11 +348,7 @@ function ProjectDetail({
 
       <div className="page-head project-detail-head">
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            全局项目 · {getCategory(project.categoryId).name}
-          </div>
-          <h1 className="page-title">{project.title}</h1>
+                    <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
             {project.span} · 计划结束 {fmtDateTime(project.endDate, project.endTime)} · 全局项目 ·{' '}
             {projectDoneCount(project)}/{project.milestones.length}{' '}

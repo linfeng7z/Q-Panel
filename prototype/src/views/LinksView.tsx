@@ -63,11 +63,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
     <div className="view links-view">
       <div className="page-head">
         <div>
-          <div className="eyebrow">
-            <span className="tick" />
-            本地 · LINKS
-          </div>
-          <h1 className="page-title">收藏链接</h1>
+                    <h1 className="page-title">收藏链接</h1>
           <p className="page-sub">{links.length} 条链接 · 自动补齐标题与图标 · 点击用系统浏览器打开</p>
         </div>
         <div className="head-actions">
@@ -149,7 +145,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
               <div
                 className="link-card"
                 style={catStyle(link.categoryId)}
-                onClick={() => onToast(`原型：将在系统浏览器打开 ${link.url}`)}
+                onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
               >
                 <div className="link-top">
                   <span className="link-icon">{link.letter}</span>

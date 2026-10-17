@@ -1894,3 +1894,282 @@
   font-size: 8.5px;
   letter-spacing: 0.01em;
 }
+
+/* ---- Custom date-time field ---- */
+.dt-field {
+  position: relative;
+  min-width: 0;
+}
+
+.dt-trigger {
+  width: 100%;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-input);
+  background: var(--surface-inset);
+  color: var(--text-1);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
+}
+
+.dt-trigger:hover {
+  border-color: var(--line-strong);
+}
+
+.dt-trigger.open {
+  border-color: color-mix(in srgb, var(--info) 55%, var(--line));
+  background: color-mix(in srgb, var(--info-soft) 35%, var(--surface-inset));
+}
+
+.dt-value {
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+
+.dt-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--line);
+}
+
+.dt-time {
+  color: var(--text-2);
+}
+
+.dt-24 {
+  margin-left: auto;
+  color: var(--text-4);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.dt-icon {
+  color: var(--text-3);
+}
+
+.dt-pop {
+  position: fixed;
+  z-index: 500;
+  width: 318px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--panel-3);
+  box-shadow: var(--shadow-float);
+  animation: dtPopIn 0.16s var(--ease) both;
+}
+
+.dt-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dt-month {
+  color: var(--text-1);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dt-nav {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.dt-nav:hover {
+  color: var(--text-1);
+  background: var(--surface-1);
+}
+
+.dt-weekdays,
+.dt-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.dt-weekdays {
+  margin-bottom: 4px;
+  color: var(--text-3);
+  font-size: 8.5px;
+  text-align: center;
+}
+
+.dt-day,
+.dt-day-empty {
+  height: 29px;
+}
+
+.dt-day {
+  border-radius: 7px;
+  color: var(--text-2);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.dt-day:hover {
+  color: var(--text-1);
+  background: var(--surface-1);
+}
+
+.dt-day.today {
+  color: var(--info);
+}
+
+.dt-day.selected {
+  color: var(--text-inverse);
+  background: var(--info);
+  font-weight: 600;
+}
+
+.dt-day.selected:hover {
+  color: var(--text-inverse);
+  background: var(--info);
+}
+
+.dt-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.dt-time-label {
+  color: var(--text-3);
+  font-size: 9px;
+}
+
+.dt-pop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.time-select {
+  height: 33px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-input);
+  background: var(--surface-inset);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.time-select.compact {
+  height: 29px;
+  padding: 0 6px;
+}
+
+.time-select svg {
+  color: var(--text-4);
+  margin-right: 2px;
+}
+
+.time-select select {
+  width: 22px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  appearance: none;
+  background: transparent;
+  color: var(--text-1);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+}
+
+.time-colon {
+  color: var(--text-3);
+}
+
+.time-caret {
+  margin-left: 1px;
+  color: var(--text-4);
+  pointer-events: none;
+}
+
+.time-unit {
+  margin-left: 3px;
+  padding-left: 5px;
+  border-left: 1px solid var(--line);
+  color: var(--text-4);
+  font-size: 8px;
+}
+
+.field-grid.one {
+  grid-template-columns: 1fr;
+}
+
+@keyframes dtPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.inline-category {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-inset);
+}
+
+.inline-category .input {
+  flex: 1 1 120px;
+  height: 29px;
+  min-width: 100px;
+}
+
+.inline-category .select {
+  width: 120px;
+  height: 29px;
+}
+
+.inline-category .icon-btn {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+}
+
+.inline-category-error {
+  flex: 1 0 100%;
+  color: var(--bad);
+  font-size: 9px;
+}
+
+.sidebar-label-input {
+  width: 200px;
+}
