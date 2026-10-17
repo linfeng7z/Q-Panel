@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { closeApp, createUserData, launchApp } from './helpers.mjs'
 import fs from 'node:fs/promises'
+import path from 'node:path'
 
 test.describe('Q-Panel Electron shell', () => {
   test('launches as a native panel without the simulated desktop', async () => {
@@ -79,4 +80,48 @@ test.describe('Q-Panel Electron shell', () => {
       await closeApp(app, userData)
     }
   })
+})
+
+test('loads and migrates a schema-v1 workspace', async () => {
+  const userData = await createUserData()
+  await fs.mkdir(userData, { recursive: true })
+  await fs.writeFile(
+    path.join(userData, 'workspace.json'),
+    JSON.stringify({
+      schemaVersion: 1,
+      theme: 'aurora',
+      view: 'links',
+      year: 2026,
+      quarter: 4,
+      weekKey: '2026-W42',
+      tasks: [],
+      objectives: { '2026-Q4': [] },
+      projects: [],
+      notes: [],
+      links: [
+        {
+          id: 'legacy-link',
+          title: '旧版迁移链接',
+          url: 'https://example.com/legacy',
+          domain: 'example.com',
+          categoryId: 'standards',
+          description: '来自 schema v1 工作区。',
+          letter: '旧',
+        },
+      ],
+    }),
+    'utf8',
+  )
+  const { app, page } = await launchApp(userData)
+  try {
+    await expect(page.locator('.qp-root')).toHaveAttribute('data-theme', 'aurora')
+    await expect(page.locator('.page-title')).toHaveText('收藏链接')
+    await expect(page.locator('.library-row').filter({ hasText: '旧版迁移链接' })).toHaveCount(1)
+    await expect.poll(async () => {
+      const raw = await fs.readFile(path.join(userData, 'workspace.json'), 'utf8')
+      return JSON.parse(raw).schemaVersion
+    }).toBe(2)
+  } finally {
+    await closeApp(app, userData)
+  }
 })

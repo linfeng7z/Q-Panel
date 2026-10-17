@@ -245,6 +245,27 @@ export default function App() {
     return true
   }, [])
 
+  const buildWorkspaceSnapshot = (): WorkspaceSnapshot => ({
+    schemaVersion: WORKSPACE_SCHEMA_VERSION,
+    savedAt: new Date().toISOString(),
+    theme,
+    view,
+    year,
+    quarter,
+    weekKey,
+    tasks,
+    objectives,
+    projects,
+    notes,
+    links,
+    linkCategories,
+    categories: CATEGORIES.map((category) => ({ ...category })),
+    sidebarLabels,
+    aiModel,
+    reminderDefaults,
+    calendarAdjustments,
+  })
+
   useEffect(() => {
     if (!electronMode) return
     let cancelled = false
@@ -255,6 +276,7 @@ export default function App() {
         if (!result?.ok) {
           showToast(result?.error === 'invalid_workspace' ? '工作区文件损坏，已载入示例数据' : '工作区读取失败，使用示例数据')
         } else if (result.data) {
+          if (result.migrated) showToast('旧版工作区已自动迁移')
           if (!applyWorkspace(result.data)) {
             showToast('工作区格式不兼容，已载入示例数据')
           }
@@ -290,26 +312,7 @@ export default function App() {
     if (!electronMode || notchMode || !hydrated) return
     const timer = window.setTimeout(async () => {
       setSaveState('saving')
-      const snapshot: WorkspaceSnapshot = {
-        schemaVersion: WORKSPACE_SCHEMA_VERSION,
-        savedAt: new Date().toISOString(),
-        theme,
-        view,
-        year,
-        quarter,
-        weekKey,
-        tasks,
-        objectives,
-        projects,
-        notes,
-        links,
-        linkCategories,
-        categories: CATEGORIES.map((category) => ({ ...category })),
-        sidebarLabels,
-        aiModel,
-        reminderDefaults,
-        calendarAdjustments,
-      }
+      const snapshot = buildWorkspaceSnapshot()
       try {
         const result = await window.qpanel?.workspace.save(snapshot)
         setSaveState(result?.ok ? 'saved' : 'error')
@@ -358,16 +361,13 @@ export default function App() {
 
   const manageCategories = () => openSettings('categories')
 
-  const exportWorkspace = () => {
-    const payload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      theme,
-      objectives,
-      tasks,
-      projects,
-      notes,
-      links,
+  const exportWorkspace = async () => {
+    const payload = buildWorkspaceSnapshot()
+    if (electronMode) {
+      const result = await window.qpanel?.workspace.export(payload)
+      if (result?.ok) showToast('工作区已导出为 JSON')
+      else if (!result?.canceled) showToast('工作区导出失败')
+      return
     }
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -379,6 +379,23 @@ export default function App() {
     anchor.remove()
     URL.revokeObjectURL(url)
     showToast('工作区已导出为 JSON')
+  }
+
+  const importWorkspace = async () => {
+    if (!electronMode) {
+      showToast('导入 JSON 仅支持正式版')
+      return
+    }
+    const result = await window.qpanel?.workspace.import()
+    if (!result?.ok) {
+      if (!result?.canceled) showToast('工作区导入失败，请检查 JSON')
+      return
+    }
+    if (!applyWorkspace(result.data)) {
+      showToast('工作区格式不兼容')
+      return
+    }
+    showToast(result.migrated ? '旧版工作区已迁移并导入' : '工作区已导入')
   }
   const updateSidebarLabel = (key: keyof SidebarLabels, label: string) => {
     setSidebarLabels((current) => ({ ...current, [key]: label }))
@@ -944,6 +961,7 @@ export default function App() {
           initialTab={settingsInitialTab}
           onAddCategory={handleAddCategory}
           onExportWorkspace={exportWorkspace}
+          onImportWorkspace={importWorkspace}
           categoryUsage={categoryUsage}
           onDeleteCategory={deleteCategory}
           aiModel={aiModel}

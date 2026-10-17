@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { closeApp, createUserData, launchApp } from './helpers.mjs'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 
 function collectPageErrors(page) {
   const errors = []
@@ -110,6 +113,53 @@ test.describe('Q-Panel feature regression', () => {
       expect(errors).toEqual([])
     } finally {
       await closeApp(app, userData)
+    }
+  })
+
+  test('exports and imports the full workspace through native file IO', async () => {
+    const ioDir = await fs.mkdtemp(path.join(os.tmpdir(), 'qpanel-native-io-'))
+    const exportPath = path.join(ioDir, 'workspace-export.json')
+    const firstUserData = await createUserData()
+    let app
+    try {
+      const first = await launchApp(firstUserData, { Q_PANEL_TEST_EXPORT_PATH: exportPath })
+      app = first.app
+      const page = first.page
+      await page.locator('.nav-item:has-text("收藏链接")').click()
+      await page.locator('.links-head .btn.primary').click()
+      await page.locator('.link-url-field input').fill('https://example.com/native-export')
+      await page.locator('#link-title').fill('原生导入导出验证')
+      await page.locator('.link-editor-modal .modal-foot .btn.primary').click()
+      await expect(page.locator('.library-row').filter({ hasText: '原生导入导出验证' })).toHaveCount(1)
+
+      await page.locator('.icon-btn[title="设置"]').click()
+      await page.locator('.settings-tab:has-text("数据")').click()
+      await page.getByRole('button', { name: '导出 JSON' }).click()
+      await expect.poll(async () => {
+        const raw = await fs.readFile(exportPath, 'utf8').catch(() => '')
+        return raw.includes('原生导入导出验证')
+      }).toBe(true)
+      const exported = JSON.parse(await fs.readFile(exportPath, 'utf8'))
+      expect(exported.schemaVersion).toBe(2)
+      await closeApp(app, null)
+      app = undefined
+
+      const secondUserData = await createUserData()
+      const second = await launchApp(secondUserData, { Q_PANEL_TEST_IMPORT_PATH: exportPath })
+      app = second.app
+      const secondPage = second.page
+      await secondPage.locator('.icon-btn[title="设置"]').click()
+      await secondPage.locator('.settings-tab:has-text("数据")').click()
+      await secondPage.getByRole('button', { name: '导入 JSON' }).click()
+      await expect(secondPage.locator('.toast')).toBeVisible()
+      await secondPage.locator('.settings-modal .modal-close').click()
+      await secondPage.locator('.nav-item:has-text("收藏链接")').click()
+      await expect(secondPage.locator('.library-row').filter({ hasText: '原生导入导出验证' })).toHaveCount(1)
+      await fs.rm(secondUserData, { recursive: true, force: true })
+    } finally {
+      if (app) await closeApp(app, null)
+      await fs.rm(firstUserData, { recursive: true, force: true })
+      await fs.rm(ioDir, { recursive: true, force: true })
     }
   })
 

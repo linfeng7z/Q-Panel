@@ -4,6 +4,7 @@ interface QPanelWorkspaceLoadResult {
   path?: string
   error?: string
   message?: string
+  migrated?: boolean
 }
 
 interface QPanelWorkspaceSaveResult {
@@ -32,6 +33,8 @@ interface QPanelBridge {
   workspace: {
     load: () => Promise<QPanelWorkspaceLoadResult>
     save: (payload: unknown) => Promise<QPanelWorkspaceSaveResult>
+    export: (payload: unknown) => Promise<{ ok: boolean; canceled?: boolean; path?: string; error?: string }>
+    import: () => Promise<{ ok: boolean; canceled?: boolean; data?: unknown; error?: string; migrated?: boolean }>
   }
   window: {
     hide: () => Promise<{ ok: boolean }>

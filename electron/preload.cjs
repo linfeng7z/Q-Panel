@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('qpanel', {
   workspace: {
     load: () => ipcRenderer.invoke('workspace:load'),
     save: (payload) => ipcRenderer.invoke('workspace:save', payload),
+    export: (payload) => ipcRenderer.invoke('workspace:export', payload),
+    import: () => ipcRenderer.invoke('workspace:import'),
   },
   window: {
     hide: () => ipcRenderer.invoke('window:hide'),

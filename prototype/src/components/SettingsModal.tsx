@@ -38,6 +38,7 @@ interface SettingsModalProps {
   initialTab?: SettingsTab
   onAddCategory: (name: string, colorVar: string) => void
   onExportWorkspace: () => void
+  onImportWorkspace: () => void
   categoryUsage: Record<string, number>
   onDeleteCategory: (categoryId: string) => void
   aiModel: string
@@ -77,6 +78,7 @@ export function SettingsModal({
   initialTab = 'general',
   onAddCategory,
   onExportWorkspace,
+  onImportWorkspace,
   categoryUsage,
   onDeleteCategory,
   aiModel,
@@ -679,6 +681,15 @@ export function SettingsModal({
                         </div>
                         <button type="button" className="btn sm" onClick={onExportWorkspace}>
                           导出 JSON
+                        </button>
+                      </div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">导入工作区</div>
+                          <div className="settings-help">从 JSON 恢复；导入前会自动备份当前工作区，旧版 schema 会自动迁移。</div>
+                        </div>
+                        <button type="button" className="btn sm" onClick={onImportWorkspace}>
+                          导入 JSON
                         </button>
                       </div>
                     </div>

@@ -44,9 +44,9 @@ cd electron && npm run dev
 npm test
 ```
 
-测试分两层：
+测试分两层（当前 Electron E2E 10/10）：
 
-- `npm run test:unit`：提醒规则解析、工作区提醒提取、已完成事项过滤；
+- `npm run test:unit`：提醒规则解析、工作区提醒提取、已完成事项过滤、旧 schema 迁移、导入导出文件校验；
 - `npm test`：先跑单测，再跑 Playwright Electron E2E。
 
 Electron E2E 覆盖：
@@ -58,6 +58,8 @@ Electron E2E 覆盖：
 - 六页面导航、四皮肤、⌘K；
 - 新建周事项、项目详情、设置、笔记；
 - 原生提醒 IPC → 应用内提醒弹窗；
+- 原生导出 JSON → 新工作区导入恢复；
+- schema v1 旧工作区加载后自动迁移到 v2；
 - 新增/删除请假 → Q4 可用人日 60 → 59 → 60 实时重算；
 - 默认打开实际当前季度/周，测试通过 `Q_PANEL_NOW` 固定。
 

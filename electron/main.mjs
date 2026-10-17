@@ -1,7 +1,8 @@
-import { app, BrowserWindow, Menu, Notification, Tray, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
+import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReminderScheduler } from './lib/reminders.mjs'
+import { exportWorkspaceFile, importWorkspaceFile, normalizeWorkspace } from './lib/workspace-io.mjs'
 import { WorkspaceStore } from './lib/store.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -243,8 +244,12 @@ function registerIpc() {
   ipcMain.handle('workspace:load', async () => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
     const result = await store.load()
-    if (result.ok && result.data) reminderScheduler?.sync(result.data)
-    return result
+    if (!result.ok || !result.data) return result
+    const normalized = normalizeWorkspace(result.data)
+    if (!normalized.ok) return { ok: false, error: normalized.error }
+    if (normalized.migrated) await store.backupNow('before-migration')
+    reminderScheduler?.sync(normalized.data)
+    return { ...result, data: normalized.data, migrated: normalized.migrated }
   })
   ipcMain.handle('workspace:save', async (_event, payload) => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
@@ -255,6 +260,39 @@ function registerIpc() {
     }
     return result
   })
+  ipcMain.handle('workspace:export', async (_event, payload) => {
+    if (!store) store = new WorkspaceStore(app.getPath('userData'))
+    const testPath = process.env.Q_PANEL_TEST_EXPORT_PATH
+    let destination = testPath
+    if (!destination) {
+      const result = await dialog.showSaveDialog(mainWindow ?? undefined, {
+        title: '导出 Q-Panel 工作区',
+        defaultPath: path.join(app.getPath('documents'), `q-panel-workspace-${new Date().toISOString().slice(0, 10)}.json`),
+        filters: [{ name: 'Q-Panel workspace', extensions: ['json'] }],
+      })
+      if (result.canceled || !result.filePath) return { ok: false, canceled: true }
+      destination = result.filePath
+    }
+    return exportWorkspaceFile(destination, payload)
+  })
+
+  ipcMain.handle('workspace:import', async () => {
+    if (!store) store = new WorkspaceStore(app.getPath('userData'))
+    const testPath = process.env.Q_PANEL_TEST_IMPORT_PATH
+    let source = testPath
+    if (!source) {
+      const result = await dialog.showOpenDialog(mainWindow ?? undefined, {
+        title: '导入 Q-Panel 工作区',
+        properties: ['openFile'],
+        filters: [{ name: 'Q-Panel workspace', extensions: ['json'] }],
+      })
+      if (result.canceled || result.filePaths.length === 0) return { ok: false, canceled: true }
+      source = result.filePaths[0]
+    }
+    await store.backupNow('before-import')
+    return importWorkspaceFile(source)
+  })
+
   ipcMain.handle('window:hide', () => {
     hideWindow()
     return { ok: true }

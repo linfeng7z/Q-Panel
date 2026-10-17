@@ -55,6 +55,20 @@ export class WorkspaceStore {
     return { ok: true, savedAt: new Date().toISOString(), path: this.filePath }
   }
 
+  async backupNow(label = 'manual') {
+    try {
+      const existing = await fs.readFile(this.filePath)
+      await fs.mkdir(this.backupDir, { recursive: true })
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const backupPath = path.join(this.backupDir, `workspace-${stamp}-${label}.json`)
+      await fs.writeFile(backupPath, existing)
+      return { ok: true, path: backupPath }
+    } catch (error) {
+      if (error?.code === 'ENOENT') return { ok: false, error: 'missing_workspace' }
+      return { ok: false, error: 'backup_failed' }
+    }
+  }
+
   async #backupIfNeeded() {
     try {
       const existing = await fs.readFile(this.filePath)
