@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FolderSimple, Trash, X } from '@phosphor-icons/react'
 import type { CSSProperties } from 'react'
+import { FolderSimple, Trash, X } from '@phosphor-icons/react'
 import type { LinkCategory } from '../types'
 import { LINK_CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
@@ -23,7 +23,11 @@ export function LinkCategoryModal({
   onDelete,
 }: LinkCategoryModalProps) {
   const [name, setName] = useState(initial?.name ?? '')
-  const [colorVar, setColorVar] = useState(initial?.colorVar ?? LINK_CATEGORY_COLORS[0].value)
+  const [colorVar] = useState(
+    () =>
+      initial?.colorVar ??
+      LINK_CATEGORY_COLORS[Math.floor(Math.random() * LINK_CATEGORY_COLORS.length)].value,
+  )
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
   const isFallback = initial?.id === 'unsorted'
@@ -53,7 +57,7 @@ export function LinkCategoryModal({
             <div className="modal-head">
               <div>
                 <div className="modal-title">{initial ? '编辑收藏集合' : '新建收藏集合'}</div>
-                <div className="modal-sub">用集合给链接分组，之后可以随时改名或重新分配。</div>
+                <div className="modal-sub">颜色会自动分配，用一个短名字把同类链接收在一起。</div>
               </div>
               <button type="button" className="modal-close" onClick={onClose} aria-label="关闭">
                 <X size={15} />
@@ -62,11 +66,11 @@ export function LinkCategoryModal({
             <div className="modal-body link-category-body">
               <div className="link-category-preview" style={{ '--cat': `var(${colorVar})` } as CSSProperties}>
                 <span className="link-category-preview-icon">
-                  <FolderSimple size={18} />
+                  <FolderSimple size={19} />
                 </span>
                 <span>
                   <b>{name.trim() || '新收藏集合'}</b>
-                  <small>{linkCount} 条收藏</small>
+                  <small>{linkCount} 条收藏 · 自动配色</small>
                 </span>
               </div>
 
@@ -88,59 +92,33 @@ export function LinkCategoryModal({
                 />
                 {error ? <span className="link-form-error">{error}</span> : null}
               </div>
-
-              <div className="field">
-                <label>颜色</label>
-                <div className="link-color-picker">
-                  {LINK_CATEGORY_COLORS.map((color) => (
-                    <button
-                      key={color.value}
-                      type="button"
-                      className={cn('link-color-option', colorVar === color.value && 'active')}
-                      style={{ '--cat': `var(${color.value})` } as CSSProperties}
-                      onClick={() => setColorVar(color.value)}
-                      aria-label={`${color.label}色`}
-                    >
-                      <span />
-                      {color.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {initial && !isFallback ? (
-                <div className={cn('link-category-danger', confirmDelete && 'armed')}>
-                  <div>
-                    <b>删除集合</b>
-                    <span>
-                      {linkCount > 0
-                        ? `其中 ${linkCount} 条收藏会自动移到「待整理」`
-                        : '这个集合还没有收藏'}
-                    </span>
-                  </div>
-                  {confirmDelete ? (
+            </div>
+            <div className="modal-foot link-category-foot">
+              <div className="link-category-foot-left">
+                {initial && !isFallback && onDelete ? (
+                  confirmDelete ? (
                     <button type="button" className="btn danger sm" onClick={onDelete}>
-                      确认删除
+                      确认删除{linkCount > 0 ? ` · ${linkCount} 条移至待整理` : ''}
                     </button>
                   ) : (
                     <button
                       type="button"
-                      className="btn ghost sm danger-text"
+                      className={cn('btn ghost sm', 'link-category-delete')}
                       onClick={() => setConfirmDelete(true)}
                     >
-                      <Trash size={12} /> 删除
+                      <Trash size={12} /> 删除集合
                     </button>
-                  )}
-                </div>
-              ) : null}
-            </div>
-            <div className="modal-foot">
-              <button type="button" className="btn ghost" onClick={onClose}>
-                取消
-              </button>
-              <button type="button" className="btn primary" onClick={submit}>
-                {initial ? '保存修改' : '创建集合'}
-              </button>
+                  )
+                ) : null}
+              </div>
+              <div className="link-category-foot-actions">
+                <button type="button" className="btn ghost" onClick={onClose}>
+                  取消
+                </button>
+                <button type="button" className="btn primary" onClick={submit}>
+                  {initial ? '保存修改' : '创建集合'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

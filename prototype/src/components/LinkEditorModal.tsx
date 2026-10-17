@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { LinkSimple, LockSimple, X } from '@phosphor-icons/react'
 import type { LinkCategory, LinkCategoryId, LinkItem } from '../types'
-import type { CSSProperties } from 'react'
-
 import { cn } from '../utils'
 
 interface LinkEditorModalProps {
@@ -42,22 +41,23 @@ export function LinkEditorModal({
   onClose,
   onSave,
 }: LinkEditorModalProps) {
+  const resolveCategory = (id?: string) =>
+    categories.find((category) => category.id === id) ??
+    categories.find((category) => category.id === 'unsorted') ??
+    categories[0]
+
   const [url, setUrl] = useState(initial?.url ?? '')
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
-  const resolveCategoryId = (id?: string) =>
-    categories.find((category) => category.id === id)?.id ??
-    categories.find((category) => category.id === 'unsorted')?.id ??
-    categories[0]?.id ??
-    'unsorted'
-  const [categoryId, setCategoryId] = useState<LinkCategoryId>(
-    resolveCategoryId(initial?.categoryId ?? defaultCategory),
+  const [categoryId, setCategoryId] = useState(
+    resolveCategory(initial?.categoryId ?? defaultCategory)?.id ?? 'unsorted',
   )
   const [internal, setInternal] = useState(initial?.internal ?? false)
   const [error, setError] = useState('')
   const titleTouched = useRef(Boolean(initial))
 
   const parsed = normalizeUrl(url)
+  const category = resolveCategory(categoryId)
   const duplicates = parsed
     ? existingLinks.find(
         (link) =>
@@ -65,6 +65,12 @@ export function LinkEditorModal({
           normalizeUrl(link.url)?.url.toLowerCase() === parsed.url.toLowerCase(),
       )
     : null
+  const previewTitle = title.trim() || parsed?.domain || '未命名收藏'
+  const previewDomain = parsed?.domain || 'example.com'
+  const previewLetter = previewTitle.slice(0, 1).toUpperCase()
+  const categoryStyle = category
+    ? ({ '--cat': `var(${category.colorVar})` } as CSSProperties)
+    : undefined
 
   const updateUrl = (next: string) => {
     setUrl(next)
@@ -72,9 +78,7 @@ export function LinkEditorModal({
     const nextParsed = normalizeUrl(next)
     if (!nextParsed) return
     setInternal(isInternalDomain(nextParsed.domain))
-    if (!titleTouched.current || !title.trim()) {
-      setTitle(nextParsed.domain)
-    }
+    if (!titleTouched.current || !title.trim()) setTitle(nextParsed.domain)
   }
 
   const submit = () => {
@@ -93,7 +97,7 @@ export function LinkEditorModal({
       title: finalTitle,
       url: normalized.url,
       domain: normalized.domain,
-      categoryId,
+      categoryId: category?.id ?? 'unsorted',
       description: description.trim() || '暂无说明，稍后可以补充。',
       letter: finalTitle.slice(0, 1).toUpperCase(),
       internal,
@@ -115,7 +119,7 @@ export function LinkEditorModal({
             <div className="modal-head">
               <div>
                 <div className="modal-title">{initial ? '编辑收藏' : '添加收藏'}</div>
-                <div className="modal-sub">收藏到合适的集合，之后可以随时编辑或删除</div>
+                <div className="modal-sub">网址会先解析成一张收藏卡片，再选择集合和补充信息。</div>
               </div>
               <button type="button" className="modal-close" onClick={onClose} aria-label="关闭">
                 <X size={15} />
@@ -123,86 +127,112 @@ export function LinkEditorModal({
             </div>
 
             <div className="modal-body link-editor-body">
-              <label className={cn('link-url-field', error && 'has-error')}>
-                <LinkSimple size={16} />
-                <input
-                  value={url}
-                  onChange={(event) => updateUrl(event.target.value)}
-                  onBlur={() => {
-                    if (parsed && !title.trim()) setTitle(parsed.domain)
-                  }}
-                  placeholder="粘贴网址，例如 https://owasp.org"
-                  autoFocus
-                />
-                {internal ? (
-                  <span className="link-url-badge">
-                    <LockSimple size={10} /> 内部
-                  </span>
-                ) : null}
-              </label>
-              {error ? <div className="link-form-error">{error}</div> : null}
-              {!error && parsed ? (
-                <div className="link-form-hint">将保存为 {parsed.domain}</div>
-              ) : null}
+              <div className="link-editor-grid">
+                <aside className="link-preview-pane">
+                  <div className="link-preview-label">收藏预览</div>
+                  <div className="link-preview-card" style={categoryStyle}>
+                    <span className="link-preview-avatar">{previewLetter}</span>
+                    <span className="link-preview-title">{previewTitle}</span>
+                    <span className="link-preview-domain">
+                      {internal ? <LockSimple size={9} /> : null}
+                      {previewDomain}
+                    </span>
+                    <span className="link-preview-meta">
+                      <span className="link-preview-cat">
+                        <span className="dot" />
+                        {category?.name ?? '待整理'}
+                      </span>
+                      {internal ? <span>内部链接</span> : null}
+                    </span>
+                  </div>
+                  <div className="link-preview-note">
+                    标题和地址来自链接本身，可以随时手动修整。
+                  </div>
+                </aside>
 
-              <div className="field">
-                <label htmlFor="link-title">标题</label>
-                <input
-                  id="link-title"
-                  className="input"
-                  value={title}
-                  onChange={(event) => {
-                    titleTouched.current = true
-                    setTitle(event.target.value)
-                  }}
-                  onBlur={() => {
-                    if (!title.trim() && parsed) setTitle(parsed.domain)
-                  }}
-                  placeholder="例如 OWASP Top 10"
-                />
-              </div>
+                <div className="link-editor-fields">
+                  <label className={cn('link-url-field', error && 'has-error')}>
+                    <LinkSimple size={16} />
+                    <input
+                      value={url}
+                      onChange={(event) => updateUrl(event.target.value)}
+                      onBlur={() => {
+                        if (parsed && !title.trim()) setTitle(parsed.domain)
+                      }}
+                      placeholder="粘贴网址，例如 https://owasp.org"
+                      autoFocus
+                    />
+                    {internal ? (
+                      <span className="link-url-badge">
+                        <LockSimple size={10} /> 内部
+                      </span>
+                    ) : null}
+                  </label>
+                  {error ? <div className="link-form-error">{error}</div> : null}
+                  {!error && parsed ? (
+                    <div className="link-form-hint">将保存为 {parsed.domain}</div>
+                  ) : null}
 
-              <div className="field">
-                <label>收藏到</label>
-                <div className="link-category-picker">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      className={cn('link-category-option', categoryId === category.id && 'active')}
-                      style={{ '--cat': `var(${category.colorVar})` } as CSSProperties}
-                      onClick={() => setCategoryId(category.id)}
-                    >
-                      <span className="dot" />
-                      {category.name}
-                    </button>
-                  ))}
+                  <div className="field">
+                    <label htmlFor="link-title">标题</label>
+                    <input
+                      id="link-title"
+                      className="input"
+                      value={title}
+                      onChange={(event) => {
+                        titleTouched.current = true
+                        setTitle(event.target.value)
+                      }}
+                      onBlur={() => {
+                        if (!title.trim() && parsed) setTitle(parsed.domain)
+                      }}
+                      placeholder="例如 OWASP Top 10"
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label>收藏到</label>
+                    <div className="link-category-picker">
+                      {categories.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={cn('link-category-option', categoryId === item.id && 'active')}
+                          style={{ '--cat': `var(${item.colorVar})` } as CSSProperties}
+                          onClick={() => setCategoryId(item.id)}
+                        >
+                          <span className="dot" />
+                          {item.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="field">
+                    <label htmlFor="link-desc">说明</label>
+                    <textarea
+                      id="link-desc"
+                      className="textarea"
+                      rows={2}
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="为什么收藏它、什么时候会用到…"
+                    />
+                  </div>
+
+                  <label className="link-internal-toggle">
+                    <input
+                      type="checkbox"
+                      checked={internal}
+                      onChange={(event) => setInternal(event.target.checked)}
+                    />
+                    <span>
+                      <b>内部链接</b>
+                      <small>标记为仅内网可访问，列表中会显示锁图标</small>
+                    </span>
+                  </label>
                 </div>
               </div>
-
-              <div className="field">
-                <label htmlFor="link-desc">说明</label>
-                <textarea
-                  id="link-desc"
-                  className="textarea"
-                  rows={3}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="为什么收藏它、什么时候会用到…"
-                />
-              </div>
-
-              <label className="link-internal-toggle">
-                <input
-                  type="checkbox"
-                  checked={internal}
-                  onChange={(event) => setInternal(event.target.checked)}
-                />
-                <span>
-                  <b>内部链接</b>
-                  <small>标记为仅内网可访问，列表中会显示锁图标</small>
-                </span>
-              </label>
             </div>
 
             <div className="modal-foot">

@@ -81,7 +81,7 @@ check('link collection can be renamed', await page.locator('.collection-item').f
 const categoryRow2 = page.locator('.collection-item-wrap').filter({ hasText: '回归集合 2' })
 await categoryRow2.locator('.collection-edit').click()
 await page.waitForTimeout(250)
-await page.locator('.link-category-modal .btn.ghost.danger-text').click()
+await page.locator('.link-category-modal .link-category-delete').click()
 await page.waitForTimeout(150)
 await page.locator('.link-category-modal .btn.danger.sm').click()
 await page.waitForTimeout(300)
