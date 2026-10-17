@@ -17,6 +17,7 @@ import {
   doneDaysOf,
   fmtDate,
   fmtDays,
+  fmtDue,
   daysOf,
   isOverdue,
   projectNext,
@@ -534,7 +535,7 @@ export function WeekView({
                     <span className="project-mini-copy">
                       <b>{project.title}</b>
                       <span>
-                        {next ? `下一里程碑 ${fmtDate(next.targetDate)}` : '全部里程碑已完成'}
+                        {next ? `下一里程碑 ${fmtDue(next.targetDate, next.targetTime)}` : '全部里程碑已完成'}
                       </span>
                     </span>
                     <span className="mini-pct">{projectProgress(project)}%</span>

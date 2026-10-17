@@ -1,7 +1,6 @@
 import {
   CalendarDots,
   ChartLineUp,
-  DotsThree,
   FolderSimple,
   House,
   LinkSimple,
@@ -35,18 +34,15 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: '工作台',
+    label: '规划与推进',
     items: [
       { id: 'quarter', label: '季度规划', icon: House },
       { id: 'week', label: '本周安排', icon: CalendarDots, badge: 'week' },
+      { id: 'projects', label: '项目', icon: FolderSimple, note: '全局' },
     ],
   },
   {
-    label: '全局',
-    items: [{ id: 'projects', label: '项目', icon: FolderSimple, note: '跨季度' }],
-  },
-  {
-    label: '工具',
+    label: '回顾与资料',
     items: [
       { id: 'stats', label: '统计与容量', icon: ChartLineUp },
       { id: 'notes', label: '临时笔记', icon: NotePencil },
@@ -102,21 +98,12 @@ export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, w
               <i style={{ width: `${ratio}%` }} />
             </div>
           </div>
-          <div className="side-cap-foot">
+          <div className={`side-cap-foot${over ? ' over' : ''}`}>
             {over
-              ? `超出 ${fmtDays(weekPlanned - weekAvailable)} 人日 · 建议挪出`
+              ? `超出 ${fmtDays(weekPlanned - weekAvailable)} 人日 · 建议延期`
               : `剩余 ${fmtDays(weekAvailable - weekPlanned)} 人日 · 按工作日计`}
           </div>
         </div>
-
-        <button type="button" className="side-user">
-          <span className="avatar">H</span>
-          <span className="side-user-copy">
-            <b>Huihui</b>
-            <span>安全负责人</span>
-          </span>
-          <DotsThree size={16} className="more" />
-        </button>
       </div>
     </aside>
   )

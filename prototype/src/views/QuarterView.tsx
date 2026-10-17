@@ -23,8 +23,8 @@ import {
 } from '../data/mock'
 import {
   dateISO,
-  fmtDate,
   fmtDays,
+  fmtDue,
   monthGrid,
   pct,
   projectCrossQuarter,
@@ -426,7 +426,7 @@ export function QuarterView({
                               </div>
                               <div className="obj-sub">
                                 <StatusChip status={objective.status} />
-                                <span>截止 {fmtDate(objective.dueDate)}</span>
+                                <span>截止 {fmtDue(objective.dueDate, objective.dueTime)}</span>
                                 <span className="sep" />
                                 <span>
                                   {objective.reminder ? (
@@ -573,7 +573,7 @@ export function QuarterView({
                     <div className="modal-title">{selectedObjective.title}</div>
                     <div className="modal-sub">
                       {getCategory(selectedObjective.categoryId).name} · Q{quarter} {year} · 截止{' '}
-                      {fmtDate(selectedObjective.dueDate)}
+                      {fmtDue(selectedObjective.dueDate, selectedObjective.dueTime)}
                     </div>
                   </div>
                   <button type="button" className="modal-close" onClick={() => setSelectedObjective(null)}>

@@ -20,6 +20,7 @@ import {
   TODAY,
   WEEKS,
   addCategory,
+  getCategory,
   quarterKey,
 } from './data/mock'
 import { dateISO, daysOf, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
@@ -111,6 +112,7 @@ export default function App() {
     (task) => !task.done && (task.dueDate === TODAY || isOverdue(task)),
   ).length
   const periodObjectives = objectives[quarterKey(year, quarter)] ?? []
+  const reminderObjective = (objectives['2026-Q4'] ?? []).find((objective) => objective.id === 'o1')
 
   const changeWeek = (key: string) => {
     setWeekKey(key)
@@ -230,6 +232,7 @@ export default function App() {
     title: string
     categoryId: CategoryId
     dueDate: string
+    dueTime: string
     estimateDays: number
   }) => {
     const task: WeekTask = {
@@ -238,7 +241,7 @@ export default function App() {
       title: data.title,
       categoryId: data.categoryId,
       dueDate: data.dueDate,
-      dueTime: data.dueDate === TODAY ? '23:30' : undefined,
+      dueTime: data.dueTime,
       estimateDays: data.estimateDays,
       done: false,
       reminder: '提前 2 天 · 09:30',
@@ -252,6 +255,7 @@ export default function App() {
     categoryId: CategoryId
     plannedDays: number
     dueDate: string
+    dueTime: string
   }) => {
     const key = quarterKey(year, quarter)
     const objective: Objective = {
@@ -262,6 +266,7 @@ export default function App() {
       progress: 0,
       status: 'planned',
       dueDate: data.dueDate,
+      dueTime: data.dueTime,
       reminder: '提前 2 天 · 09:30',
     }
     setObjectives((value) => ({ ...value, [key]: [...(value[key] ?? []), objective] }))
@@ -272,6 +277,7 @@ export default function App() {
     title: string
     categoryId: CategoryId
     targetDate: string
+    targetTime: string
     description: string
   }) => {
     const targetMonth = Number(data.targetDate.slice(5, 7))
@@ -284,6 +290,7 @@ export default function App() {
       span: `2026.10 – ${targetYear}.${String(targetMonth).padStart(2, '0')}`,
       startDate: '2026-10-17',
       endDate: data.targetDate,
+      endTime: data.targetTime,
       status: 'active',
       plannedDays: 0,
       workItems: [],
@@ -292,6 +299,7 @@ export default function App() {
           id: `m-${Date.now()}`,
           title: '启动与范围确认',
           targetDate: data.targetDate,
+          targetTime: data.targetTime,
           status: 'doing',
         },
       ],
@@ -323,7 +331,7 @@ export default function App() {
     setTasks((value) =>
       value.map((task) =>
         ids.includes(task.id)
-          ? { ...task, weekKey, dueDate: weekEnd, dueTime: undefined }
+          ? { ...task, weekKey, dueDate: weekEnd, dueTime: '18:00' }
           : task,
       ),
     )
@@ -574,8 +582,13 @@ export default function App() {
         />
       ) : null}
 
-      {reminderOpen ? (
+      {reminderOpen && reminderObjective ? (
         <ReminderPopup
+          title={reminderObjective.title}
+          categoryName={getCategory(reminderObjective.categoryId).name}
+          dueDate={reminderObjective.dueDate}
+          dueTime={reminderObjective.dueTime}
+          reminder={reminderObjective.reminder}
           onClose={() => setReminderOpen(false)}
           onComplete={completeReminder}
           onSnooze={() => showToast('已稍后提醒：10 分钟后再弹一次')}

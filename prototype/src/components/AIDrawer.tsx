@@ -47,7 +47,7 @@ function proposalTask(
   objectiveId: string,
   projectId: string,
 ): AiProposalTask {
-  return { title, categoryId, dueDate, dueTime, estimateDays, objectiveId, projectId }
+  return { title, categoryId, dueDate, dueTime: dueTime ?? '18:00', estimateDays, objectiveId, projectId }
 }
 
 export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {

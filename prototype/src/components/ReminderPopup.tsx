@@ -1,14 +1,30 @@
 import { useEffect } from 'react'
 import { BellRinging, Check, Clock, X } from '@phosphor-icons/react'
+import { fmtDateTime } from '../utils'
 
 interface ReminderPopupProps {
+  title: string
+  categoryName: string
+  dueDate: string
+  dueTime?: string
+  reminder?: string
   onClose: () => void
   onComplete: () => void
   onSnooze: () => void
   onOpen: () => void
 }
 
-export function ReminderPopup({ onClose, onComplete, onSnooze, onOpen }: ReminderPopupProps) {
+export function ReminderPopup({
+  title,
+  categoryName,
+  dueDate,
+  dueTime,
+  reminder,
+  onClose,
+  onComplete,
+  onSnooze,
+  onOpen,
+}: ReminderPopupProps) {
   useEffect(() => {
     const timer = window.setTimeout(onClose, 12000)
     return () => window.clearTimeout(timer)
@@ -25,13 +41,16 @@ export function ReminderPopup({ onClose, onComplete, onSnooze, onOpen }: Reminde
             <div className="reminder-copy">
               <div className="reminder-kicker">
                 <Clock size={10} />
-                REMINDER · 还有 2 天
+                系统通知 · 24 小时制
               </div>
-              <div className="reminder-title">等保 2.0 差距分析闭环</div>
+              <div className="reminder-title">{title}</div>
               <div className="reminder-meta">
-                <span>季度任务 · 应用安全</span>
+                <span>季度任务 · {categoryName}</span>
                 <span className="sep" />
-                <span className="num">截止 10/31 18:00</span>
+                <span className="num">截止 {fmtDateTime(dueDate, dueTime)}</span>
+              </div>
+              <div className="reminder-rule">
+                提醒规则 {reminder ?? '提前 2 天 · 09:30'} · 精确到分钟
               </div>
             </div>
             <button type="button" className="reminder-close" onClick={onClose} aria-label="关闭提醒">

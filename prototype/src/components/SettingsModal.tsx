@@ -343,7 +343,7 @@ export function SettingsModal({
                 {tab === 'reminders' ? (
                   <>
                     <div className="settings-pane-title">提醒</div>
-                    <div className="settings-pane-sub">每个事项可以覆盖默认规则；例如「离截止还差 2 天」。</div>
+                    <div className="settings-pane-sub">每个事项可以覆盖默认规则；例如「提前 2 天 · 09:30」，系统通知按 24 小时制精确到分钟。</div>
 
                     <div className="settings-section">
                       <div className="settings-section-label">默认提醒规则</div>
@@ -363,12 +363,14 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">提醒时刻</div>
-                          <div className="settings-help">只有日期的事项默认在这个时间提醒。</div>
+                          <div className="settings-help">24 小时制（HH:mm） · 系统通知精确到分钟。</div>
                         </div>
                         <input
-                          className="input"
-                          style={{ width: 100 }}
+                          className="input time-input"
+                          style={{ width: 112 }}
                           type="time"
+                          step={60}
+                          aria-label="默认提醒时刻，24 小时制"
                           value={defaultTime}
                           onChange={(event) => setDefaultTime(event.target.value)}
                         />

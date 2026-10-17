@@ -871,9 +871,9 @@
 .reminder {
   pointer-events: auto;
   position: fixed;
-  top: 34px;
-  left: 50%;
-  width: min(468px, calc(100vw - 60px));
+  top: 38px;
+  right: 30px;
+  width: min(390px, calc(100vw - 60px));
   padding: 1px;
   border-radius: 20px;
   background: linear-gradient(
@@ -1859,4 +1859,38 @@
 
 .category-add-row .select {
   width: 100%;
+}
+
+
+.field-grid.three {
+  grid-template-columns: 1fr 1fr 0.72fr;
+}
+
+.field-grid.two {
+  grid-template-columns: 1fr 0.72fr;
+}
+
+.time-input {
+  font-variant-numeric: tabular-nums;
+}
+
+.datetime-preview {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  color: var(--text-3);
+  font-size: 9px;
+  letter-spacing: 0.01em;
+}
+
+.datetime-preview svg {
+  color: var(--text-4);
+}
+
+.reminder-rule {
+  margin-top: 5px;
+  color: var(--text-4);
+  font-size: 8.5px;
+  letter-spacing: 0.01em;
 }

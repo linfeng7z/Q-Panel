@@ -15,8 +15,9 @@ import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
 import { CATEGORIES, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
 import {
   cn,
-  fmtDate,
+  fmtDateTime,
   fmtDays,
+  fmtDue,
   projectCrossQuarter,
   projectDecomposedDays,
   projectDoneCount,
@@ -253,7 +254,7 @@ export function ProjectsView({
                     </div>
                     <div className="project-row-desc">
                       {getCategory(project.categoryId).name} · {project.span} ·{' '}
-                      {next ? `下一里程碑 ${fmtDate(next.targetDate)}` : '里程碑已完成'}
+                      {next ? `下一里程碑 ${fmtDue(next.targetDate, next.targetTime)}` : '里程碑已完成'}
                     </div>
                   </div>
                   <div className="project-row-metrics">
@@ -362,7 +363,8 @@ function ProjectDetail({
           </div>
           <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
-            {project.span} · 全局项目 · {projectDoneCount(project)}/{project.milestones.length}{' '}
+            {project.span} · 计划结束 {fmtDateTime(project.endDate, project.endTime)} · 全局项目 ·{' '}
+            {projectDoneCount(project)}/{project.milestones.length}{' '}
             里程碑 · {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
             {fmtDays(quarterDays)} 人日
           </p>
@@ -392,7 +394,7 @@ function ProjectDetail({
           <WarningCircle size={14} style={{ flex: '0 0 14px', marginTop: 1 }} />
           <span>
             {crossQuarter
-              ? `项目计划结束 ${project.endDate}，超出当前季度；本季度只计 ${quarterLabel} 排期 ${fmtDays(quarterDays)} 人日，其余属于后续季度，已标记有风险。`
+              ? `项目计划结束 ${fmtDateTime(project.endDate, project.endTime)}，超出当前季度；本季度只计 ${quarterLabel} 排期 ${fmtDays(quarterDays)} 人日，其余属于后续季度，已标记有风险。`
               : '项目状态为有风险，请关注当前季度排期与里程碑。'}
           </span>
         </div>
@@ -611,7 +613,7 @@ function ProjectDetail({
                   >
                     <span className="timeline-dot" />
                     <span className="tl-title">{milestone.title}</span>
-                    <span className="tl-date">{fmtDate(milestone.targetDate)}</span>
+                    <span className="tl-date">{fmtDue(milestone.targetDate, milestone.targetTime)}</span>
                   </div>
                 ))}
               </div>

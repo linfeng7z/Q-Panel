@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, X } from '@phosphor-icons/react'
+import { Check, Clock, X } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode } from '../types'
 import { CATEGORIES, TODAY } from '../data/mock'
 import { catStyle } from './ui'
@@ -14,17 +14,20 @@ interface CreateModalProps {
     categoryId: CategoryId
     plannedDays: number
     dueDate: string
+    dueTime: string
   }) => void
   onCreateTask: (data: {
     title: string
     categoryId: CategoryId
     dueDate: string
+    dueTime: string
     estimateDays: number
   }) => void
   onCreateProject: (data: {
     title: string
     categoryId: CategoryId
     targetDate: string
+    targetTime: string
     description: string
   }) => void
 }
@@ -61,6 +64,7 @@ export function CreateModal({
   const [categoryId, setCategoryId] = useState<CategoryId>(defaultCategory)
   const [days, setDays] = useState(mode === 'objective' ? 15 : mode === 'task' ? 0.5 : 0)
   const [date, setDate] = useState(defaultDate || TODAY)
+  const [time, setTime] = useState('18:00')
   const [description, setDescription] = useState('')
 
   const valid = title.trim().length > 0
@@ -73,12 +77,14 @@ export function CreateModal({
         categoryId,
         plannedDays: Number(days) || 1,
         dueDate: date,
+        dueTime: time || '18:00',
       })
     } else if (mode === 'task') {
       onCreateTask({
         title: title.trim(),
         categoryId,
         dueDate: date,
+        dueTime: time || '18:00',
         estimateDays: Number(days) || 0.5,
       })
     } else {
@@ -86,6 +92,7 @@ export function CreateModal({
         title: title.trim(),
         categoryId,
         targetDate: date,
+        targetTime: time || '18:00',
         description: description.trim(),
       })
     }
@@ -163,7 +170,7 @@ export function CreateModal({
                 </div>
               ) : null}
 
-              <div className="field-grid">
+              <div className={mode === 'project' ? 'field-grid two' : 'field-grid three'}>
                 {mode !== 'project' ? (
                   <div className="field">
                     <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
@@ -187,6 +194,20 @@ export function CreateModal({
                     onChange={(event) => setDate(event.target.value)}
                   />
                 </div>
+                <div className="field">
+                  <label>{mode === 'project' ? '目标时间' : '截止时间'}</label>
+                  <input
+                    className="input time-input"
+                    type="time"
+                    step={60}
+                    value={time}
+                    onChange={(event) => setTime(event.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="datetime-preview">
+                <Clock size={10} />
+                {mode === 'project' ? '目标' : '截止'} {date} {time} · 24 小时制 · 系统通知精确到分钟
               </div>
             </div>
 

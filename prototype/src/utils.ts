@@ -216,3 +216,7 @@ export function quarterLoad(
     completion: committedDays > 0 ? Math.round((doneDays / committedDays) * 100) : 0,
   }
 }
+
+export function fmtDateTime(iso: string, time?: string): string {
+  return `${iso} ${time ?? '18:00'}`
+}

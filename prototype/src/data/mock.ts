@@ -443,3 +443,23 @@ export function dayInfo(dateISO: string): {
 }
 
 export const WEEKDAY_CN = ['日', '一', '二', '三', '四', '五', '六']
+
+/**
+ * 原型统一补齐 24 小时制时刻：已有精确时间的内容保留，
+ * 其余历史 mock 数据默认按 18:00 处理，避免日期-only 的提醒。
+ */
+const DEFAULT_DUE_TIME = '18:00'
+Object.values(OBJECTIVES)
+  .flat()
+  .forEach((objective) => {
+    objective.dueTime ??= DEFAULT_DUE_TIME
+  })
+INITIAL_TASKS.forEach((task) => {
+  task.dueTime ??= DEFAULT_DUE_TIME
+})
+PROJECTS.forEach((project) => {
+  project.endTime ??= DEFAULT_DUE_TIME
+  project.milestones.forEach((milestone) => {
+    milestone.targetTime ??= DEFAULT_DUE_TIME
+  })
+})

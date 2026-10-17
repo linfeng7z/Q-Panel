@@ -27,6 +27,8 @@ export interface Objective {
   progress: number
   status: ObjectiveStatus
   dueDate: string
+  /** 截止时刻，24 小时制 HH:mm；提醒与系统通知按此时间计算 */
+  dueTime?: string
   projectId?: string
   reminder?: string
 }
@@ -37,6 +39,8 @@ export interface Milestone {
   id: string
   title: string
   targetDate: string
+  /** 目标时刻，24 小时制 HH:mm */
+  targetTime?: string
   status: MilestoneStatus
 }
 
@@ -60,6 +64,8 @@ export interface Project {
   /** 全局项目起止日期，用于判断是否跨当前季度 */
   startDate: string
   endDate: string
+  /** 项目计划结束时刻，24 小时制 HH:mm */
+  endTime?: string
   status: 'active' | 'done' | 'risk'
   /** 项目全局规划人日，可编辑 */
   plannedDays: number

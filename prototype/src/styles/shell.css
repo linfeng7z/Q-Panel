@@ -887,3 +887,12 @@
 .nav-item.active .nav-note {
   color: var(--text-3);
 }
+
+.side-section + .side-section {
+  margin-top: 20px;
+}
+
+.side-cap-foot.over {
+  color: var(--bad);
+  font-weight: 600;
+}
