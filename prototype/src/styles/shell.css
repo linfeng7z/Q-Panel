@@ -889,3 +889,191 @@
   color: var(--bad);
   font-weight: 600;
 }
+
+/* ---------- topbar week navigator ---------- */
+
+.topbar.week-mode .q-tabs {
+  display: none;
+}
+
+.top-week {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-inset);
+}
+
+.top-week-arrow {
+  width: 25px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.top-week-arrow:hover:not(:disabled) {
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+
+.top-week-arrow:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.top-week-trigger {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background-color 0.16s var(--ease);
+}
+
+.top-week-trigger:hover,
+.top-week-trigger.open {
+  background: var(--surface-1);
+}
+
+.top-week-range {
+  min-width: 86px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.top-week-caret {
+  color: var(--text-3);
+}
+
+.top-week-today {
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-left: 1px solid var(--line-soft);
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.top-week-today:hover {
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+
+.top-week-today.active {
+  background: color-mix(in srgb, var(--info) 11%, transparent);
+  color: var(--text-1);
+}
+
+.week-pop {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  z-index: 30;
+  width: 420px;
+  padding: 10px;
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(24px);
+  animation: popIn 0.2s var(--ease-out) both;
+}
+
+.week-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 2px 8px;
+  color: var(--text-3);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.week-pop-today {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.week-pop-today:hover {
+  color: var(--text-1);
+}
+
+.week-pop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.week-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.16s var(--ease),
+    border-color 0.16s var(--ease);
+}
+
+.week-option:hover {
+  background: var(--surface-1);
+  border-color: var(--line-soft);
+}
+
+.week-option.active {
+  border-color: color-mix(in srgb, var(--info) 30%, var(--line-soft));
+  background: color-mix(in srgb, var(--info) 9%, transparent);
+  color: var(--text-1);
+}
+
+.week-option b {
+  font-size: 10.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.week-option span {
+  color: var(--text-3);
+  font-size: 8.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

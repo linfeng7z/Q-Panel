@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import {
   ArrowRight,
-  CaretLeft,
-  CaretRight,
   CheckCircle,
   FolderSimple,
   Plus,
@@ -11,7 +9,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode, Objective, Project, WeekTask } from '../types'
-import { CATEGORIES, TODAY, WEEKDAY_CN, WEEK_ORDER, WEEKS, dayInfo, getCategory } from '../data/mock'
+import { CATEGORIES, TODAY, WEEKDAY_CN, WEEKS, dayInfo, getCategory } from '../data/mock'
 import {
   cn,
   doneDaysOf,
@@ -36,7 +34,6 @@ interface WeekViewProps {
   projects: Project[]
   filter: CategoryId | 'all'
   onFilter: (filter: CategoryId | 'all') => void
-  onWeekChange: (weekKey: string) => void
   onToggleTask: (id: string) => void
   onOpenCreate: (mode: CreateMode) => void
   onMoveOverdue: (ids: string[]) => void
@@ -62,7 +59,6 @@ export function WeekView({
   projects,
   filter,
   onFilter,
-  onWeekChange,
   onToggleTask,
   onOpenCreate,
   onMoveOverdue,
@@ -115,9 +111,6 @@ export function WeekView({
   const remaining = available - planned
   const overdue = meta.end <= '2026-12-31' ? tasks.filter(isOverdue) : []
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
-  const weekIndex = WEEK_ORDER.indexOf(weekKey)
-  const prevWeek = weekIndex > 0 ? WEEKS[WEEK_ORDER[weekIndex - 1]] : null
-  const nextWeek = weekIndex < WEEK_ORDER.length - 1 ? WEEKS[WEEK_ORDER[weekIndex + 1]] : null
   const linkedObjectiveIds = Array.from(
     new Set(weekTasks.map((task) => task.objectiveId).filter(Boolean)),
   ) as string[]
@@ -151,51 +144,11 @@ export function WeekView({
     weekTasks.filter((task) => task.done).length +
     autoItems.filter((item) => item.status === 'done').length
 
-  const goPrev = () => {
-    if (weekIndex > 0) onWeekChange(WEEK_ORDER[weekIndex - 1])
-  }
-  const goNext = () => {
-    if (weekIndex < WEEK_ORDER.length - 1) onWeekChange(WEEK_ORDER[weekIndex + 1])
-  }
-
   return (
     <div className="view week-view">
       <div className="page-head week-head">
         <div className="week-head-copy">
-          <div className="week-head-titleline">
-            <h1 className="page-title">第 {meta.num} 周</h1>
-            <div className="week-nav" role="group" aria-label="周切换">
-              <button
-                type="button"
-                className="week-nav-arrow"
-                onClick={goPrev}
-                disabled={weekIndex <= 0}
-                title={prevWeek ? `第 ${prevWeek.num} 周 · ${prevWeek.range}` : '没有上一周'}
-                aria-label="上一周"
-              >
-                <CaretLeft size={13} />
-              </button>
-              <span className="week-nav-label">{meta.range}</span>
-              <button
-                type="button"
-                className="week-nav-arrow"
-                onClick={goNext}
-                disabled={weekIndex >= WEEK_ORDER.length - 1}
-                title={nextWeek ? `第 ${nextWeek.num} 周 · ${nextWeek.range}` : '没有下一周'}
-                aria-label="下一周"
-              >
-                <CaretRight size={13} />
-              </button>
-              <button
-                type="button"
-                className={cn('week-nav-today', weekKey === '2026-W42' && 'active')}
-                onClick={() => onWeekChange('2026-W42')}
-                title="回到第 42 周"
-              >
-                本周
-              </button>
-            </div>
-          </div>
+          <h1 className="page-title">第 {meta.num} 周</h1>
           <p className="page-sub">
             {meta.workdays} 个工作日 · 可用 {available} 人日
             {meta.note ? ` · ${meta.note}` : ''}

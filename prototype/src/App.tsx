@@ -512,7 +512,6 @@ export default function App() {
             projects={projects}
             filter={filter}
             onFilter={setFilter}
-            onWeekChange={changeWeek}
             onToggleTask={toggleTask}
             onOpenCreate={setCreateMode}
             onMoveOverdue={moveOverdue}
@@ -576,6 +575,9 @@ export default function App() {
                   }
                   year={year}
                   quarter={quarter}
+                  view={view}
+                  weekKey={weekKey}
+                  onWeekChange={changeWeek}
                   onPeriodChange={(nextYear, nextQuarter) => {
                     setYear(nextYear)
                     setQuarter(nextQuarter)
