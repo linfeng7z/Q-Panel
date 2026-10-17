@@ -1,0 +1,103 @@
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --r-panel: 30px;
+  --r-card: 20px;
+  --r-inner: 19px;
+  --r-input: 11px;
+  --r-pill: 999px;
+
+  --panel-w: 1280px;
+  --panel-h: 760px;
+  --sidebar-w: 204px;
+}
+
+.qp-root[data-theme="noir"] {
+  --bg-desktop: #050507;
+  --panel: rgba(9, 9, 12, 0.86);
+  --panel-2: rgba(13, 13, 17, 0.94);
+  --panel-3: rgba(18, 18, 23, 0.97);
+  --surface-1: rgba(255, 255, 255, 0.042);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --surface-3: rgba(255, 255, 255, 0.105);
+  --surface-inset: rgba(255, 255, 255, 0.028);
+  --line: rgba(255, 255, 255, 0.085);
+  --line-soft: rgba(255, 255, 255, 0.055);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --text-1: rgba(255, 255, 255, 0.94);
+  --text-2: rgba(255, 255, 255, 0.57);
+  --text-3: rgba(255, 255, 255, 0.37);
+  --text-4: rgba(255, 255, 255, 0.2);
+  --text-inverse: #07070a;
+
+  --good: #63e0a6;
+  --good-soft: rgba(99, 224, 166, 0.12);
+  --warn: #f0b35c;
+  --warn-soft: rgba(240, 179, 92, 0.12);
+  --bad: #ff7078;
+  --bad-soft: rgba(255, 112, 120, 0.12);
+  --info: #8aa9ff;
+  --info-soft: rgba(138, 169, 255, 0.12);
+
+  --cat-appsec: #7da2ff;
+  --cat-secops: #f0a35e;
+  --cat-team: #63d7b2;
+  --cat-other: #b49cff;
+
+  --wallpaper-1: rgba(44, 74, 152, 0.46);
+  --wallpaper-2: rgba(112, 58, 146, 0.3);
+  --wallpaper-3: rgba(168, 84, 46, 0.17);
+  --wallpaper-4: rgba(18, 106, 106, 0.15);
+  --menubar-bg: rgba(7, 8, 12, 0.42);
+  --card-highlight: rgba(255, 255, 255, 0.07);
+  --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.72), 0 14px 44px rgba(0, 0, 0, 0.48);
+  --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.58);
+}
+
+.qp-root[data-theme="ops"] {
+  --bg-desktop: #05080d;
+  --panel: rgba(7, 14, 23, 0.965);
+  --panel-2: rgba(10, 18, 28, 0.97);
+  --panel-3: rgba(13, 23, 35, 0.98);
+  --surface-1: #0d1722;
+  --surface-2: #122130;
+  --surface-3: #172b3d;
+  --surface-inset: #0a131d;
+  --line: rgba(124, 163, 207, 0.16);
+  --line-soft: rgba(124, 163, 207, 0.1);
+  --line-strong: rgba(124, 163, 207, 0.32);
+  --text-1: #eaf2fb;
+  --text-2: #9db0c5;
+  --text-3: #6a8099;
+  --text-4: #40546b;
+  --text-inverse: #061018;
+
+  --good: #2fd6ae;
+  --good-soft: rgba(47, 214, 174, 0.12);
+  --warn: #ffb35c;
+  --warn-soft: rgba(255, 179, 92, 0.12);
+  --bad: #ff6b72;
+  --bad-soft: rgba(255, 107, 114, 0.14);
+  --info: #4c9aff;
+  --info-soft: rgba(76, 154, 255, 0.14);
+
+  --cat-appsec: #4c9aff;
+  --cat-secops: #ff9f5a;
+  --cat-team: #2fd6ae;
+  --cat-other: #a78bfa;
+
+  --wallpaper-1: rgba(30, 70, 140, 0.5);
+  --wallpaper-2: rgba(40, 48, 120, 0.32);
+  --wallpaper-3: rgba(120, 62, 40, 0.12);
+  --wallpaper-4: rgba(12, 90, 96, 0.16);
+  --menubar-bg: rgba(5, 10, 18, 0.55);
+  --card-highlight: rgba(168, 204, 255, 0.08);
+  --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.78), 0 14px 44px rgba(0, 0, 0, 0.52);
+  --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.62);
+}

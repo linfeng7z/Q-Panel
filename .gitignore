@@ -1,0 +1,6 @@
+.DS_Store
+*.log
+node_modules/
+prototype/node_modules/
+prototype/dist/
+prototype/screenshots/

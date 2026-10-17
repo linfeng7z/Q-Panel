@@ -1,0 +1,83 @@
+import { useEffect } from 'react'
+import { BellRinging, Check, Clock, X } from '@phosphor-icons/react'
+
+interface ReminderPopupProps {
+  onClose: () => void
+  onComplete: () => void
+  onSnooze: () => void
+  onOpen: () => void
+}
+
+export function ReminderPopup({ onClose, onComplete, onSnooze, onOpen }: ReminderPopupProps) {
+  useEffect(() => {
+    const timer = window.setTimeout(onClose, 12000)
+    return () => window.clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div className="reminder-layer">
+      <div className="reminder" role="alert">
+        <div className="reminder-inner">
+          <div className="reminder-top">
+            <span className="reminder-icon">
+              <BellRinging size={17} />
+            </span>
+            <div className="reminder-copy">
+              <div className="reminder-kicker">
+                <Clock size={10} />
+                REMINDER · 还有 2 天
+              </div>
+              <div className="reminder-title">等保 2.0 差距分析闭环</div>
+              <div className="reminder-meta">
+                <span>Q4 主线 · 应用安全</span>
+                <span className="sep" />
+                <span className="num">截止 10/31 18:00</span>
+              </div>
+            </div>
+            <button type="button" className="reminder-close" onClick={onClose} aria-label="关闭提醒">
+              <X size={14} />
+            </button>
+          </div>
+          <div className="reminder-actions">
+            <button
+              type="button"
+              className="btn primary sm"
+              onClick={() => {
+                onComplete()
+                onClose()
+              }}
+            >
+              <span className="icon-circle">
+                <Check size={10} weight="bold" />
+              </span>
+              完成
+            </button>
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={() => {
+                onSnooze()
+                onClose()
+              }}
+            >
+              稍后 10 分钟
+            </button>
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={() => {
+                onOpen()
+                onClose()
+              }}
+            >
+              打开
+            </button>
+          </div>
+          <div className="reminder-timer">
+            <i />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
