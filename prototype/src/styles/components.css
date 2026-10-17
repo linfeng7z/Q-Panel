@@ -41,6 +41,11 @@
 
 .qp-root[data-theme="ops"] .panel::before {
   background:
+    radial-gradient(
+      520px circle at var(--pointer-x, 50%) var(--pointer-y, 32%),
+      var(--pointer-glow),
+      transparent 72%
+    ),
     linear-gradient(180deg, rgba(98, 156, 230, 0.06), transparent 14%),
     radial-gradient(ellipse 46% 32% at 10% 0%, rgba(60, 118, 210, 0.08), transparent 70%);
 }
@@ -1547,12 +1552,13 @@
 }
 
 .theme-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
 }
 
 .theme-card {
-  width: 176px;
+  width: auto;
   padding: 8px;
   border-radius: 13px;
   border: 1px solid var(--line-soft);
@@ -1595,6 +1601,20 @@
     radial-gradient(ellipse 70% 80% at 20% 0%, rgba(40, 100, 190, 0.32), transparent 65%),
     #08111b;
   background-size: 16px 16px, 16px 16px, auto, auto;
+}
+
+.theme-preview.aurora {
+  background:
+    radial-gradient(ellipse 60% 90% at 18% 0%, rgba(148, 92, 255, 0.48), transparent 62%),
+    radial-gradient(ellipse 55% 70% at 90% 100%, rgba(40, 190, 190, 0.32), transparent 62%),
+    #08040f;
+}
+
+.theme-preview.ember {
+  background:
+    radial-gradient(ellipse 70% 95% at 18% 0%, rgba(236, 118, 44, 0.42), transparent 64%),
+    radial-gradient(ellipse 55% 70% at 90% 100%, rgba(172, 66, 48, 0.28), transparent 64%),
+    #0d0704;
 }
 
 .theme-preview .tp-bar {
@@ -2191,4 +2211,80 @@
 .category-actions .icon-btn.sm:disabled {
   opacity: 0.28;
   cursor: not-allowed;
+}
+
+.reminder-field {
+  margin-top: 2px;
+}
+
+.reminder-config {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 118px;
+  align-items: center;
+  gap: 7px;
+}
+
+.reminder-config > .select:first-child {
+  grid-column: 1 / -1;
+}
+
+.reminder-config .select {
+  width: 100%;
+  min-width: 0;
+}
+
+.reminder-config .time-select {
+  grid-column: 2;
+  justify-self: start;
+}
+
+
+.qp-root[data-theme="aurora"] .bezel {
+  background: linear-gradient(
+    180deg,
+    rgba(207, 176, 255, 0.2),
+    rgba(199, 155, 255, 0.07) 42%,
+    rgba(110, 220, 230, 0.055)
+  );
+}
+
+.qp-root[data-theme="aurora"] .bezel-inner {
+  background: linear-gradient(180deg, var(--surface-1), var(--surface-inset));
+  box-shadow: inset 0 1px 0 rgba(226, 210, 255, 0.1);
+}
+
+.qp-root[data-theme="ember"] .bezel {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 214, 170, 0.19),
+    rgba(255, 177, 94, 0.06) 42%,
+    rgba(255, 120, 80, 0.045)
+  );
+}
+
+.qp-root[data-theme="ember"] .bezel-inner {
+  background: linear-gradient(180deg, var(--surface-1), var(--surface-inset));
+  box-shadow: inset 0 1px 0 rgba(255, 230, 196, 0.1);
+}
+
+.qp-root[data-theme="aurora"] .panel::before {
+  background:
+    radial-gradient(
+      520px circle at var(--pointer-x, 50%) var(--pointer-y, 32%),
+      var(--pointer-glow),
+      transparent 72%
+    ),
+    radial-gradient(ellipse 44% 32% at 10% 0%, rgba(165, 115, 255, 0.1), transparent 72%),
+    linear-gradient(180deg, rgba(200, 170, 255, 0.06), transparent 14%);
+}
+
+.qp-root[data-theme="ember"] .panel::before {
+  background:
+    radial-gradient(
+      520px circle at var(--pointer-x, 50%) var(--pointer-y, 32%),
+      var(--pointer-glow),
+      transparent 72%
+    ),
+    radial-gradient(ellipse 44% 32% at 10% 0%, rgba(255, 150, 76, 0.08), transparent 72%),
+    linear-gradient(180deg, rgba(255, 202, 154, 0.055), transparent 14%);
 }

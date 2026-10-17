@@ -190,6 +190,11 @@
   pointer-events: none;
   border-radius: inherit;
   background:
+    radial-gradient(
+      520px circle at var(--pointer-x, 50%) var(--pointer-y, 32%),
+      var(--pointer-glow),
+      transparent 72%
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 12%),
     radial-gradient(ellipse 40% 30% at 8% 0%, rgba(255, 255, 255, 0.04), transparent 70%);
 }
@@ -267,15 +272,6 @@
   letter-spacing: 0.03em;
   color: var(--text-1);
   line-height: 1.1;
-}
-
-.brand-sub {
-  margin-top: 2px;
-  font-size: 9.5px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--text-2);
-  line-height: 1;
 }
 
 .topbar-divider {

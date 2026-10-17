@@ -58,6 +58,7 @@
   --card-highlight: rgba(255, 255, 255, 0.07);
   --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.72), 0 14px 44px rgba(0, 0, 0, 0.48);
   --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.58);
+  --pointer-glow: rgba(138, 169, 255, 0.075);
 }
 
 .qp-root[data-theme="ops"] {
@@ -100,4 +101,91 @@
   --card-highlight: rgba(168, 204, 255, 0.08);
   --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.78), 0 14px 44px rgba(0, 0, 0, 0.52);
   --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.62);
+  --pointer-glow: rgba(76, 154, 255, 0.085);
+}
+
+.qp-root[data-theme="aurora"] {
+  --bg-desktop: #05030b;
+  --panel: rgba(13, 9, 24, 0.88);
+  --panel-2: rgba(19, 13, 33, 0.95);
+  --panel-3: rgba(23, 16, 39, 0.98);
+  --surface-1: rgba(191, 158, 255, 0.055);
+  --surface-2: rgba(191, 158, 255, 0.09);
+  --surface-3: rgba(191, 158, 255, 0.14);
+  --surface-inset: rgba(191, 158, 255, 0.032);
+  --line: rgba(198, 170, 255, 0.14);
+  --line-soft: rgba(198, 170, 255, 0.085);
+  --line-strong: rgba(208, 184, 255, 0.26);
+  --text-1: #f4edff;
+  --text-2: #ab9dc2;
+  --text-3: #77678f;
+  --text-4: #4e4163;
+  --text-inverse: #0b0614;
+
+  --good: #68e6c2;
+  --good-soft: rgba(104, 230, 194, 0.13);
+  --warn: #f6c36f;
+  --warn-soft: rgba(246, 195, 111, 0.13);
+  --bad: #ff7fa5;
+  --bad-soft: rgba(255, 127, 165, 0.14);
+  --info: #c79bff;
+  --info-soft: rgba(199, 155, 255, 0.15);
+
+  --cat-appsec: #b39cff;
+  --cat-secops: #f6ad7d;
+  --cat-team: #5ee5c5;
+  --cat-other: #ef9fea;
+
+  --wallpaper-1: rgba(96, 58, 186, 0.55);
+  --wallpaper-2: rgba(28, 84, 150, 0.36);
+  --wallpaper-3: rgba(170, 54, 136, 0.23);
+  --wallpaper-4: rgba(16, 138, 142, 0.2);
+  --menubar-bg: rgba(6, 4, 12, 0.48);
+  --card-highlight: rgba(224, 205, 255, 0.09);
+  --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.76), 0 14px 44px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.64);
+  --pointer-glow: rgba(199, 155, 255, 0.11);
+}
+
+.qp-root[data-theme="ember"] {
+  --bg-desktop: #0a0503;
+  --panel: rgba(22, 14, 9, 0.9);
+  --panel-2: rgba(30, 19, 13, 0.96);
+  --panel-3: rgba(37, 24, 16, 0.98);
+  --surface-1: rgba(255, 205, 158, 0.052);
+  --surface-2: rgba(255, 205, 158, 0.088);
+  --surface-3: rgba(255, 205, 158, 0.135);
+  --surface-inset: rgba(255, 205, 158, 0.03);
+  --line: rgba(255, 210, 170, 0.13);
+  --line-soft: rgba(255, 210, 170, 0.08);
+  --line-strong: rgba(255, 220, 184, 0.24);
+  --text-1: #fff2e3;
+  --text-2: #c3a78e;
+  --text-3: #8e7661;
+  --text-4: #5e4a3b;
+  --text-inverse: #160b05;
+
+  --good: #8cdbb2;
+  --good-soft: rgba(140, 219, 178, 0.13);
+  --warn: #ffd166;
+  --warn-soft: rgba(255, 209, 102, 0.13);
+  --bad: #ff7f6e;
+  --bad-soft: rgba(255, 127, 110, 0.14);
+  --info: #ffb15e;
+  --info-soft: rgba(255, 177, 94, 0.15);
+
+  --cat-appsec: #ffa968;
+  --cat-secops: #ffd07a;
+  --cat-team: #8bd3a8;
+  --cat-other: #e2a0e8;
+
+  --wallpaper-1: rgba(156, 76, 24, 0.5);
+  --wallpaper-2: rgba(114, 42, 28, 0.34);
+  --wallpaper-3: rgba(204, 124, 48, 0.2);
+  --wallpaper-4: rgba(58, 92, 76, 0.16);
+  --menubar-bg: rgba(9, 5, 4, 0.5);
+  --card-highlight: rgba(255, 225, 190, 0.085);
+  --shadow-panel: 0 60px 150px rgba(0, 0, 0, 0.8), 0 14px 44px rgba(0, 0, 0, 0.54);
+  --shadow-float: 0 28px 80px rgba(0, 0, 0, 0.66);
+  --pointer-glow: rgba(255, 177, 94, 0.09);
 }

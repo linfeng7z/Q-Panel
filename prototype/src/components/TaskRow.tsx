@@ -13,8 +13,7 @@ interface TaskRowProps {
 }
 
 function shortReminder(value?: string): string {
-  if (!value) return ''
-  return value.split('·')[0].trim()
+  return value ?? ''
 }
 
 export function TaskRow({ task, project, objective, onToggle }: TaskRowProps) {

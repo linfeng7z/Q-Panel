@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Check, Clock, Plus, X } from '@phosphor-icons/react'
-import type { Category, CategoryId, CreateMode } from '../types'
+import type { Category, CategoryId, CreateMode, ReminderDefaults } from '../types'
 import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
 import { DateTimeField } from './DateTimeField'
+import { TimeSelect } from './TimeSelect'
+import { formatReminder } from '../utils'
 
 interface CreateModalProps {
   mode: CreateMode
@@ -16,6 +18,7 @@ interface CreateModalProps {
     plannedDays: number
     dueDate: string
     dueTime: string
+    reminder?: string
   }) => void
   onCreateTask: (data: {
     title: string
@@ -23,6 +26,7 @@ interface CreateModalProps {
     dueDate: string
     dueTime: string
     estimateDays: number
+    reminder?: string
   }) => void
   onCreateProject: (data: {
     title: string
@@ -30,8 +34,10 @@ interface CreateModalProps {
     targetDate: string
     targetTime: string
     description: string
+    reminder?: string
   }) => void
   onAddCategory: (name: string, colorVar: string) => Category
+  reminderDefaults: ReminderDefaults
 }
 
 const TITLES: Record<CreateMode, { title: string; sub: string }> = {
@@ -58,6 +64,7 @@ export function CreateModal({
   onCreateTask,
   onCreateProject,
   onAddCategory,
+  reminderDefaults,
 }: CreateModalProps) {
   const meta = TITLES[mode]
   const [title, setTitle] = useState('')
@@ -70,6 +77,9 @@ export function CreateModal({
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0].value)
   const [categoryError, setCategoryError] = useState('')
+  const [reminderMode, setReminderMode] = useState<'default' | 'custom'>('default')
+  const [reminderOffset, setReminderOffset] = useState(reminderDefaults.offsetDays)
+  const [reminderTime, setReminderTime] = useState(reminderDefaults.time)
 
   const valid = title.trim().length > 0
 
@@ -82,6 +92,10 @@ export function CreateModal({
         plannedDays: Number(days) || 1,
         dueDate: date,
         dueTime: time || '18:00',
+        reminder:
+          reminderMode === 'custom'
+            ? formatReminder(reminderOffset, reminderTime)
+            : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     } else if (mode === 'task') {
       onCreateTask({
@@ -90,6 +104,10 @@ export function CreateModal({
         dueDate: date,
         dueTime: time || '18:00',
         estimateDays: Number(days) || 0.5,
+        reminder:
+          reminderMode === 'custom'
+            ? formatReminder(reminderOffset, reminderTime)
+            : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     } else {
       onCreateProject({
@@ -98,6 +116,10 @@ export function CreateModal({
         targetDate: date,
         targetTime: time || '18:00',
         description: description.trim(),
+        reminder:
+          reminderMode === 'custom'
+            ? formatReminder(reminderOffset, reminderTime)
+            : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     }
     onClose()
@@ -287,6 +309,47 @@ export function CreateModal({
               <div className="datetime-preview">
                 <Clock size={10} />
                 24 小时制 · 系统通知精确到分钟
+              </div>
+
+              <div className="field reminder-field">
+                <label>提醒</label>
+                <div className="reminder-config">
+                  <select
+                    className="select"
+                    value={reminderMode}
+                    onChange={(event) => {
+                      const next = event.target.value as 'default' | 'custom'
+                      setReminderMode(next)
+                      if (next === 'custom') {
+                        setReminderOffset(reminderDefaults.offsetDays)
+                        setReminderTime(reminderDefaults.time)
+                      }
+                    }}
+                    aria-label="提醒规则"
+                  >
+                    <option value="default">
+                      跟随全局 · {formatReminder(reminderDefaults.offsetDays, reminderDefaults.time)}
+                    </option>
+                    <option value="custom">自定义提醒</option>
+                  </select>
+                  {reminderMode === 'custom' ? (
+                    <>
+                      <select
+                        className="select"
+                        value={reminderOffset}
+                        onChange={(event) => setReminderOffset(Number(event.target.value))}
+                        aria-label="提前量"
+                      >
+                        <option value={0}>当天</option>
+                        <option value={1}>提前 1 天</option>
+                        <option value={2}>提前 2 天</option>
+                        <option value={3}>提前 3 天</option>
+                        <option value={7}>提前 1 周</option>
+                      </select>
+                      <TimeSelect value={reminderTime} onChange={setReminderTime} compact />
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
 

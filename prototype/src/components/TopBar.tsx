@@ -62,10 +62,7 @@ export function TopBar({
           <span className="brand-mark">
             <Logo size={19} />
           </span>
-          <div>
-            <div className="brand-name">Q-Panel</div>
-            <div className="brand-sub">日常工作台</div>
-          </div>
+          <div className="brand-name">Q-Panel</div>
         </div>
 
         <span className="topbar-divider" />

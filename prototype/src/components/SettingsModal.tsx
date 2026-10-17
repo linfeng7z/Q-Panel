@@ -13,7 +13,7 @@ import {
   Trash,
   X,
 } from '@phosphor-icons/react'
-import type { SidebarLabels, ThemeId } from '../types'
+import type { ReminderDefaults, SidebarLabels, ThemeId } from '../types'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
@@ -41,10 +41,19 @@ interface SettingsModalProps {
   onDeleteCategory: (categoryId: string) => void
   aiModel: string
   onAiModelChange: (model: string) => void
+  reminderDefaults: ReminderDefaults
+  onReminderDefaultsChange: (defaults: ReminderDefaults) => void
   sidebarLabels: SidebarLabels
   onUpdateSidebarLabel: (key: keyof SidebarLabels, label: string) => void
   onResetSidebarLabels: () => void
 }
+
+const THEME_OPTIONS: Array<{ id: ThemeId; name: string; desc: string }> = [
+  { id: 'noir', name: 'Noir', desc: '黑玻璃' },
+  { id: 'ops', name: 'Ops', desc: '数据看板' },
+  { id: 'aurora', name: 'Aurora', desc: '冷紫极光' },
+  { id: 'ember', name: 'Ember', desc: '暖橙余烬' },
+]
 
 const tabs: Array<{ id: SettingsTab; label: string; icon: typeof Bell }> = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
@@ -69,6 +78,8 @@ export function SettingsModal({
   onDeleteCategory,
   aiModel,
   onAiModelChange,
+  reminderDefaults,
+  onReminderDefaultsChange,
   sidebarLabels,
   onUpdateSidebarLabel,
   onResetSidebarLabels,
@@ -82,8 +93,6 @@ export function SettingsModal({
   const [dnd, setDnd] = useState(false)
   const [confirmWrites, setConfirmWrites] = useState(true)
   const [buffer, setBuffer] = useState(0)
-  const [defaultOffset, setDefaultOffset] = useState('提前 2 天')
-  const [defaultTime, setDefaultTime] = useState('09:30')
   const [defaultView, setDefaultView] = useState('季度规划')
   const [provider, setProvider] = useState('OpenAI 兼容')
   const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
@@ -133,34 +142,24 @@ export function SettingsModal({
                     <div className="settings-section">
                       <div className="settings-section-label">皮肤</div>
                       <div className="theme-cards">
-                        <button
-                          type="button"
-                          className={cn('theme-card', theme === 'noir' && 'active')}
-                          onClick={() => onTheme('noir')}
-                        >
-                          <div className="theme-preview noir">
-                            <span className="tp-bar" />
-                            <span className="tp-card" />
-                            <span className="tp-dot" />
-                          </div>
-                          <div className="theme-name">
-                            Noir <span>{theme === 'noir' ? '当前' : '黑玻璃'}</span>
-                          </div>
-                        </button>
-                        <button
-                          type="button"
-                          className={cn('theme-card', theme === 'ops' && 'active')}
-                          onClick={() => onTheme('ops')}
-                        >
-                          <div className="theme-preview ops">
-                            <span className="tp-bar" />
-                            <span className="tp-card" />
-                            <span className="tp-dot" />
-                          </div>
-                          <div className="theme-name">
-                            Ops <span>{theme === 'ops' ? '当前' : '数据看板'}</span>
-                          </div>
-                        </button>
+                        {THEME_OPTIONS.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={cn('theme-card', theme === option.id && 'active')}
+                            onClick={() => onTheme(option.id)}
+                            aria-pressed={theme === option.id}
+                          >
+                            <div className={`theme-preview ${option.id}`}>
+                              <span className="tp-bar" />
+                              <span className="tp-card" />
+                              <span className="tp-dot" />
+                            </div>
+                            <div className="theme-name">
+                              {option.name} <span>{theme === option.id ? '当前' : option.desc}</span>
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -405,7 +404,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">第二组</div>
-                          <div className="settings-help">统计与容量 / 临时笔记 / 收藏链接</div>
+                          <div className="settings-help">容量与复盘 / 临时笔记 / 收藏链接</div>
                         </div>
                         <input
                           className="input sidebar-label-input"
@@ -438,7 +437,7 @@ export function SettingsModal({
                 {tab === 'reminders' ? (
                   <>
                     <div className="settings-pane-title">提醒</div>
-                    <div className="settings-pane-sub">每个事项可以覆盖默认规则；例如「提前 2 天 · 09:30」，系统通知按 24 小时制精确到分钟。</div>
+                    <div className="settings-pane-sub">新建任务或项目时可以选择自定义提醒；不指定则跟随这里的全局默认。系统通知按 24 小时制精确到分钟。</div>
 
                     <div className="settings-section">
                       <div className="settings-section-label">默认提醒规则</div>
@@ -447,12 +446,22 @@ export function SettingsModal({
                           <div className="settings-label">提前量</div>
                           <div className="settings-help">分类和事项可以单独覆盖。</div>
                         </div>
-                        <select className="select" style={{ width: 130 }} value={defaultOffset} onChange={(event) => setDefaultOffset(event.target.value)}>
-                          <option>提前 1 天</option>
-                          <option>提前 2 天</option>
-                          <option>提前 3 天</option>
-                          <option>提前 1 周</option>
-                          <option>当天</option>
+                        <select
+                          className="select"
+                          style={{ width: 130 }}
+                          value={reminderDefaults.offsetDays}
+                          onChange={(event) =>
+                            onReminderDefaultsChange({
+                              ...reminderDefaults,
+                              offsetDays: Number(event.target.value),
+                            })
+                          }
+                        >
+                          <option value={0}>当天</option>
+                          <option value={1}>提前 1 天</option>
+                          <option value={2}>提前 2 天</option>
+                          <option value={3}>提前 3 天</option>
+                          <option value={7}>提前 1 周</option>
                         </select>
                       </div>
                       <div className="settings-row">
@@ -460,7 +469,10 @@ export function SettingsModal({
                           <div className="settings-label">提醒时刻</div>
                           <div className="settings-help">24 小时制（HH:mm） · 系统通知精确到分钟。</div>
                         </div>
-                        <TimeSelect value={defaultTime} onChange={setDefaultTime} />
+                        <TimeSelect
+                          value={reminderDefaults.time}
+                          onChange={(time) => onReminderDefaultsChange({ ...reminderDefaults, time })}
+                        />
                       </div>
                     </div>
 

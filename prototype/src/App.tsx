@@ -7,6 +7,7 @@ import type {
   Note,
   Objective,
   Project,
+  ReminderDefaults,
   SidebarLabels,
   ThemeId,
   ViewId,
@@ -25,7 +26,7 @@ import {
   getCategory,
   quarterKey,
 } from './data/mock'
-import { dateISO, daysOf, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
+import { dateISO, daysOf, formatReminder, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
 import { MenuBar } from './components/MenuBar'
 import { TopBar } from './components/TopBar'
 import { Sidebar } from './components/Sidebar'
@@ -45,7 +46,7 @@ import { NotesView } from './views/NotesView'
 import { LinksView } from './views/LinksView'
 
 const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'stats', 'notes', 'links']
-const THEMES: ThemeId[] = ['noir', 'ops']
+const THEMES: ThemeId[] = ['noir', 'ops', 'aurora', 'ember']
 const DEFAULT_SIDEBAR_LABELS: SidebarLabels = { plan: '规划与推进', archive: '其它' }
 
 function firstWeekKeyForQuarter(year: number, quarter: number): string | undefined {
@@ -94,6 +95,28 @@ export default function App() {
   const [filter, setFilter] = useState<CategoryId | 'all'>('all')
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [aiModel, setAiModel] = useState('deepseek-chat')
+  const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
+
+  useEffect(() => {
+    const root = document.querySelector('.qp-root') as HTMLElement | null
+    if (!root) return
+    let frame = 0
+    const onPointerMove = (event: PointerEvent) => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        const panel = root.querySelector('.panel') as HTMLElement | null
+        const rect = panel?.getBoundingClientRect()
+        root.style.setProperty('--pointer-x', `${event.clientX - (rect?.left ?? 0)}px`)
+        root.style.setProperty('--pointer-y', `${event.clientY - (rect?.top ?? 0)}px`)
+        frame = 0
+      })
+    }
+    window.addEventListener('pointermove', onPointerMove, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
 
   const categoryUsage = useMemo(() => {
     const usage: Record<string, number> = {}
@@ -301,6 +324,7 @@ export default function App() {
     dueDate: string
     dueTime: string
     estimateDays: number
+    reminder?: string
   }) => {
     const task: WeekTask = {
       id: `t-${Date.now()}`,
@@ -311,7 +335,8 @@ export default function App() {
       dueTime: data.dueTime,
       estimateDays: data.estimateDays,
       done: false,
-      reminder: '提前 2 天 · 09:30',
+      reminder:
+        data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
     }
     setTasks((value) => [task, ...value])
     showToast('已创建本周事项')
@@ -323,6 +348,7 @@ export default function App() {
     plannedDays: number
     dueDate: string
     dueTime: string
+    reminder?: string
   }) => {
     const key = quarterKey(year, quarter)
     const objective: Objective = {
@@ -334,7 +360,8 @@ export default function App() {
       status: 'planned',
       dueDate: data.dueDate,
       dueTime: data.dueTime,
-      reminder: '提前 2 天 · 09:30',
+      reminder:
+        data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
     }
     setObjectives((value) => ({ ...value, [key]: [...(value[key] ?? []), objective] }))
     showToast('已创建季度任务，容量已重新计算')
@@ -346,6 +373,7 @@ export default function App() {
     targetDate: string
     targetTime: string
     description: string
+    reminder?: string
   }) => {
     const targetMonth = Number(data.targetDate.slice(5, 7))
     const targetYear = data.targetDate.slice(0, 4)
@@ -358,6 +386,8 @@ export default function App() {
       startDate: '2026-10-17',
       endDate: data.targetDate,
       endTime: data.targetTime,
+      reminder:
+        data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       status: 'active',
       plannedDays: 0,
       workItems: [],
@@ -388,7 +418,7 @@ export default function App() {
       done: false,
       objectiveId: task.objectiveId,
       projectId: task.projectId,
-      reminder: '提前 2 天 · 09:30',
+      reminder: formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
     }))
     setTasks((value) => [...newTasks, ...value])
   }
@@ -513,7 +543,7 @@ export default function App() {
                 <TopBar
                   projects={projects}
                   onToggleTheme={() =>
-                    setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))
+                    setTheme((value) => THEMES[(THEMES.indexOf(value) + 1) % THEMES.length])
                   }
                   year={year}
                   quarter={quarter}
@@ -609,7 +639,7 @@ export default function App() {
           }}
           onOpenAI={() => setAiOpen(true)}
           onOpenSettings={() => openSettings('general')}
-          onToggleTheme={() => setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))}
+          onToggleTheme={() => setTheme((value) => THEMES[(THEMES.indexOf(value) + 1) % THEMES.length])}
         />
       ) : null}
 
@@ -627,6 +657,8 @@ export default function App() {
           onDeleteCategory={deleteCategory}
           aiModel={aiModel}
           onAiModelChange={setAiModel}
+          reminderDefaults={reminderDefaults}
+          onReminderDefaultsChange={setReminderDefaults}
           sidebarLabels={sidebarLabels}
           onUpdateSidebarLabel={updateSidebarLabel}
           onResetSidebarLabels={resetSidebarLabels}
@@ -643,6 +675,7 @@ export default function App() {
           onCreateTask={createTask}
           onCreateProject={createProject}
           onAddCategory={handleAddCategory}
+          reminderDefaults={reminderDefaults}
         />
       ) : null}
 

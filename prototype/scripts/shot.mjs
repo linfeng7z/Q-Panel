@@ -69,6 +69,12 @@ await shot('11-collapsed')
 await goto('?view=stats&theme=noir&noreminder=1')
 await shot('12-stats')
 
+await goto('?view=quarter&theme=aurora&noreminder=1')
+await shot('13-aurora')
+
+await goto('?view=quarter&theme=ember&noreminder=1')
+await shot('14-ember')
+
 await browser.close()
 fs.writeFileSync(`${outDir}errors.json`, JSON.stringify(errors, null, 2))
 console.log('errors:', errors.length)

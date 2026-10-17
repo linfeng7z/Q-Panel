@@ -1,4 +1,4 @@
-export type ThemeId = 'noir' | 'ops'
+export type ThemeId = 'noir' | 'ops' | 'aurora' | 'ember'
 
 export type ViewId =
   | 'quarter'
@@ -9,6 +9,13 @@ export type ViewId =
   | 'links'
 
 export type CategoryId = string
+
+export interface ReminderDefaults {
+  /** 0 = 当天，1 = 提前 1 天，7 = 提前 1 周 */
+  offsetDays: number
+  /** 24 小时制 HH:mm */
+  time: string
+}
 
 export interface Category {
   id: CategoryId
@@ -73,6 +80,7 @@ export interface Project {
   workItems: ProjectWorkItem[]
   milestones: Milestone[]
   objectiveId?: string
+  reminder?: string
 }
 
 export interface WeekTask {

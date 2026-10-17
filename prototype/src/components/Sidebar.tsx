@@ -45,7 +45,7 @@ const navGroups: NavGroup[] = [
   {
     id: 'archive',
     items: [
-      { id: 'stats', label: '统计与容量', icon: ChartLineUp },
+      { id: 'stats', label: '容量与复盘', icon: ChartLineUp },
       { id: 'notes', label: '临时笔记', icon: NotePencil },
       { id: 'links', label: '收藏链接', icon: LinkSimple },
     ],

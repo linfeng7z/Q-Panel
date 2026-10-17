@@ -358,6 +358,7 @@ function ProjectDetail({
           <div className="project-scope-line">
             <span className="tag">全局项目</span>
             {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
+            {project.reminder ? <span className="tag">提醒 {project.reminder}</span> : null}
             <span>
               全局规划 {project.plannedDays} 人日 · 本季度只看 {quarterLabel} 排期{' '}
               {fmtDays(quarterDays)} 人日

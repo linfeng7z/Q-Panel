@@ -86,7 +86,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
       <div className="page-head">
         <div>
                     <h1 className="page-title">
-            统计与容量 <span className="light">· Q{quarter}</span>
+            容量与复盘 <span className="light">· Q{quarter}</span>
           </h1>
           <p className="page-sub">
             {year} 年已录入 {yearWorkdays} 个工作日 · {yearAvailable} 人日可用（已扣请假）· 数据源：中国法定节假日 + 调休补班

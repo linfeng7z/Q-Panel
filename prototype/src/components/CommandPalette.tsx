@@ -63,7 +63,7 @@ export function CommandPalette({
       ['quarter', '季度规划', <House size={15} key="quarter" />],
       ['week', '本周安排', <CalendarDots size={15} key="week" />],
       ['projects', '全局项目', <FolderSimple size={15} key="projects" />],
-      ['stats', '统计与容量', <ChartLineUp size={15} key="stats" />],
+      ['stats', '容量与复盘', <ChartLineUp size={15} key="stats" />],
       ['notes', '临时笔记', <NotePencil size={15} key="notes" />],
       ['links', '收藏链接', <LinkSimple size={15} key="links" />],
     ]

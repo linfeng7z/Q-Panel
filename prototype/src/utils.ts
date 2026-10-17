@@ -217,6 +217,11 @@ export function quarterLoad(
   }
 }
 
+export function formatReminder(offsetDays: number, time: string): string {
+  const day = offsetDays === 0 ? '当天' : offsetDays === 7 ? '提前 1 周' : `提前 ${offsetDays} 天`
+  return `${day} · ${time}`
+}
+
 export function fmtDateTime(iso: string, time?: string): string {
   return `${iso} ${time ?? '18:00'}`
 }

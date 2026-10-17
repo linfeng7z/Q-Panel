@@ -1,0 +1,144 @@
+/* ---------- motion layer ---------- */
+
+/* Page content arrives in a short cascade instead of one flat fade. */
+.view > * {
+  animation: contentRise 0.48s var(--ease-soft) both;
+}
+
+.view > *:nth-child(2) {
+  animation-delay: 0.035s;
+}
+
+.view > *:nth-child(3) {
+  animation-delay: 0.07s;
+}
+
+.view > *:nth-child(4) {
+  animation-delay: 0.105s;
+}
+
+.view > *:nth-child(5) {
+  animation-delay: 0.14s;
+}
+
+.view > *:nth-child(n + 6) {
+  animation-delay: 0.17s;
+}
+
+@keyframes contentRise {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The active nav rail grows in instead of appearing as a static tick. */
+.nav-item.active::before {
+  animation: navRail 0.34s var(--spring) both;
+}
+
+@keyframes navRail {
+  from {
+    opacity: 0;
+    transform: scaleY(0.25);
+  }
+  to {
+    opacity: 0.72;
+    transform: scaleY(1);
+  }
+}
+
+/* Progress fills animate from the left on first paint. */
+.bar > i {
+  transform-origin: left center;
+  animation: barGrow 0.72s var(--ease-soft) both;
+}
+
+@keyframes barGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Soft pointer light already lives on .panel::before; this makes theme changes
+   feel like a material transition rather than a hard repaint. */
+.panel,
+.topbar,
+.sidebar,
+.bezel-inner,
+.modal-card,
+.modal-inner,
+.input,
+.select,
+.btn,
+.nav-item,
+.chip,
+.status,
+.tag,
+.theme-card {
+  transition:
+    background-color 0.34s var(--ease),
+    border-color 0.34s var(--ease),
+    color 0.34s var(--ease),
+    transform 0.16s var(--ease);
+}
+
+.obj-row,
+.task-row,
+.project-overview-row,
+.week-plan-row,
+.link-card,
+.note-item {
+  transition:
+    background-color 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+@media (hover: hover) {
+  .obj-row:hover,
+  .task-row:hover,
+  .project-overview-row:hover,
+  .week-plan-row:hover,
+  .link-card:hover,
+  .note-item:hover {
+    transform: translateY(-1px);
+  }
+
+  .theme-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.btn:active,
+.icon-btn:active,
+.theme-card:active,
+.nav-item:active {
+  transform: scale(0.975);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view > *,
+  .nav-item.active::before,
+  .bar > i {
+    animation: none;
+  }
+
+  .obj-row:hover,
+  .task-row:hover,
+  .project-overview-row:hover,
+  .week-plan-row:hover,
+  .link-card:hover,
+  .note-item:hover,
+  .theme-card:hover {
+    transform: none;
+  }
+}
