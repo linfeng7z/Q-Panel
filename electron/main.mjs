@@ -82,7 +82,25 @@ function toggleWindow() {
   else showWindow()
 }
 
+function reminderPreferences() {
+  return lastWorkspace?.preferences && typeof lastWorkspace.preferences === 'object'
+    ? lastWorkspace.preferences
+    : {}
+}
+
+function isWithinDnd(preferences, now = new Date()) {
+  if (!preferences.dndEnabled) return false
+  const [startHour, startMinute] = String(preferences.dndStart ?? '22:30').split(':').map(Number)
+  const [endHour, endMinute] = String(preferences.dndEnd ?? '08:30').split(':').map(Number)
+  const current = now.getHours() * 60 + now.getMinutes()
+  const start = startHour * 60 + startMinute
+  const end = endHour * 60 + endMinute
+  if (start === end) return false
+  return start < end ? current >= start && current < end : current >= start || current < end
+}
+
 function sendReminderToPanel(entry) {
+  if (reminderPreferences().reminderPopup === false) return
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('reminders:due', entry)
   }
@@ -90,6 +108,9 @@ function sendReminderToPanel(entry) {
 
 function showReminderNotification(entry) {
   if (process.env.Q_PANEL_NO_NOTIFICATIONS === '1') return
+  const preferences = reminderPreferences()
+  if (preferences.nativeNotifications === false) return
+  if (isWithinDnd(preferences)) return
   if (!Notification.isSupported()) return
   const notification = new Notification({
     title: 'Q-Panel 提醒',
@@ -118,7 +139,13 @@ function handleReminderDue(entry) {
 function handleMissedReminders(entries) {
   if (entries.length === 0) return
   for (const entry of entries) markReminderFired(entry)
-  if (process.env.Q_PANEL_NO_NOTIFICATIONS !== '1' && Notification.isSupported()) {
+  const preferences = reminderPreferences()
+  if (
+    process.env.Q_PANEL_NO_NOTIFICATIONS !== '1' &&
+    preferences.nativeNotifications !== false &&
+    !isWithinDnd(preferences) &&
+    Notification.isSupported()
+  ) {
     const notification = new Notification({
       title: `Q-Panel · ${entries.length} 条错过的提醒`,
       body: entries.slice(0, 3).map((entry) => entry.title).join('\n'),
@@ -126,7 +153,9 @@ function handleMissedReminders(entries) {
     notification.on('click', () => showWindow())
     notification.show()
   }
-  mainWindow?.webContents.send('reminders:missed', { entries })
+  if (preferences.reminderPopup !== false) {
+    mainWindow?.webContents.send('reminders:missed', { entries })
+  }
 }
 
 let reminderSyncQueue = Promise.resolve()
@@ -299,6 +328,13 @@ function registerIpc() {
     if (!normalized.ok) return { ok: false, error: normalized.error }
     if (normalized.migrated) await store.backupNow('before-migration')
     await syncReminders(normalized.data)
+    if (
+      app.isPackaged &&
+      normalized.data.preferences &&
+      typeof normalized.data.preferences.autoLaunch === 'boolean'
+    ) {
+      app.setLoginItemSettings({ openAtLogin: normalized.data.preferences.autoLaunch })
+    }
     return { ...result, data: normalized.data, migrated: normalized.migrated }
   })
   ipcMain.handle('workspace:save', async (_event, payload) => {
@@ -408,6 +444,11 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
+    if (!app.isPackaged) return { ok: true, skipped: 'development' }
+    app.setLoginItemSettings({ openAtLogin: Boolean(enabled) })
+    return { ok: true, openAtLogin: app.getLoginItemSettings().openAtLogin }
+  })
 }
 
 function installApplicationMenu() {

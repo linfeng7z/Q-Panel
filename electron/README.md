@@ -78,11 +78,11 @@ npm run pack
 产物：
 
 ```text
-release/Q-Panel-0.5.0-arm64.dmg
+release/Q-Panel-1.0.0-arm64.dmg
 release/mac-arm64/Q-Panel.app
 ```
 
-当前为 ad-hoc/未签名构建，供本机安装测试；Developer ID 签名与公证在 P5 接。
+当前为 ad-hoc 签名构建，供本机安装测试；Developer ID 签名/公证步骤见 `docs/SIGNING.md`。
 
 ## 目录
 
@@ -98,4 +98,4 @@ electron/
 
 ## 下一阶段
 
-P1 会把当前冻结示例数据替换为真实中国日历/容量计算与本地工作区数据迁移；P2 接提醒调度和 macOS 通知，随后是项目排期工具页、真实 AI 和最终签名打包。
+交付目标已达到：真实日历/容量、提醒、项目排期、工具页、真实 AI、工作区迁移/导入导出和全功能测试均已完成；当前为 ad-hoc 签名，Developer ID 可升级公证。

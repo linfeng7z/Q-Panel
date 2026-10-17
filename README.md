@@ -98,10 +98,10 @@ npm run shot
 npm run interact
 ```
 
-当前：日历引擎单元测试 5/5 通过；Electron 单测 12/12 通过；Electron 原生壳与功能 E2E 12/12 通过；原型关键交互回归通过、0 console error；DMG 打包通过。
+当前：日历引擎单元测试 5/5 通过；Electron 单测 12/12 通过；Electron 原生壳与功能 E2E 13/13 通过；原型关键交互回归通过、0 console error；DMG 打包通过。
 
 ## 下一步
 
-P0 骨架已完成；后续按产品计划推进 P1 日历容量/季度规划真实数据、P2 提醒与通知、P3 项目排期与工具页、P4 AI、P5 打磨与正式签名。
+P0–P5 已完成：原生壳、真实日历/容量、提醒调度/补发/稍后、项目排期、工具页、链接元数据、可配置 AI、工作区迁移/导入导出与全功能测试。当前交付为 macOS arm64 ad-hoc 签名 DMG。
 
 完整产品/技术方案见 [docs/PRODUCT-PLAN.md](docs/PRODUCT-PLAN.md)；Electron 实现说明见 [electron/README.md](electron/README.md)。

@@ -1,4 +1,5 @@
 import type { CalendarAdjustment } from './calendar'
+import type { UserPreferences } from './types'
 import type {
   Category,
   LinkCategory,
@@ -34,6 +35,7 @@ export interface WorkspaceSnapshot {
   aiModel: string
   reminderDefaults: ReminderDefaults
   calendarAdjustments: CalendarAdjustment[]
+  preferences: UserPreferences
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

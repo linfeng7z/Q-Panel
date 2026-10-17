@@ -146,6 +146,20 @@ export interface WeekMeta {
 
 export type CreateMode = 'objective' | 'task' | 'project'
 
+export interface UserPreferences {
+  autoLaunch: boolean
+  nativeNotifications: boolean
+  reminderPopup: boolean
+  dndEnabled: boolean
+  dndStart: string
+  dndEnd: string
+  defaultView: ViewId
+  bufferPercent: number
+  confirmAiWrites: boolean
+  aiScope: 'minimal' | 'summary' | 'all'
+  backupDays: number
+}
+
 export interface AiConfigPublic {
   baseUrl: string
   model: string

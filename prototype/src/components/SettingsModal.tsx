@@ -13,7 +13,7 @@ import {
   Trash,
   X,
 } from '@phosphor-icons/react'
-import type { AiConfigPublic, ReminderDefaults, SidebarLabels, ThemeId } from '../types'
+import type { AiConfigPublic, ReminderDefaults, SidebarLabels, ThemeId, UserPreferences } from '../types'
 import type { CalendarAdjustment } from '../calendar'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
@@ -43,6 +43,8 @@ interface SettingsModalProps {
   onDeleteCategory: (categoryId: string) => void
   aiModel: string
   onAiModelChange: (model: string) => void
+  preferences: UserPreferences
+  onPreferencesChange: (preferences: UserPreferences) => void
   aiConfig: AiConfigPublic
   onAiConfigSave: (payload: { baseUrl: string; model: string; apiKey?: string }) => Promise<{ ok: boolean; error?: string }>
   onAiTest: () => Promise<{ ok: boolean; error?: string; status?: number }>
@@ -86,6 +88,8 @@ export function SettingsModal({
   onDeleteCategory,
   aiModel,
   onAiModelChange,
+  preferences,
+  onPreferencesChange,
   aiConfig,
   onAiConfigSave,
   onAiTest,
@@ -101,19 +105,15 @@ export function SettingsModal({
   const [categoryName, setCategoryName] = useState('')
   const [leaveDate, setLeaveDate] = useState('')
   const [leaveLabel, setLeaveLabel] = useState('')
-  const [autoLaunch, setAutoLaunch] = useState(true)
-  const [popup, setPopup] = useState(true)
-  const [nativeNotif, setNativeNotif] = useState(true)
-  const [dnd, setDnd] = useState(false)
-  const [confirmWrites, setConfirmWrites] = useState(true)
-  const [buffer, setBuffer] = useState(0)
-  const [defaultView, setDefaultView] = useState('季度规划')
   const [provider, setProvider] = useState('OpenAI 兼容')
   const [baseUrl, setBaseUrl] = useState(aiConfig.baseUrl)
   const [apiKey, setApiKey] = useState('')
   const [aiSaving, setAiSaving] = useState(false)
   const [aiStatus, setAiStatus] = useState('')
-  const [scope, setScope] = useState('摘要（推荐）')
+
+  const updatePreferences = (patch: Partial<UserPreferences>) => {
+    onPreferencesChange({ ...preferences, ...patch })
+  }
 
   const addCategoryFromInput = () => {
     const name = categoryName.trim()
@@ -228,7 +228,7 @@ export function SettingsModal({
                           <div className="settings-label">开机自动启动</div>
                           <div className="settings-help">提醒依赖 App 常驻菜单栏；关闭后仅在手动打开时提醒。</div>
                         </div>
-                        <Toggle on={autoLaunch} onChange={setAutoLaunch} />
+                        <Toggle on={preferences.autoLaunch} onChange={(value) => updatePreferences({ autoLaunch: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -244,10 +244,18 @@ export function SettingsModal({
                           <div className="settings-label">默认展开页</div>
                           <div className="settings-help">点击刘海展开时先看到的页面。</div>
                         </div>
-                        <select className="select" style={{ width: 120 }} value={defaultView} onChange={(event) => setDefaultView(event.target.value)}>
-                          <option>季度规划</option>
-                          <option>本周安排</option>
-                          <option>全局项目</option>
+                        <select
+                          className="select"
+                          style={{ width: 120 }}
+                          value={preferences.defaultView}
+                          onChange={(event) => updatePreferences({ defaultView: event.target.value as UserPreferences['defaultView'] })}
+                        >
+                          <option value="quarter">季度规划</option>
+                          <option value="week">本周安排</option>
+                          <option value="projects">全局项目</option>
+                          <option value="stats">容量与复盘</option>
+                          <option value="notes">临时笔记</option>
+                          <option value="links">收藏链接</option>
                         </select>
                       </div>
                     </div>
@@ -281,11 +289,11 @@ export function SettingsModal({
                           <div className="settings-help">预留不可用于季度任务的会议 / 杂事时间，默认 0%。</div>
                         </div>
                         <div className="stepper">
-                          <button type="button" onClick={() => setBuffer((value) => Math.max(0, value - 5))}>
+                          <button type="button" onClick={() => updatePreferences({ bufferPercent: Math.max(0, preferences.bufferPercent - 5) })}>
                             <Minus size={11} />
                           </button>
-                          <span>{buffer}%</span>
-                          <button type="button" onClick={() => setBuffer((value) => Math.min(40, value + 5))}>
+                          <span>{preferences.bufferPercent}%</span>
+                          <button type="button" onClick={() => updatePreferences({ bufferPercent: Math.min(40, preferences.bufferPercent + 5) })}>
                             <Plus size={11} />
                           </button>
                         </div>
@@ -554,21 +562,21 @@ export function SettingsModal({
                           <div className="settings-label">应用内顶部弹窗</div>
                           <div className="settings-help">不抢焦点，可完成 / 稍后 / 打开。</div>
                         </div>
-                        <Toggle on={popup} onChange={setPopup} />
+                        <Toggle on={preferences.reminderPopup} onChange={(value) => updatePreferences({ reminderPopup: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">macOS 系统通知</div>
                           <div className="settings-help">同时进入通知中心，作为记录与兜底。</div>
                         </div>
-                        <Toggle on={nativeNotif} onChange={setNativeNotif} />
+                        <Toggle on={preferences.nativeNotifications} onChange={(value) => updatePreferences({ nativeNotifications: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">勿扰时段</div>
-                          <div className="settings-help">22:30 – 08:30 之间只入队，不弹窗。</div>
+                          <div className="settings-help">22:30 – 08:30 之间暂停系统通知，应用内提醒仍保留。</div>
                         </div>
-                        <Toggle on={dnd} onChange={setDnd} />
+                        <Toggle on={preferences.dndEnabled} onChange={(value) => updatePreferences({ dndEnabled: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -640,10 +648,15 @@ export function SettingsModal({
                           <div className="settings-label">发送给 AI 的上下文</div>
                           <div className="settings-help">摘要包含当前周期、季度任务、项目与本周事项的标题/状态/人日；笔记与链接默认不发送。</div>
                         </div>
-                        <select className="select" style={{ width: 150 }} value={scope} onChange={(event) => setScope(event.target.value)}>
-                          <option>最小</option>
-                          <option>摘要（推荐）</option>
-                          <option>全部</option>
+                        <select
+                          className="select"
+                          style={{ width: 150 }}
+                          value={preferences.aiScope}
+                          onChange={(event) => updatePreferences({ aiScope: event.target.value as UserPreferences['aiScope'] })}
+                        >
+                          <option value="minimal">最小</option>
+                          <option value="summary">摘要（推荐）</option>
+                          <option value="all">全部</option>
                         </select>
                       </div>
                       <div className="settings-row">
@@ -651,7 +664,7 @@ export function SettingsModal({
                           <div className="settings-label">写入前确认</div>
                           <div className="settings-help">AI 创建/修改事项前展示预览卡，确认后才落库；AI 永远不能删除事项。</div>
                         </div>
-                        <Toggle on={confirmWrites} onChange={setConfirmWrites} />
+                        <Toggle on={preferences.confirmAiWrites} onChange={(value) => updatePreferences({ confirmAiWrites: value })} />
                       </div>
                       <div className="settings-row">
                         <div>

@@ -125,3 +125,39 @@ test('loads and migrates a schema-v1 workspace', async () => {
     await closeApp(app, userData)
   }
 })
+
+test('persists user preferences across an app restart', async () => {
+  const userData = await createUserData()
+  let app
+  try {
+    const first = await launchApp(userData)
+    app = first.app
+    const page = first.page
+    const startSeq = Number(await page.locator('.qp-root').getAttribute('data-save-seq'))
+    await page.locator('.icon-btn[title="设置"]').click()
+    const autoLaunch = page.locator('.settings-row', { hasText: '开机自动启动' }).locator('.toggle')
+    await expect(autoLaunch).toHaveAttribute('aria-checked', 'true')
+    await autoLaunch.click()
+    await expect(autoLaunch).toHaveAttribute('aria-checked', 'false')
+    await page.locator('.settings-row', { hasText: '默认展开页' }).locator('select').selectOption('week')
+    await page.locator('.settings-modal .modal-close').click()
+    await expect.poll(async () => Number(await page.locator('.qp-root').getAttribute('data-save-seq'))).toBeGreaterThan(startSeq)
+    await expect.poll(async () => {
+      const raw = await fs.readFile(path.join(userData, 'workspace.json'), 'utf8')
+      return JSON.parse(raw).view
+    }).toBe('week')
+    await closeApp(app, null)
+    app = undefined
+
+    const second = await launchApp(userData)
+    app = second.app
+    const secondPage = second.page
+    await expect(secondPage.locator('.page-title')).toContainText('第 42 周')
+    await secondPage.locator('.icon-btn[title="设置"]').click()
+    await expect(secondPage.locator('.settings-row', { hasText: '开机自动启动' }).locator('.toggle')).toHaveAttribute('aria-checked', 'false')
+    await expect(secondPage.locator('.settings-row', { hasText: '默认展开页' }).locator('select')).toHaveValue('week')
+  } finally {
+    if (app) await closeApp(app, userData)
+    else await fs.rm(userData, { recursive: true, force: true })
+  }
+})

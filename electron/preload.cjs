@@ -47,5 +47,6 @@ contextBridge.exposeInMainWorld('qpanel', {
   },
   app: {
     version: () => ipcRenderer.invoke('app:version'),
+    setAutoLaunch: (enabled) => ipcRenderer.invoke('app:set-auto-launch', enabled),
   },
 })

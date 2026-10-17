@@ -13,6 +13,7 @@ import type {
   Project,
   ReminderDefaults,
   SidebarLabels,
+  UserPreferences,
   ThemeId,
   ViewId,
   WeekTask,
@@ -50,6 +51,7 @@ import type { WorkspaceSnapshot } from './workspace'
 import { chinaQuarter, chinaYear } from './clock'
 import type { CalendarAdjustment } from './calendar'
 import { CALENDAR_ADJUSTMENTS } from './calendar'
+import { DEFAULT_PREFERENCES } from './preferences'
 import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
 import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
@@ -124,6 +126,7 @@ export default function App() {
   })
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
   const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
+  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
   const viewTransitionRef = useRef<{ finished: Promise<void> } | null>(null)
 
   useEffect(() => {
@@ -249,6 +252,9 @@ export default function App() {
       setCalendarAdjustments(adjustments)
       applyCalendarAdjustments(adjustments)
     }
+    if (isRecord(data.preferences)) {
+      setPreferences({ ...DEFAULT_PREFERENCES, ...data.preferences })
+    }
     return true
   }, [])
 
@@ -271,6 +277,7 @@ export default function App() {
     aiModel,
     reminderDefaults,
     calendarAdjustments,
+    preferences,
   }), [
     theme,
     view,
@@ -287,6 +294,7 @@ export default function App() {
     aiModel,
     reminderDefaults,
     calendarAdjustments,
+    preferences,
   ])
 
   useEffect(() => {
@@ -339,6 +347,11 @@ export default function App() {
       showToast(`有 ${entries.length} 条错过的提醒`)
     })
   }, [electronMode, notchMode, showToast])
+
+  useEffect(() => {
+    if (!electronMode) return
+    void window.qpanel?.app.setAutoLaunch(preferences.autoLaunch)
+  }, [electronMode, preferences.autoLaunch])
 
   useEffect(() => {
     if (!electronMode) return
@@ -443,6 +456,11 @@ export default function App() {
     }
     showToast(result.migrated ? '旧版工作区已迁移并导入' : '工作区已导入')
   }
+  const changeAiModel = (model: string) => {
+    setAiModel(model)
+    setAiConfig((current) => ({ ...current, model }))
+  }
+
   const saveAiConfig = async (payload: { baseUrl: string; model: string; apiKey?: string }) => {
     if (!electronMode) {
       setAiModel(payload.model)
@@ -469,39 +487,52 @@ export default function App() {
     if (!electronMode) return { ok: false, error: 'electron_only' }
     const currentKey = quarterKey(year, quarter)
     const week = WEEKS[weekKey]
+    const minimal = preferences.aiScope === 'minimal'
     const context = {
       today: TODAY,
       period: `${year} Q${quarter}`,
       weekKey,
       weekLabel: week ? `第 ${week.num} 周` : '',
       categories: CATEGORIES.map((category) => ({ id: category.id, name: category.name })),
-      quarterObjectives: (objectives[currentKey] ?? []).map((objective) => ({
-        id: objective.id,
-        title: objective.title,
-        categoryId: objective.categoryId,
-        plannedDays: objective.plannedDays,
-        status: objective.status,
-        dueDate: objective.dueDate,
-      })),
-      projects: projects.map((project) => ({
-        id: project.id,
-        title: project.title,
-        categoryId: project.categoryId,
-        status: project.status,
-        startDate: project.startDate,
-        endDate: project.endDate,
-      })),
-      weekTasks: tasks
-        .filter((task) => task.weekKey === weekKey)
-        .map((task) => ({
-          id: task.id,
-          title: task.title,
-          categoryId: task.categoryId,
-          dueDate: task.dueDate,
-          dueTime: task.dueTime,
-          done: task.done,
-          estimateDays: task.estimateDays,
-        })),
+      quarterObjectives: minimal
+        ? []
+        : (objectives[currentKey] ?? []).map((objective) => ({
+            id: objective.id,
+            title: objective.title,
+            categoryId: objective.categoryId,
+            plannedDays: objective.plannedDays,
+            status: objective.status,
+            dueDate: objective.dueDate,
+          })),
+      projects: minimal
+        ? []
+        : projects.map((project) => ({
+            id: project.id,
+            title: project.title,
+            categoryId: project.categoryId,
+            status: project.status,
+            startDate: project.startDate,
+            endDate: project.endDate,
+          })),
+      weekTasks: minimal
+        ? []
+        : tasks
+            .filter((task) => task.weekKey === weekKey)
+            .map((task) => ({
+              id: task.id,
+              title: task.title,
+              categoryId: task.categoryId,
+              dueDate: task.dueDate,
+              dueTime: task.dueTime,
+              done: task.done,
+              estimateDays: task.estimateDays,
+            })),
+      ...(preferences.aiScope === 'all'
+        ? {
+            notes: notes.slice(0, 30).map((note) => ({ id: note.id, title: note.title, content: note.content.slice(0, 800) })),
+            links: links.slice(0, 50).map((link) => ({ id: link.id, title: link.title, url: link.url, description: link.description })),
+          }
+        : {}),
     }
     const result = await window.qpanel?.ai.propose({ prompt, context })
     if (!result?.ok) return { ok: false, error: result?.error ?? 'unknown' }
@@ -516,6 +547,12 @@ export default function App() {
     setSidebarLabels((current) => ({ ...current, [key]: label }))
   }
   const resetSidebarLabels = () => setSidebarLabels(DEFAULT_SIDEBAR_LABELS)
+
+  const updatePreferences = (next: UserPreferences) => {
+    const previousDefault = preferences.defaultView
+    setPreferences(next)
+    if (next.defaultView !== previousDefault) setView(next.defaultView)
+  }
 
   const updateCalendarAdjustments = (next: CalendarAdjustment[]) => {
     const sorted = [...next].sort((a, b) => a.date.localeCompare(b.date))
@@ -1083,7 +1120,9 @@ export default function App() {
           categoryUsage={categoryUsage}
           onDeleteCategory={deleteCategory}
           aiModel={aiModel}
-          onAiModelChange={setAiModel}
+          onAiModelChange={changeAiModel}
+          preferences={preferences}
+          onPreferencesChange={updatePreferences}
           aiConfig={aiConfig}
           onAiConfigSave={saveAiConfig}
           onAiTest={testAiConfig}
