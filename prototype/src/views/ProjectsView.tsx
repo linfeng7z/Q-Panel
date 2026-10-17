@@ -229,17 +229,20 @@ export function ProjectsView({
                 <button
                   key={project.id}
                   type="button"
-                  className="project-overview-row"
+                  className={cn('project-overview-row', status.cls === 'risk' && 'ring-risk')}
                   onClick={() => setSelectedId(project.id)}
                 >
                   <div className="project-row-main">
                     <div className="project-row-title">
                       <span className="dot" style={catStyle(project.categoryId)} />
                       <b>{project.title}</b>
-                      <span className="tag">全局</span>
                       {cross ? <span className="tag risk-tag">跨季度</span> : null}
                       <span className={cn('status', status.cls)}>
-                        <span className="mini-dot" />
+                        {status.cls === 'risk' ? (
+                          <WarningCircle size={10} weight="fill" className="risk-icon" />
+                        ) : (
+                          <span className="mini-dot" />
+                        )}
                         {status.label}
                       </span>
                     </div>
@@ -356,7 +359,6 @@ function ProjectDetail({
             {fmtDays(quarterDays)} 人日
           </p>
           <div className="project-scope-line">
-            <span className="tag">全局项目</span>
             {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
             {project.reminder ? <span className="tag">提醒 {project.reminder}</span> : null}
             <span>
