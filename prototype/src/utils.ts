@@ -1,5 +1,5 @@
 import type { Objective, Project, ProjectWorkItem, WeekTask } from './types'
-import { NOW, WEEKS } from './data/mock'
+import { NOW, TODAY, WEEKS } from './data/mock'
 
 export function cn(...xs: Array<string | false | null | undefined>): string {
   return xs.filter(Boolean).join(' ')
@@ -27,7 +27,7 @@ export function isOverdue(task: WeekTask): boolean {
 }
 
 export function isToday(task: WeekTask): boolean {
-  return task.dueDate === '2026-10-17'
+  return task.dueDate === TODAY
 }
 
 export function projectProgress(project: Project): number {

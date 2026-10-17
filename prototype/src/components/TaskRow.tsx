@@ -1,6 +1,6 @@
 import { Clock, Target } from '@phosphor-icons/react'
 import type { Objective, Project, WeekTask } from '../types'
-import { getCategory } from '../data/mock'
+import { TODAY, getCategory } from '../data/mock'
 import { cn, fmtDays, fmtDue, isOverdue } from '../utils'
 import { catStyle } from './ui'
 import { CheckBox } from './ui'
@@ -22,7 +22,7 @@ function shortReminder(value?: string): string {
 export function TaskRow({ task, project, objective, onToggle, onHover, related, dimmed }: TaskRowProps) {
   const category = getCategory(task.categoryId)
   const overdue = isOverdue(task)
-  const today = task.dueDate === '2026-10-17'
+  const today = task.dueDate === TODAY
   const dueLabel = fmtDue(task.dueDate, task.dueTime)
 
   return (

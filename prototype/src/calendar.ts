@@ -279,3 +279,70 @@ export function weekStats(startISO: string, endISO: string): CalendarWeekStats {
   const stats = periodStats(startISO, endISO)
   return { workdays: stats.workdays, leaveDays: stats.leaveDays, available: stats.available }
 }
+
+
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+export interface IsoWeekInfo {
+  key: string
+  num: number
+  start: string
+  end: string
+  range: string
+  note?: string
+}
+
+export function isoWeekKey(dateISO: string): string {
+  return isoWeekInfo(dateISO).key
+}
+
+export function isoWeekInfo(dateISO: string): IsoWeekInfo {
+  const date = utcDate(dateISO)
+  const day = (date.getUTCDay() + 6) % 7
+  const monday = new Date(date)
+  monday.setUTCDate(date.getUTCDate() - day)
+  const thursday = new Date(monday)
+  thursday.setUTCDate(monday.getUTCDate() + 3)
+  const weekYear = thursday.getUTCFullYear()
+  const jan4 = new Date(Date.UTC(weekYear, 0, 4))
+  const jan4Day = (jan4.getUTCDay() + 6) % 7
+  const firstMonday = new Date(jan4)
+  firstMonday.setUTCDate(jan4.getUTCDate() - jan4Day)
+  const num = Math.round((monday.getTime() - firstMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1
+  const sunday = new Date(monday)
+  sunday.setUTCDate(monday.getUTCDate() + 6)
+  const start = isoFromUtc(monday)
+  const end = isoFromUtc(sunday)
+  return {
+    key: `${weekYear}-W${pad2(num)}`,
+    num,
+    start,
+    end,
+    range: `${start.slice(5, 7)}/${start.slice(8, 10)} – ${end.slice(5, 7)}/${end.slice(8, 10)}`,
+  }
+}
+
+export function generateWeeks(startISO: string, endISO: string): IsoWeekInfo[] {
+  const weeks: IsoWeekInfo[] = []
+  let current = isoWeekInfo(startISO).start
+  while (current <= endISO) {
+    const info = isoWeekInfo(current)
+    if (info.end < startISO) {
+      current = addUtcDays(info.end, 1)
+      continue
+    }
+    const infoStart = utcDate(info.start)
+    const infoEnd = utcDate(info.end)
+    const startMonth = infoStart.getUTCMonth() + 1
+    const endMonth = infoEnd.getUTCMonth() + 1
+    const startYear = infoStart.getUTCFullYear()
+    const endYear = infoEnd.getUTCFullYear()
+    if (startYear !== endYear) info.note = '跨年周'
+    else if (Math.floor((startMonth - 1) / 3) !== Math.floor((endMonth - 1) / 3)) info.note = '跨季度'
+    weeks.push(info)
+    current = addUtcDays(info.end, 1)
+  }
+  return weeks
+}

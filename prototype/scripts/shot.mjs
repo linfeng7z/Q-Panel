@@ -24,7 +24,9 @@ async function shot(name) {
 }
 
 async function goto(query) {
-  await page.goto(base + query, { waitUntil: 'networkidle' })
+  const params = new URLSearchParams(query.replace(/^\?/, ''))
+  params.set('now', '2026-10-17T19:22:00+08:00')
+  await page.goto(`${base}?${params.toString()}`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(450)
 }
 

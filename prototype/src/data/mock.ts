@@ -3,12 +3,15 @@ import {
   CHINA_HOLIDAYS,
   CHINA_MAKEUP_DAYS,
   calendarDay,
+  generateWeeks,
+  isoWeekKey,
   monthStats as computeMonthStats,
   quarterStats as computeQuarterStats,
   setCalendarAdjustments,
   weekStats as computeWeekStats,
 } from '../calendar'
 import type { CalendarAdjustment } from '../calendar'
+import { APP_NOW, APP_TODAY, chinaQuarter, chinaYear } from '../clock'
 import type {
   Category,
   CategoryId,
@@ -22,9 +25,14 @@ import type {
   WeekTask,
 } from '../types'
 
-/** The prototype is frozen at Saturday, 2026-10-17 19:22 (Asia/Shanghai). */
-export const NOW = new Date('2026-10-17T19:22:00+08:00')
-export const TODAY = '2026-10-17'
+/**
+ * Real app clock. The web prototype and E2E tests can freeze it with
+ * `?now=2026-10-17T19:22:00+08:00`.
+ */
+export const NOW = APP_NOW
+export const TODAY = APP_TODAY
+export const CURRENT_WEEK_KEY = isoWeekKey(TODAY)
+export const CURRENT_QUARTER_KEY = `${chinaYear(NOW)}-Q${chinaQuarter(NOW)}`
 
 export const CATEGORIES: Category[] = [
   { id: 'appsec', name: '应用安全', colorVar: '--cat-appsec' },
@@ -285,33 +293,21 @@ export const PROJECTS: Project[] = [
   },
 ]
 
-export const WEEKS: Record<string, WeekMeta> = {
-  '2026-W40': { key: '2026-W40', num: 40, start: '2026-09-28', end: '2026-10-04', range: '09/28 – 10/04', workdays: 3, leaveDays: 0, note: '跨季度' },
-  '2026-W41': { key: '2026-W41', num: 41, start: '2026-10-05', end: '2026-10-11', range: '10/05 – 10/11', workdays: 3, leaveDays: 0 },
-  '2026-W42': { key: '2026-W42', num: 42, start: '2026-10-12', end: '2026-10-18', range: '10/12 – 10/18', workdays: 5, leaveDays: 0 },
-  '2026-W43': { key: '2026-W43', num: 43, start: '2026-10-19', end: '2026-10-25', range: '10/19 – 10/25', workdays: 5, leaveDays: 2 },
-  '2026-W44': { key: '2026-W44', num: 44, start: '2026-10-26', end: '2026-11-01', range: '10/26 – 11/01', workdays: 5, leaveDays: 0 },
-  '2026-W45': { key: '2026-W45', num: 45, start: '2026-11-02', end: '2026-11-08', range: '11/02 – 11/08', workdays: 5, leaveDays: 0 },
-  '2026-W46': { key: '2026-W46', num: 46, start: '2026-11-09', end: '2026-11-15', range: '11/09 – 11/15', workdays: 5, leaveDays: 0 },
-  '2026-W47': { key: '2026-W47', num: 47, start: '2026-11-16', end: '2026-11-22', range: '11/16 – 11/22', workdays: 5, leaveDays: 0 },
-  '2026-W48': { key: '2026-W48', num: 48, start: '2026-11-23', end: '2026-11-29', range: '11/23 – 11/29', workdays: 5, leaveDays: 0 },
-  '2026-W49': { key: '2026-W49', num: 49, start: '2026-11-30', end: '2026-12-06', range: '11/30 – 12/06', workdays: 5, leaveDays: 0 },
-  '2026-W50': { key: '2026-W50', num: 50, start: '2026-12-07', end: '2026-12-13', range: '12/07 – 12/13', workdays: 5, leaveDays: 0 },
-  '2026-W51': { key: '2026-W51', num: 51, start: '2026-12-14', end: '2026-12-20', range: '12/14 – 12/20', workdays: 5, leaveDays: 0 },
-  '2026-W52': { key: '2026-W52', num: 52, start: '2026-12-21', end: '2026-12-27', range: '12/21 – 12/27', workdays: 5, leaveDays: 0 },
-  '2027-W01': { key: '2027-W01', num: 1, start: '2026-12-28', end: '2027-01-03', range: '12/28 – 01/03', workdays: 5, leaveDays: 0, note: '跨年周 · 2027 按工作日估算' },
-  '2027-W02': { key: '2027-W02', num: 2, start: '2027-01-04', end: '2027-01-10', range: '01/04 – 01/10', workdays: 5, leaveDays: 0 },
-  '2027-W03': { key: '2027-W03', num: 3, start: '2027-01-11', end: '2027-01-17', range: '01/11 – 01/17', workdays: 5, leaveDays: 0 },
-  '2027-W04': { key: '2027-W04', num: 4, start: '2027-01-18', end: '2027-01-24', range: '01/18 – 01/24', workdays: 5, leaveDays: 0 },
-  '2027-W05': { key: '2027-W05', num: 5, start: '2027-01-25', end: '2027-01-31', range: '01/25 – 01/31', workdays: 5, leaveDays: 0 },
-  '2027-W06': { key: '2027-W06', num: 6, start: '2027-02-01', end: '2027-02-07', range: '02/01 – 02/07', workdays: 5, leaveDays: 0 },
-}
-
-for (const meta of Object.values(WEEKS)) {
-  const stats = computeWeekStats(meta.start, meta.end)
-  meta.workdays = stats.workdays
-  meta.leaveDays = stats.leaveDays
-}
+export const WEEKS: Record<string, WeekMeta> = Object.fromEntries(
+  generateWeeks('2025-01-01', '2028-12-31').map((info) => [
+    info.key,
+    {
+      key: info.key,
+      num: info.num,
+      start: info.start,
+      end: info.end,
+      range: info.range,
+      workdays: 0,
+      leaveDays: 0,
+      ...(info.note ? { note: info.note } : {}),
+    } satisfies WeekMeta,
+  ]),
+)
 
 export const WEEK_ORDER = Object.keys(WEEKS)
 
@@ -572,3 +568,5 @@ export function applyCalendarAdjustments(adjustments: CalendarAdjustment[]): voi
     row.available = next.available
   }
 }
+
+applyCalendarAdjustments(CALENDAR_ADJUSTMENTS)

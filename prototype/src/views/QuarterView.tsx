@@ -13,6 +13,7 @@ import {
 import type { CategoryId, CreateMode, Objective, Project } from '../types'
 import {
   CATEGORIES,
+  CURRENT_QUARTER_KEY,
   QUARTER_STATS,
   TODAY,
   dayInfo,
@@ -104,7 +105,7 @@ export function QuarterView({
         .reduce((sum, { item }) => sum + item.plannedDays, 0),
   })).filter((segment) => segment.days > 0)
 
-  const currentKey = '2026-Q4'
+  const currentKey = CURRENT_QUARTER_KEY
   const yearQuarters = [1, 2, 3, 4].map((q) => {
     const quarterKeyValue = quarterKey(year, q)
     const quarterStats = QUARTER_STATS[quarterKeyValue]

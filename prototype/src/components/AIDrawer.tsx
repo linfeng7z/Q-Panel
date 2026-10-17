@@ -7,7 +7,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import type { AiProposalTask, CategoryId } from '../types'
-import { getCategory } from '../data/mock'
+import { TODAY, getCategory } from '../data/mock'
 import { fmtDue } from '../utils'
 import { catStyle } from './ui'
 
@@ -96,7 +96,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
             proposal: {
               title: '变更提案 · 创建 3 条周事项',
               tasks: [
-                proposalTask('输出等保差距分析初稿', 'appsec', '2026-10-17', '23:30', 0.75, 'o1', 'p1'),
+                proposalTask('输出等保差距分析初稿', 'appsec', TODAY, '23:30', 0.75, 'o1', 'p1'),
                 proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
                 proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
               ],

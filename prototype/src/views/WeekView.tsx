@@ -9,7 +9,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode, Objective, Project, WeekTask } from '../types'
-import { CATEGORIES, TODAY, WEEKDAY_CN, WEEKS, dayInfo, getCategory } from '../data/mock'
+import { CATEGORIES, CURRENT_WEEK_KEY, TODAY, WEEKDAY_CN, WEEKS, dayInfo, getCategory } from '../data/mock'
 import {
   cn,
   doneDaysOf,
@@ -68,7 +68,7 @@ export function WeekView({
   onManageCategories,
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
-  const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
+  const meta = WEEKS[weekKey] ?? WEEKS[CURRENT_WEEK_KEY]
   const [relationTaskId, setRelationTaskId] = useState<string | null>(null)
   const relationTask = relationTaskId ? tasks.find((task) => task.id === relationTaskId) ?? null : null
   const relationObjectiveId = relationTask?.objectiveId

@@ -13,7 +13,7 @@ const results = []
 const check = (name, ok) => { results.push({ name, ok }); console.log(ok ? 'OK ' : 'FAIL', name) }
 const shot = async (name) => { await page.screenshot({ path: `${outDir}${name}.png` }); console.log('shot', name) }
 
-await page.goto('http://127.0.0.1:5178/?view=quarter&theme=noir&noreminder=1', { waitUntil: 'networkidle' })
+await page.goto('http://127.0.0.1:5178/?view=quarter&theme=noir&noreminder=1&now=2026-10-17T19:22:00%2B08:00', { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
 check('sidebar grouped with 6 items', await page.locator('.sidebar .nav-item').count() === 6)
 check('sidebar has 2 content-matched groups', await page.locator('.sidebar .side-label').count() === 2)

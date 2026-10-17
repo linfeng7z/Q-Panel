@@ -31,6 +31,7 @@ function rendererUrl() {
     const url = new URL(process.env.Q_PANEL_DEV_URL)
     url.searchParams.set('electron', '1')
     url.searchParams.set('noreminder', '1')
+    if (process.env.Q_PANEL_NOW) url.searchParams.set('now', process.env.Q_PANEL_NOW)
     return url.toString()
   }
   return null
@@ -154,7 +155,11 @@ function createWindow() {
   if (devUrl) mainWindow.loadURL(devUrl)
   else {
     mainWindow.loadFile(rendererFile(), {
-      query: { electron: '1', noreminder: '1' },
+      query: {
+        electron: '1',
+        noreminder: '1',
+        ...(process.env.Q_PANEL_NOW ? { now: process.env.Q_PANEL_NOW } : {}),
+      },
     })
   }
 }
@@ -208,7 +213,12 @@ function createNotchWindow() {
     notchWindow.loadURL(url.toString())
   } else {
     notchWindow.loadFile(rendererFile(), {
-      query: { electron: '1', notch: '1', noreminder: '1' },
+      query: {
+        electron: '1',
+        notch: '1',
+        noreminder: '1',
+        ...(process.env.Q_PANEL_NOW ? { now: process.env.Q_PANEL_NOW } : {}),
+      },
     })
   }
 }

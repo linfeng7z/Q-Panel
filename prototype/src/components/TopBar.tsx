@@ -11,6 +11,7 @@ import {
   Sparkle,
 } from '@phosphor-icons/react'
 import {
+  CURRENT_WEEK_KEY,
   OBJECTIVES,
   QUARTER_STATS,
   WEEK_ORDER,
@@ -63,7 +64,7 @@ export function TopBar({
   const [weekOpen, setWeekOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const weekRef = useRef<HTMLDivElement>(null)
-  const weekMeta = WEEKS[weekKey] ?? WEEKS['2026-W42']
+  const weekMeta = WEEKS[weekKey] ?? WEEKS[CURRENT_WEEK_KEY]
   const weekIndex = WEEK_ORDER.indexOf(weekKey)
   const quarterWeeks = WEEK_ORDER.filter((key) => {
     const meta = WEEKS[key]
@@ -255,8 +256,8 @@ export function TopBar({
               </button>
               <button
                 type="button"
-                className={cn('top-week-today', weekKey === '2026-W42' && 'active')}
-                onClick={() => onWeekChange('2026-W42')}
+                className={cn('top-week-today', weekKey === CURRENT_WEEK_KEY && 'active')}
+                onClick={() => onWeekChange(CURRENT_WEEK_KEY)}
                 title="回到本周"
               >
                 本周
@@ -270,7 +271,7 @@ export function TopBar({
                       type="button"
                       className="week-pop-today"
                       onClick={() => {
-                        onWeekChange('2026-W42')
+                        onWeekChange(CURRENT_WEEK_KEY)
                         setWeekOpen(false)
                       }}
                     >

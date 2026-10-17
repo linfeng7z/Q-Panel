@@ -22,6 +22,8 @@ import {
   NOTES,
   OBJECTIVES,
   PROJECTS,
+  CURRENT_WEEK_KEY,
+  NOW,
   TODAY,
   WEEKS,
   CATEGORIES,
@@ -43,6 +45,7 @@ import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
 import type { WorkspaceSnapshot } from './workspace'
+import { chinaQuarter, chinaYear } from './clock'
 import type { CalendarAdjustment } from './calendar'
 import { CALENDAR_ADJUSTMENTS } from './calendar'
 import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
@@ -69,7 +72,7 @@ function firstWeekKeyForQuarter(year: number, quarter: number): string | undefin
 
 function weekKeyForDate(date: string): string {
   const found = Object.values(WEEKS).find((week) => date >= week.start && date <= week.end)
-  return found?.key ?? '2026-W42'
+  return found?.key ?? CURRENT_WEEK_KEY
 }
 
 function quarterEndDate(year: number, quarter: number): string {
@@ -100,9 +103,9 @@ export default function App() {
   const [hydrated, setHydrated] = useState(!electronMode)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [saveSequence, setSaveSequence] = useState(0)
-  const [year, setYear] = useState(2026)
-  const [quarter, setQuarter] = useState(4)
-  const [weekKey, setWeekKey] = useState('2026-W42')
+  const [year, setYear] = useState(chinaYear(NOW))
+  const [quarter, setQuarter] = useState(chinaQuarter(NOW))
+  const [weekKey, setWeekKey] = useState(CURRENT_WEEK_KEY)
   const [tasks, setTasks] = useState<WeekTask[]>(INITIAL_TASKS)
   const [objectives, setObjectives] = useState<Record<string, Objective[]>>(OBJECTIVES)
   const [projects, setProjects] = useState<Project[]>(PROJECTS)
@@ -161,8 +164,8 @@ export default function App() {
   const toastTimer = useRef<number | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const sideWeekKey = view === 'week' ? weekKey : '2026-W42'
-  const sideWeekMeta = WEEKS[sideWeekKey] ?? WEEKS['2026-W42']
+  const sideWeekKey = view === 'week' ? weekKey : CURRENT_WEEK_KEY
+  const sideWeekMeta = WEEKS[sideWeekKey] ?? WEEKS[CURRENT_WEEK_KEY]
   const sideWeekTasks = tasks.filter((task) => task.weekKey === sideWeekKey)
   const sideWeekProjectItems = projectWorkItemsForWeek(projects, sideWeekKey)
   const weekAvailable = sideWeekMeta.workdays - sideWeekMeta.leaveDays
@@ -174,7 +177,8 @@ export default function App() {
     (task) => !task.done && (task.dueDate === TODAY || isOverdue(task)),
   ).length
   const periodObjectives = objectives[quarterKey(year, quarter)] ?? []
-  const reminderObjective = (objectives['2026-Q4'] ?? []).find((objective) => objective.id === 'o1')
+  const currentQuarterKey = `${chinaYear(NOW)}-Q${chinaQuarter(NOW)}`
+  const reminderObjective = (objectives[currentQuarterKey] ?? []).find((objective) => objective.id === 'o1')
 
   const changeWeek = (key: string) => {
     setWeekKey(key)
@@ -586,7 +590,7 @@ export default function App() {
       categoryId: data.categoryId,
       description: data.description || '新建长期项目。',
       span: `2026.10 – ${targetYear}.${String(targetMonth).padStart(2, '0')}`,
-      startDate: '2026-10-17',
+      startDate: TODAY,
       endDate: data.targetDate,
       endTime: data.targetTime,
       reminder:
@@ -612,7 +616,7 @@ export default function App() {
     const stamp = Date.now()
     const newTasks: WeekTask[] = proposal.map((task, index) => ({
       id: `t-ai-${stamp}-${index}`,
-      weekKey: '2026-W42',
+      weekKey: CURRENT_WEEK_KEY,
       title: task.title,
       categoryId: task.categoryId,
       dueDate: task.dueDate,
@@ -627,7 +631,7 @@ export default function App() {
   }
 
   const moveOverdue = (ids: string[]) => {
-    const weekEnd = WEEKS[weekKey]?.end ?? WEEKS['2026-W42'].end
+    const weekEnd = WEEKS[weekKey]?.end ?? WEEKS[CURRENT_WEEK_KEY].end
     setTasks((value) =>
       value.map((task) =>
         ids.includes(task.id)
@@ -641,7 +645,7 @@ export default function App() {
   const completeReminder = () => {
     setObjectives((value) => ({
       ...value,
-      '2026-Q4': (value['2026-Q4'] ?? []).map((objective) =>
+      [currentQuarterKey]: (value[currentQuarterKey] ?? []).map((objective) =>
         objective.id === 'o1' ? { ...objective, progress: 100, status: 'done' } : objective,
       ),
     }))
@@ -707,7 +711,7 @@ export default function App() {
       ? quarterEndDate(year, quarter)
       : createMode === 'project'
         ? '2026-12-31'
-        : view === 'week' && weekKey !== '2026-W42'
+        : view === 'week' && weekKey !== CURRENT_WEEK_KEY
           ? WEEKS[weekKey]?.end ?? TODAY
           : TODAY
 

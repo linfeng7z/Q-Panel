@@ -24,6 +24,8 @@ import {
   sumDays,
 } from '../utils'
 import { Card, Donut, Progress, catStyle } from '../components/ui'
+import { chinaQuarter, chinaYear } from '../clock'
+import { NOW } from '../data/mock'
 import { CountUp } from '../components/CountUp'
 
 interface StatsViewProps {
@@ -67,7 +69,7 @@ export function StatsView({ year, quarter, projects }: StatsViewProps) {
   })).filter((segment) => segment.days > 0)
   const firstMonth = quarter * 3 - 2
   const months = [firstMonth, firstMonth + 1, firstMonth + 2]
-  const isQ4 = year === 2026 && quarter === 4
+  const isQ4 = year === chinaYear(NOW) && quarter === chinaQuarter(NOW)
   const monthRows = isQ4
     ? MONTH_STATS
     : months.map((month) => {

@@ -11,7 +11,7 @@ import {
   WarningCircle,
 } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
-import { CATEGORIES, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
+import { CATEGORIES, CURRENT_WEEK_KEY, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
 import {
   cn,
   fmtDateTime,
@@ -318,6 +318,11 @@ function ProjectDetail({
     items: project.workItems.filter((item) => item.weekKey === key),
   })).filter((group) => group.items.length > 0)
 
+  const projectWeekOptions = WEEK_ORDER.filter(
+    (key) => WEEKS[key].end >= project.startDate && WEEKS[key].start <= project.endDate,
+  )
+  const weekOptions = projectWeekOptions.length > 0 ? projectWeekOptions : [CURRENT_WEEK_KEY]
+
   const updateItem = (id: string, patch: Partial<ProjectWorkItem>) => {
     onChange({
       ...project,
@@ -330,7 +335,7 @@ function ProjectDetail({
       id: `wi-${Date.now()}`,
       title: '新工作项',
       plannedDays: 0.5,
-      weekKey: '2026-W42',
+      weekKey: CURRENT_WEEK_KEY,
       status: 'todo',
     }
     onChange({ ...project, workItems: [...project.workItems, item] })
@@ -371,7 +376,7 @@ function ProjectDetail({
           <button
             type="button"
             className="btn ghost"
-            onClick={() => onOpenWeek(project.workItems[0]?.weekKey ?? '2026-W42')}
+            onClick={() => onOpenWeek(project.workItems[0]?.weekKey ?? CURRENT_WEEK_KEY)}
           >
             <CalendarDots size={14} />
             打开本周安排
@@ -496,7 +501,7 @@ function ProjectDetail({
                   value={item.weekKey}
                   onChange={(event) => updateItem(item.id, { weekKey: event.target.value })}
                 >
-                  {WEEK_ORDER.map((key) => (
+                  {weekOptions.map((key) => (
                     <option value={key} key={key}>
                       {weekLabel(key)} · {WEEKS[key].range}
                     </option>
