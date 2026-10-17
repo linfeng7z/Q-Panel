@@ -29,6 +29,8 @@ cd electron && npm run dev
 - **本地工作区**：首次启动从示例数据初始化，之后原子写入 `workspace.json`；
 - **每日备份**：`backups/workspace-YYYY-MM-DD.json`，保留最近 14 天；
 - **完整 UI**：四套皮肤、季度/周/项目/统计/笔记/链接/设置/AI 抽屉/⌘K 都能在原生壳内使用；
+- **提醒调度**：解析工作区里的周事项/季度任务/项目提醒，主进程定时器到点发 macOS 通知，同时把提醒条目推给渲染层弹窗；
+- **提醒动作**：完成会写回任务/季度任务/项目状态；稍后入口保留；设置里的「测试」可走完整 IPC 链路；
 - **安全默认**：`contextIsolation` + `sandbox` + `nodeIntegration: false`，preload 只暴露工作区、窗口和刘海白名单；外部 http(s) 链接交给系统浏览器。
 
 数据目录默认是 `~/Library/Application Support/Q-Panel/`。测试可用 `Q_PANEL_USER_DATA` 指向临时目录；测试模式不会碰到真实工作区。
@@ -39,12 +41,20 @@ cd electron && npm run dev
 npm test
 ```
 
-Playwright Electron E2E 覆盖：
+测试分两层：
+
+- `npm run test:unit`：提醒规则解析、工作区提醒提取、已完成事项过滤；
+- `npm test`：先跑单测，再跑 Playwright Electron E2E。
+
+Electron E2E 覆盖：
 
 - 原生面板启动，模拟桌面/MenuBar 不存在；
 - App 标题、Hydration、自动保存；
 - 新增收藏链接 → 关闭 → 重启后仍然存在；
-- `Escape` 收起 → 刘海窗口出现 → 点击刘海重新展开。
+- `Escape` 收起 → 刘海窗口出现 → 点击刘海重新展开；
+- 六页面导航、四皮肤、⌘K；
+- 新建周事项、项目详情、设置、笔记；
+- 原生提醒 IPC → 应用内提醒弹窗。
 
 ## 打包
 

@@ -79,6 +79,26 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('receives a native reminder through IPC', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    const errors = collectPageErrors(page)
+    try {
+      await page.locator('.icon-btn[title="设置"]').click()
+      await expect(page.locator('.settings-modal')).toBeVisible()
+      await page.locator('.settings-tab:has-text("提醒")').click()
+      await page.getByRole('button', { name: '测试' }).click()
+      await expect(page.locator('.reminder')).toBeVisible()
+      await expect(page.locator('.reminder')).toContainText('提醒链路验证')
+      await expect(page.locator('.reminder')).toContainText('2026-10-31 18:00')
+      await page.locator('.reminder-close').click()
+      await expect(page.locator('.reminder')).toHaveCount(0)
+      expect(errors).toEqual([])
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('opens project detail, settings and notes without errors', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

@@ -20,6 +20,7 @@ export async function launchApp(userData) {
       ...process.env,
       ELECTRON_RUN_AS_NODE: '',
       Q_PANEL_USER_DATA: userData,
+      Q_PANEL_NO_NOTIFICATIONS: '1',
     },
     timeout: 60_000,
   })

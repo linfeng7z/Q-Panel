@@ -20,6 +20,14 @@ contextBridge.exposeInMainWorld('qpanel', {
       return () => ipcRenderer.removeListener('workspace:saved', listener)
     },
   },
+  reminders: {
+    test: () => ipcRenderer.invoke('reminders:test'),
+    onDue: (callback) => {
+      const listener = (_event, entry) => callback(entry)
+      ipcRenderer.on('reminders:due', listener)
+      return () => ipcRenderer.removeListener('reminders:due', listener)
+    },
+  },
   app: {
     version: () => ipcRenderer.invoke('app:version'),
   },

@@ -151,6 +151,7 @@ export default function App() {
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('general')
   const [categoryVersion, setCategoryVersion] = useState(0)
   const [reminderOpen, setReminderOpen] = useState(false)
+  const [nativeReminder, setNativeReminder] = useState<QPanelReminderEntry | null>(null)
   const [createMode, setCreateMode] = useState<CreateMode | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
@@ -260,6 +261,11 @@ export default function App() {
     })
     return unsubscribe
   }, [applyWorkspace, electronMode, notchMode])
+
+  useEffect(() => {
+    if (!electronMode || notchMode) return
+    return window.qpanel?.reminders.onDue((entry) => setNativeReminder(entry))
+  }, [electronMode, notchMode])
 
   useEffect(() => {
     if (!electronMode || notchMode || !hydrated) return
@@ -618,6 +624,60 @@ export default function App() {
     showToast('已标记完成：等保 2.0 差距分析闭环')
   }
 
+  const testReminder = () => {
+    if (electronMode) {
+      void window.qpanel?.reminders.test()
+      return
+    }
+    setReminderOpen(true)
+  }
+
+  const completeNativeReminder = () => {
+    if (!nativeReminder) return
+    if (nativeReminder.kind === 'task') {
+      setTasks((value) =>
+        value.map((task) => (task.id === nativeReminder.id ? { ...task, done: true } : task)),
+      )
+    } else if (nativeReminder.kind === 'objective') {
+      setObjectives((value) =>
+        Object.fromEntries(
+          Object.entries(value).map(([key, list]) => [
+            key,
+            list.map((objective) =>
+              objective.id === nativeReminder.id
+                ? { ...objective, progress: 100, status: 'done' }
+                : objective,
+            ),
+          ]),
+        ),
+      )
+    } else {
+      setProjects((value) =>
+        value.map((project) =>
+          project.id === nativeReminder.id ? { ...project, status: 'done' } : project,
+        ),
+      )
+    }
+    showToast(`已标记完成：${nativeReminder.title}`)
+    setNativeReminder(null)
+  }
+
+  const openNativeReminder = () => {
+    if (!nativeReminder) return
+    if (nativeReminder.kind === 'task') {
+      changeWeek(weekKeyForDate(nativeReminder.dueDate))
+      setView('week')
+    } else if (nativeReminder.kind === 'project') {
+      setView('projects')
+    } else {
+      const dueMonth = Number(nativeReminder.dueDate.slice(5, 7))
+      setYear(Number(nativeReminder.dueDate.slice(0, 4)))
+      setQuarter(Math.floor((dueMonth - 1) / 3) + 1)
+      setView('quarter')
+    }
+    setNativeReminder(null)
+  }
+
   const defaultCreateDate =
     createMode === 'objective'
       ? quarterEndDate(year, quarter)
@@ -851,7 +911,7 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
           theme={theme}
           onTheme={changeTheme}
-          onTestReminder={() => setReminderOpen(true)}
+          onTestReminder={testReminder}
           onToast={showToast}
           initialTab={settingsInitialTab}
           onAddCategory={handleAddCategory}
@@ -882,7 +942,29 @@ export default function App() {
         />
       ) : null}
 
-      {reminderOpen && reminderObjective ? (
+      {nativeReminder ? (
+        <ReminderPopup
+          title={nativeReminder.title}
+          categoryName={getCategory((nativeReminder.categoryId ?? 'other') as CategoryId).name}
+          kindLabel={
+            nativeReminder.kind === 'task'
+              ? '本周事项'
+              : nativeReminder.kind === 'project'
+                ? '全局项目'
+                : '季度任务'
+          }
+          dueDate={nativeReminder.dueDate}
+          dueTime={nativeReminder.dueTime}
+          reminder={nativeReminder.reminder}
+          onClose={() => setNativeReminder(null)}
+          onComplete={completeNativeReminder}
+          onSnooze={() => {
+            showToast('已稍后提醒：10 分钟后再弹一次')
+            setNativeReminder(null)
+          }}
+          onOpen={openNativeReminder}
+        />
+      ) : reminderOpen && reminderObjective ? (
         <ReminderPopup
           title={reminderObjective.title}
           categoryName={getCategory(reminderObjective.categoryId).name}

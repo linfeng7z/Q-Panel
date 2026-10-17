@@ -5,6 +5,7 @@ import { fmtDateTime } from '../utils'
 interface ReminderPopupProps {
   title: string
   categoryName: string
+  kindLabel?: string
   dueDate: string
   dueTime?: string
   reminder?: string
@@ -17,6 +18,7 @@ interface ReminderPopupProps {
 export function ReminderPopup({
   title,
   categoryName,
+  kindLabel = '季度任务',
   dueDate,
   dueTime,
   reminder,
@@ -45,7 +47,7 @@ export function ReminderPopup({
               </div>
               <div className="reminder-title">{title}</div>
               <div className="reminder-meta">
-                <span>季度任务 · {categoryName}</span>
+                <span>{kindLabel} · {categoryName}</span>
                 <span className="sep" />
                 <span className="num">截止 {fmtDateTime(dueDate, dueTime)}</span>
               </div>

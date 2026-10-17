@@ -1,6 +1,7 @@
-import { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
+import { app, BrowserWindow, Menu, Notification, Tray, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ReminderScheduler } from './lib/reminders.mjs'
 import { WorkspaceStore } from './lib/store.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -20,6 +21,7 @@ let mainWindow = null
 let notchWindow = null
 let tray = null
 let store = null
+let reminderScheduler = null
 
 const NOTCH_WIDTH = 210
 const NOTCH_HEIGHT = 38
@@ -70,6 +72,32 @@ function toggleWindow() {
   if (!mainWindow) return
   if (mainWindow.isVisible()) hideWindow()
   else showWindow()
+}
+
+function sendReminderToPanel(entry) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('reminders:due', entry)
+  }
+}
+
+function showReminderNotification(entry) {
+  if (process.env.Q_PANEL_NO_NOTIFICATIONS === '1') return
+  if (!Notification.isSupported()) return
+  const notification = new Notification({
+    title: 'Q-Panel 提醒',
+    body: `${entry.title}\n截止 ${entry.dueDate} ${entry.dueTime}`,
+    silent: false,
+  })
+  notification.on('click', () => {
+    showWindow()
+    sendReminderToPanel(entry)
+  })
+  notification.show()
+}
+
+function handleReminderDue(entry) {
+  showReminderNotification(entry)
+  sendReminderToPanel(entry)
 }
 
 function createWindow() {
@@ -204,12 +232,17 @@ function createTray() {
 function registerIpc() {
   ipcMain.handle('workspace:load', async () => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
-    return store.load()
+    const result = await store.load()
+    if (result.ok && result.data) reminderScheduler?.sync(result.data)
+    return result
   })
   ipcMain.handle('workspace:save', async (_event, payload) => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
     const result = await store.save(payload)
-    if (result.ok) notchWindow?.webContents.send('workspace:saved')
+    if (result.ok) {
+      reminderScheduler?.sync(payload)
+      notchWindow?.webContents.send('workspace:saved')
+    }
     return result
   })
   ipcMain.handle('window:hide', () => {
@@ -227,6 +260,10 @@ function registerIpc() {
   ipcMain.handle('notch:expand', () => {
     showWindow()
     return { ok: true }
+  })
+  ipcMain.handle('reminders:test', () => {
+    const entry = reminderScheduler?.triggerTest()
+    return { ok: true, entry }
   })
   ipcMain.handle('app:version', () => app.getVersion())
 }
@@ -263,6 +300,7 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
   installApplicationMenu()
+  reminderScheduler = new ReminderScheduler({ onDue: handleReminderDue })
   registerIpc()
   createWindow()
   createNotchWindow()
@@ -280,5 +318,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 app.on('will-quit', () => {
+  reminderScheduler?.clear()
   globalShortcut.unregisterAll()
 })

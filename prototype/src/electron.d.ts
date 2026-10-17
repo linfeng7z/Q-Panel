@@ -13,6 +13,19 @@ interface QPanelWorkspaceSaveResult {
   error?: string
 }
 
+interface QPanelReminderEntry {
+  key: string
+  id: string
+  kind: 'task' | 'objective' | 'project'
+  title: string
+  dueDate: string
+  dueTime: string
+  reminder: string
+  categoryId?: string | null
+  dueAt: string
+  remindAt: string
+}
+
 interface QPanelBridge {
   isElectron: true
   platform: string
@@ -31,6 +44,10 @@ interface QPanelBridge {
   }
   app: {
     version: () => Promise<string>
+  }
+  reminders: {
+    test: () => Promise<{ ok: boolean; entry?: QPanelReminderEntry }>
+    onDue: (callback: (entry: QPanelReminderEntry) => void) => () => void
   }
 }
 
