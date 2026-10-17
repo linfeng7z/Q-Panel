@@ -9,6 +9,7 @@ import {
   Sparkle,
 } from '@phosphor-icons/react'
 import { OBJECTIVES, QUARTER_STATS, YEARS, quarterKey, quarterRange } from '../data/mock'
+import { Logo } from './Logo'
 import { quarterLoad } from '../utils'
 import { cn } from '../utils'
 import type { Project } from '../types'
@@ -59,19 +60,11 @@ export function TopBar({
       <div className="topbar-left">
         <div className="brand">
           <span className="brand-mark">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 3.2l7.2 2.7v5.2c0 4.8-3 8.1-7.2 9.7-4.2-1.6-7.2-4.9-7.2-9.7V5.9L12 3.2z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-              <path d="M8.8 12h6.4M12 8.8v6.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <Logo size={19} />
           </span>
           <div>
             <div className="brand-name">Q-Panel</div>
-            <div className="brand-sub">Security Workbench</div>
+            <div className="brand-sub">日常工作台</div>
           </div>
         </div>
 

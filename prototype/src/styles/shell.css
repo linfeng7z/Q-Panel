@@ -99,10 +99,9 @@
   border-radius: 7px;
   display: grid;
   place-items: center;
-  color: #dfe7ff;
-  background: linear-gradient(150deg, rgba(140, 166, 255, 0.28), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
 }
 
 .notch-label {
@@ -257,10 +256,9 @@
   border-radius: 9px;
   display: grid;
   place-items: center;
-  color: #e4eaff;
-  background: linear-gradient(150deg, rgba(146, 172, 255, 0.26), rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--line);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 14px rgba(0, 0, 0, 0.2);
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
 }
 
 .brand-name {
@@ -273,11 +271,10 @@
 
 .brand-sub {
   margin-top: 2px;
-  font-size: 8.5px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  color: var(--text-3);
-  text-transform: uppercase;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
   line-height: 1;
 }
 

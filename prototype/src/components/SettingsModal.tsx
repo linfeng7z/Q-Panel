@@ -10,6 +10,7 @@ import {
   SidebarSimple,
   Sparkle,
   Tag,
+  Trash,
   X,
 } from '@phosphor-icons/react'
 import type { SidebarLabels, ThemeId } from '../types'
@@ -20,6 +21,13 @@ import { TimeSelect } from './TimeSelect'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
+const MODEL_GROUPS = [
+  { label: 'DeepSeek', models: ['deepseek-chat', 'deepseek-reasoner'] },
+  { label: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini'] },
+  { label: '通义千问', models: ['qwen-plus', 'qwen-max'] },
+  { label: 'Ollama', models: ['qwen2.5:14b', 'llama3.1:8b'] },
+]
+
 interface SettingsModalProps {
   onClose: () => void
   theme: ThemeId
@@ -29,6 +37,10 @@ interface SettingsModalProps {
   initialTab?: SettingsTab
   onAddCategory: (name: string, colorVar: string) => void
   onExportWorkspace: () => void
+  categoryUsage: Record<string, number>
+  onDeleteCategory: (categoryId: string) => void
+  aiModel: string
+  onAiModelChange: (model: string) => void
   sidebarLabels: SidebarLabels
   onUpdateSidebarLabel: (key: keyof SidebarLabels, label: string) => void
   onResetSidebarLabels: () => void
@@ -53,6 +65,10 @@ export function SettingsModal({
   initialTab = 'general',
   onAddCategory,
   onExportWorkspace,
+  categoryUsage,
+  onDeleteCategory,
+  aiModel,
+  onAiModelChange,
   sidebarLabels,
   onUpdateSidebarLabel,
   onResetSidebarLabels,
@@ -71,7 +87,6 @@ export function SettingsModal({
   const [defaultView, setDefaultView] = useState('季度规划')
   const [provider, setProvider] = useState('OpenAI 兼容')
   const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
-  const [model, setModel] = useState('deepseek-chat')
   const [apiKey, setApiKey] = useState('sk-••••••••••••••••')
   const [scope, setScope] = useState('摘要（推荐）')
 
@@ -272,7 +287,27 @@ export function SettingsModal({
                               {category.id.startsWith('cat-') ? '自定义分类' : '内置分类'}
                             </div>
                           </div>
-                          <span className="card-meta">{category.id.startsWith('cat-') ? '自定义' : '默认'}</span>
+                          <div className="category-actions">
+                            <span className="card-meta">{categoryUsage[category.id] ?? 0} 项使用</span>
+                            {category.id.startsWith('cat-') ? (
+                              <button
+                                type="button"
+                                className="icon-btn sm"
+                                disabled={(categoryUsage[category.id] ?? 0) > 0}
+                                title={
+                                  (categoryUsage[category.id] ?? 0) > 0
+                                    ? '仍有事项使用该分类，先移动后再删除'
+                                    : '删除分类'
+                                }
+                                onClick={() => onDeleteCategory(category.id)}
+                                aria-label={`删除分类 ${category.name}`}
+                              >
+                                <Trash size={13} />
+                              </button>
+                            ) : (
+                              <span className="card-meta">内置</span>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -336,7 +371,7 @@ export function SettingsModal({
                         </button>
                       </div>
                       <div className="settings-help" style={{ padding: '6px 18px 2px' }}>
-                        当前原型新增分类保存在内存中，刷新页面会恢复默认分类；功能版写入本地工作区。
+                        只删除自定义分类；仍被事项使用的分类需先移走。原型数据刷新后恢复默认。
                       </div>
                     </div>
                   </>
@@ -378,7 +413,7 @@ export function SettingsModal({
                           maxLength={10}
                           onChange={(event) => onUpdateSidebarLabel('archive', event.target.value)}
                           onBlur={(event) => {
-                            if (!event.target.value.trim()) onUpdateSidebarLabel('archive', '回顾与资料')
+                            if (!event.target.value.trim()) onUpdateSidebarLabel('archive', '其它')
                           }}
                           aria-label="侧边栏第二组名称"
                         />
@@ -490,7 +525,17 @@ export function SettingsModal({
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>模型</label>
-                        <input className="input" value={model} onChange={(event) => setModel(event.target.value)} />
+                        <select className="select" value={aiModel} onChange={(event) => onAiModelChange(event.target.value)}>
+                          {MODEL_GROUPS.map((group) => (
+                            <optgroup label={group.label} key={group.label}>
+                              {group.models.map((item) => (
+                                <option value={item} key={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>API KEY</label>

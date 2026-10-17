@@ -142,14 +142,14 @@
 }
 
 .btn.primary {
-  border-color: transparent;
-  background: var(--text-1);
-  color: var(--text-inverse);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  border-color: color-mix(in srgb, var(--info) 34%, var(--line));
+  background: color-mix(in srgb, var(--info) 20%, var(--panel-3));
+  color: var(--text-1);
 }
 
 .btn.primary:hover {
-  background: #ffffff;
+  border-color: color-mix(in srgb, var(--info) 48%, var(--line));
+  background: color-mix(in srgb, var(--info) 30%, var(--panel-3));
 }
 
 .btn.ghost {
@@ -198,7 +198,8 @@
 }
 
 .btn.primary .icon-circle {
-  background: rgba(0, 0, 0, 0.12);
+  background: color-mix(in srgb, var(--info) 20%, transparent);
+  color: var(--text-1);
 }
 
 .btn:disabled {
@@ -2172,4 +2173,22 @@
 
 .sidebar-label-input {
   width: 200px;
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-actions .icon-btn.sm {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+
+.category-actions .icon-btn.sm:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
 }

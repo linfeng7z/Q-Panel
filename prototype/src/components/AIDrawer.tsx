@@ -15,6 +15,7 @@ interface AIDrawerProps {
   onClose: () => void
   onCreateTasks: (tasks: AiProposalTask[]) => void
   onToast: (message: string) => void
+  model: string
 }
 
 interface Message {
@@ -50,7 +51,7 @@ function proposalTask(
   return { title, categoryId, dueDate, dueTime: dueTime ?? '18:00', estimateDays, objectiveId, projectId }
 }
 
-export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
+export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'hello',
@@ -160,7 +161,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
               <div className="ai-title">Q-Panel AI</div>
               <div className="ai-model">
                 <span className="status-dot" />
-                OpenAI 兼容 · deepseek-chat
+                OpenAI 兼容 · {model}
               </div>
             </div>
             <button type="button" className="ai-close" onClick={onClose} aria-label="关闭 AI">

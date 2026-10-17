@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.4.0",
   "type": "module",
-  "description": "Q-Panel clickable UI prototype — security workbench in person-days: quarterly capacity, weekly plan, global projects and AI.",
+  "description": "Q-Panel clickable UI prototype — a cross-industry daily workbench in person-days: quarterly capacity, weekly plan, global projects and AI.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

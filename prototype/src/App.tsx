@@ -20,6 +20,7 @@ import {
   PROJECTS,
   TODAY,
   WEEKS,
+  CATEGORIES,
   addCategory,
   getCategory,
   quarterKey,
@@ -35,6 +36,7 @@ import type { SettingsTab } from './components/SettingsModal'
 import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
+import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
 import { WeekView } from './views/WeekView'
 import { ProjectsView } from './views/ProjectsView'
@@ -44,7 +46,7 @@ import { LinksView } from './views/LinksView'
 
 const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'stats', 'notes', 'links']
 const THEMES: ThemeId[] = ['noir', 'ops']
-const DEFAULT_SIDEBAR_LABELS: SidebarLabels = { plan: '规划与推进', archive: '回顾与资料' }
+const DEFAULT_SIDEBAR_LABELS: SidebarLabels = { plan: '规划与推进', archive: '其它' }
 
 function firstWeekKeyForQuarter(year: number, quarter: number): string | undefined {
   return Object.keys(WEEKS).find((key) => {
@@ -91,6 +93,21 @@ export default function App() {
   const [links, setLinks] = useState<LinkItem[]>(LINKS)
   const [filter, setFilter] = useState<CategoryId | 'all'>('all')
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
+  const [aiModel, setAiModel] = useState('deepseek-chat')
+
+  const categoryUsage = useMemo(() => {
+    const usage: Record<string, number> = {}
+    const count = (categoryId: CategoryId) => {
+      usage[categoryId] = (usage[categoryId] ?? 0) + 1
+    }
+    tasks.forEach((task) => count(task.categoryId))
+    Object.values(objectives)
+      .flat()
+      .forEach((objective) => count(objective.categoryId))
+    projects.forEach((project) => count(project.categoryId))
+    links.forEach((link) => count(link.categoryId))
+    return usage
+  }, [tasks, objectives, projects, links])
   const [commandOpen, setCommandOpen] = useState(params.get('cmd') === '1')
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')
@@ -172,6 +189,25 @@ export default function App() {
     setSidebarLabels((current) => ({ ...current, [key]: label }))
   }
   const resetSidebarLabels = () => setSidebarLabels(DEFAULT_SIDEBAR_LABELS)
+
+  const deleteCategory = (categoryId: CategoryId) => {
+    const category = CATEGORIES.find((item) => item.id === categoryId)
+    if (!category) return
+    if (!category.id.startsWith('cat-')) {
+      showToast('内置分类不支持删除')
+      return
+    }
+    const used = categoryUsage[categoryId] ?? 0
+    if (used > 0) {
+      showToast(`还有 ${used} 项使用「${category.name}」，先移动后再删除`)
+      return
+    }
+    const index = CATEGORIES.findIndex((item) => item.id === categoryId)
+    if (index >= 0) CATEGORIES.splice(index, 1)
+    if (filter === categoryId) setFilter('all')
+    setCategoryVersion((value) => value + 1)
+    showToast(`已删除分类「${category.name}」`)
+  }
 
   useEffect(() => {
     return () => {
@@ -520,6 +556,7 @@ export default function App() {
                     onClose={() => setAiOpen(false)}
                     onCreateTasks={createAiTasks}
                     onToast={showToast}
+                    model={aiModel}
                   />
                 ) : null}
               </div>
@@ -548,15 +585,7 @@ export default function App() {
             aria-label="展开 Q-Panel"
           >
             <span className="notch-mark">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M12 3.2l7.2 2.7v5.2c0 4.8-3 8.1-7.2 9.7-4.2-1.6-7.2-4.9-7.2-9.7V5.9L12 3.2z"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinejoin="round"
-                />
-                <path d="M8.8 12h6.4M12 8.8v6.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-              </svg>
+              <Logo size={14} />
             </span>
             <span className="notch-label">Q-Panel</span>
             <span className="notch-badge num">{bellCount}</span>
@@ -594,6 +623,10 @@ export default function App() {
           initialTab={settingsInitialTab}
           onAddCategory={handleAddCategory}
           onExportWorkspace={exportWorkspace}
+          categoryUsage={categoryUsage}
+          onDeleteCategory={deleteCategory}
+          aiModel={aiModel}
+          onAiModelChange={setAiModel}
           sidebarLabels={sidebarLabels}
           onUpdateSidebarLabel={updateSidebarLabel}
           onResetSidebarLabels={resetSidebarLabels}
