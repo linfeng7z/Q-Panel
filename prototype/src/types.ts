@@ -1,7 +1,6 @@
 export type ThemeId = 'noir' | 'ops'
 
 export type ViewId =
-  | 'today'
   | 'quarter'
   | 'week'
   | 'projects'
@@ -24,7 +23,7 @@ export interface Objective {
   id: string
   title: string
   categoryId: CategoryId
-  plannedHours: number
+  plannedDays: number
   progress: number
   status: ObjectiveStatus
   dueDate: string
@@ -46,7 +45,7 @@ export type WorkItemStatus = 'todo' | 'doing' | 'done'
 export interface ProjectWorkItem {
   id: string
   title: string
-  plannedHours: number
+  plannedDays: number
   weekKey: string
   status: WorkItemStatus
   milestoneId?: string
@@ -58,9 +57,12 @@ export interface Project {
   categoryId: CategoryId
   description: string
   span: string
+  /** 全局项目起止日期，用于判断是否跨当前季度 */
+  startDate: string
+  endDate: string
   status: 'active' | 'done' | 'risk'
-  /** 项目整体规划工时，可编辑 */
-  plannedHours: number
+  /** 项目全局规划人日，可编辑 */
+  plannedDays: number
   /** 拆解后的工作项，按安排周自动进入周计划 */
   workItems: ProjectWorkItem[]
   milestones: Milestone[]
@@ -74,7 +76,7 @@ export interface WeekTask {
   categoryId: CategoryId
   dueDate: string
   dueTime?: string
-  estimateHours: number
+  estimateDays: number
   done: boolean
   objectiveId?: string
   projectId?: string
@@ -103,7 +105,7 @@ export interface LinkItem {
 
 export interface QuarterStats {
   workdays: number
-  leaveHours: number
+  leaveDays: number
   estimated?: boolean
   note?: string
   missing?: boolean
@@ -116,7 +118,7 @@ export interface WeekMeta {
   end: string
   range: string
   workdays: number
-  leaveHours: number
+  leaveDays: number
   note?: string
 }
 
@@ -127,7 +129,7 @@ export interface AiProposalTask {
   categoryId: CategoryId
   dueDate: string
   dueTime?: string
-  estimateHours: number
+  estimateDays: number
   objectiveId?: string
   projectId?: string
 }

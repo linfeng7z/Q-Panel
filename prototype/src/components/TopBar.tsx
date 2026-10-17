@@ -13,14 +13,15 @@ import {
   SquaresFour,
 } from '@phosphor-icons/react'
 import { OBJECTIVES, QUARTER_STATS, YEARS, quarterKey, quarterRange } from '../data/mock'
-import { sumHours, weightedCompletion } from '../utils'
+import { quarterLoad } from '../utils'
 import { cn } from '../utils'
-import type { ViewId } from '../types'
+import type { Project, ViewId } from '../types'
 
 interface TopBarProps {
   view: ViewId
   onView: (view: ViewId) => void
   onToggleTheme: () => void
+  projects: Project[]
   year: number
   quarter: number
   onPeriodChange: (year: number, quarter: number) => void
@@ -43,6 +44,7 @@ export function TopBar({
   view,
   onView,
   onToggleTheme,
+  projects,
   year,
   quarter,
   onPeriodChange,
@@ -150,9 +152,12 @@ export function TopBar({
                   const key = quarterKey(year, q)
                   const stats = QUARTER_STATS[key]
                   const objectives = OBJECTIVES[key] ?? []
-                  const available = stats ? stats.workdays * 8 - stats.leaveHours : null
-                  const allocated = sumHours(objectives)
-                  const completion = weightedCompletion(objectives)
+                  const available = stats ? stats.workdays - stats.leaveDays : null
+                  const load = stats
+                    ? quarterLoad(objectives, projects, year, q, available ?? 0)
+                    : null
+                  const allocated = load?.committedDays ?? 0
+                  const completion = load?.completion ?? 0
                   const ratio = available ? Math.min(100, Math.round((allocated / available) * 100)) : 0
                   return (
                     <button
@@ -166,11 +171,11 @@ export function TopBar({
                     >
                       <div className="q-card-top">
                         <span className="q-card-name">Q{q}</span>
-                        <span className="q-card-workdays">{stats ? `${stats.workdays} 天` : '未规划'}</span>
+                        <span className="q-card-workdays">{stats ? `${stats.workdays} 工作日` : '未规划'}</span>
                       </div>
                       <div className="q-card-meta">
                         <b className="num">{allocated}</b>
-                        <span>h / {available ?? '—'}h</span>
+                        <span> / {available ?? '—'} 人日</span>
                       </div>
                       <div className="q-card-track">
                         <i style={{ width: `${ratio}%` }} />

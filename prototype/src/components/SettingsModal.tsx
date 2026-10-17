@@ -27,7 +27,7 @@ interface SettingsModalProps {
 
 const tabs: Array<{ id: SettingsTab; label: string; icon: typeof Bell }> = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
-  { id: 'work', label: '工时与日历', icon: CalendarBlank },
+  { id: 'work', label: '人日与日历', icon: CalendarBlank },
   { id: 'reminders', label: '提醒', icon: Bell },
   { id: 'ai', label: 'AI 助手', icon: Sparkle },
   { id: 'data', label: '数据', icon: HardDrives },
@@ -46,7 +46,6 @@ export function SettingsModal({
   const [nativeNotif, setNativeNotif] = useState(true)
   const [dnd, setDnd] = useState(false)
   const [confirmWrites, setConfirmWrites] = useState(true)
-  const [dailyHours, setDailyHours] = useState(8)
   const [buffer, setBuffer] = useState(0)
   const [defaultOffset, setDefaultOffset] = useState('提前 2 天')
   const [defaultTime, setDefaultTime] = useState('09:30')
@@ -166,25 +165,24 @@ export function SettingsModal({
 
                 {tab === 'work' ? (
                   <>
-                    <div className="settings-pane-title">工时与日历</div>
-                    <div className="settings-pane-sub">按中国法定节假日 + 调休补班日计算可用工时。</div>
+                    <div className="settings-pane-title">人日与日历</div>
+                    <div className="settings-pane-sub">按中国法定节假日 + 调休补班日计算可用人日；1 人日 = 1 个正常工作日。</div>
 
                     <div className="settings-section">
                       <div className="settings-section-label">容量口径</div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">每日标准工时</div>
-                          <div className="settings-help">季度容量 = 工作日 × 每日工时 − 请假/占用扣减。</div>
+                          <div className="settings-label">时间单位</div>
+                          <div className="settings-help">本版按人日规划，不再按小时折算；支持 0.25 / 0.5 人日。</div>
                         </div>
-                        <div className="stepper">
-                          <button type="button" onClick={() => setDailyHours((value) => Math.max(1, value - 0.5))}>
-                            <Minus size={11} />
-                          </button>
-                          <span>{dailyHours}h</span>
-                          <button type="button" onClick={() => setDailyHours((value) => Math.min(12, value + 0.5))}>
-                            <Plus size={11} />
-                          </button>
+                        <span className="tag">人日</span>
+                      </div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">季度容量</div>
+                          <div className="settings-help">可用人日 = 工作日 − 请假/占用天数；剩余可为负数。</div>
                         </div>
+                        <span className="card-meta">人日</span>
                       </div>
                       <div className="settings-row">
                         <div>
@@ -230,7 +228,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">请假 / 占用</div>
-                          <div className="settings-help">10/20 – 10/21 年假 · 共扣减 16h；10/17 之后的新增会实时影响季度容量。</div>
+                          <div className="settings-help">10/20 – 10/21 年假 · 共扣减 2 人日；10/17 之后的新增会实时影响季度容量。</div>
                         </div>
                         <button type="button" className="btn sm" onClick={() => onToast('请假管理将在功能版接入')}>
                           管理
@@ -349,7 +347,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">发送给 AI 的上下文</div>
-                          <div className="settings-help">摘要包含当前周期、季度任务、项目与本周事项的标题/状态/工时；笔记与链接默认不发送。</div>
+                          <div className="settings-help">摘要包含当前周期、季度任务、项目与本周事项的标题/状态/人日；笔记与链接默认不发送。</div>
                         </div>
                         <select className="select" style={{ width: 150 }} value={scope} onChange={(event) => setScope(event.target.value)}>
                           <option>最小</option>

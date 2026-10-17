@@ -8,22 +8,29 @@ import {
   Plus,
   Target,
   Trash,
+  WarningCircle,
 } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
 import { CATEGORIES, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
 import {
   cn,
   fmtDate,
-  projectDecomposedHours,
+  fmtDays,
+  projectCrossQuarter,
+  projectDecomposedDays,
   projectDoneCount,
   projectNext,
   projectProgress,
-  projectScheduledHours,
+  projectQuarterDays,
+  projectQuarterDoneDays,
+  projectScheduledDays,
 } from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
 
 interface ProjectsViewProps {
   projects: Project[]
+  year: number
+  quarter: number
   filter: CategoryId | 'all'
   onFilter: (filter: CategoryId | 'all') => void
   onOpenCreate: (mode: CreateMode) => void
@@ -32,8 +39,10 @@ interface ProjectsViewProps {
   onOpenWeek: (weekKey: string) => void
 }
 
-function projectStatus(project: Project) {
-  if (project.status === 'risk') return { cls: 'risk', label: '有风险' }
+function projectStatus(project: Project, year: number, quarter: number) {
+  if (project.status === 'risk' || projectCrossQuarter(project, year, quarter)) {
+    return { cls: 'risk', label: '有风险' }
+  }
   if (project.status === 'done') return { cls: 'done', label: '已完成' }
   return { cls: 'in_progress', label: '进行中' }
 }
@@ -44,6 +53,8 @@ function weekLabel(key: string): string {
 
 export function ProjectsView({
   projects,
+  year,
+  quarter,
   filter,
   onFilter,
   onOpenCreate,
@@ -69,6 +80,8 @@ export function ProjectsView({
     return (
       <ProjectDetail
         project={selected}
+        year={year}
+        quarter={quarter}
         onBack={() => setSelectedId(null)}
         onChange={(next) =>
           onChangeProjects(projects.map((project) => (project.id === next.id ? next : project)))
@@ -85,15 +98,17 @@ export function ProjectsView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Long-running projects · 2026
+            GLOBAL PROJECTS · {year} · 全局维度
           </div>
           <h1 className="page-title">
-            长期项目 <span className="light">与工作规划</span>
+            全局项目 <span className="light">与工作规划</span>
           </h1>
           <p className="page-sub">
-            {projects.length} 个项目进行中 · 共{' '}
-            {projects.reduce((sum, project) => sum + project.workItems.length, 0)} 个工作项 ·
-            按安排周自动进入周计划 · 点击项目进入工作规划
+            {projects.length} 个全局项目 · 共{' '}
+            {projects.reduce((sum, project) => sum + project.workItems.length, 0)} 个工作项 ·{' '}
+            {projects.filter((project) => projectCrossQuarter(project, year, quarter)).length} 个跨季度 ·{' '}
+            {projects.filter((project) => project.status === 'risk' || projectCrossQuarter(project, year, quarter)).length} 个有风险 ·
+            本季度排期单独计入 Q{quarter}
           </p>
         </div>
         <div className="head-actions">
@@ -161,12 +176,15 @@ export function ProjectsView({
                     <span className="dot" />
                     {getCategory(featured.categoryId).name}
                     <span className="tag" style={{ marginLeft: 4 }}>
-                      季度任务
+                      全局项目
                     </span>
+                    {projectCrossQuarter(featured, year, quarter) ? (
+                      <span className="tag risk-tag">跨季度</span>
+                    ) : null}
                   </div>
-                  <span className={cn('status', projectStatus(featured).cls)}>
+                  <span className={cn('status', projectStatus(featured, year, quarter).cls)}>
                     <span className="mini-dot" />
-                    {projectStatus(featured).label}
+                    {projectStatus(featured, year, quarter).label}
                   </span>
                 </div>
                 <h3>{featured.title}</h3>
@@ -181,10 +199,13 @@ export function ProjectsView({
                 </div>
                 <div className="proj-plan-line">
                   <span>
-                    总规划 <b>{featured.plannedHours}h</b>
+                    全局规划 <b>{featured.plannedDays} 人日</b>
                   </span>
                   <span>
-                    已拆解 <b>{projectDecomposedHours(featured)}h</b>
+                    已拆解 <b>{fmtDays(projectDecomposedDays(featured))} 人日</b>
+                  </span>
+                  <span>
+                    本季排期 <b>{fmtDays(projectQuarterDays(featured, year, quarter))} 人日</b>
                   </span>
                   <span>{featured.workItems.length} 个工作项</span>
                   <span className="auto-label">自动排入周计划</span>
@@ -266,10 +287,14 @@ export function ProjectsView({
                     <div className="proj-cat" style={catStyle(project.categoryId)}>
                       <span className="dot" />
                       {getCategory(project.categoryId).name}
+                      <span className="tag" style={{ marginLeft: 4 }}>全局</span>
+                      {projectCrossQuarter(project, year, quarter) ? (
+                        <span className="tag risk-tag">跨季度</span>
+                      ) : null}
                     </div>
-                    <span className={cn('status', projectStatus(project).cls)}>
+                    <span className={cn('status', projectStatus(project, year, quarter).cls)}>
                       <span className="mini-dot" />
-                      {projectStatus(project).label}
+                      {projectStatus(project, year, quarter).label}
                     </span>
                   </div>
                   <h3>{project.title}</h3>
@@ -282,12 +307,14 @@ export function ProjectsView({
                   </div>
                   <div className="proj-plan-line">
                     <span>
-                      规划 <b>{project.plannedHours}h</b>
+                      全局 <b>{project.plannedDays} 人日</b>
                     </span>
                     <span>
-                      已拆 <b>{projectDecomposedHours(project)}h</b>
+                      已拆 <b>{fmtDays(projectDecomposedDays(project))}</b>
                     </span>
-                    <span>{project.workItems.length} 个工作项</span>
+                    <span>
+                      本季 <b>{fmtDays(projectQuarterDays(project, year, quarter))} 人日</b>
+                    </span>
                   </div>
                   <div className="milestone-bar">
                     {project.milestones.map((milestone) => (
@@ -321,22 +348,31 @@ export function ProjectsView({
 
 function ProjectDetail({
   project,
+  year,
+  quarter,
   onBack,
   onChange,
   onOpenWeek,
   onToast,
 }: {
   project: Project
+  year: number
+  quarter: number
   onBack: () => void
   onChange: (project: Project) => void
   onOpenWeek: (weekKey: string) => void
   onToast: (message: string) => void
 }) {
-  const decomposed = projectDecomposedHours(project)
-  const scheduled = projectScheduledHours(project)
+  const decomposed = projectDecomposedDays(project)
+  const scheduled = projectScheduledDays(project)
+  const quarterDays = projectQuarterDays(project, year, quarter)
+  const quarterDoneDays = projectQuarterDoneDays(project, year, quarter)
   const doneItems = project.workItems.filter((item) => item.status === 'done')
-  const doneHours = doneItems.reduce((sum, item) => sum + item.plannedHours, 0)
-  const over = decomposed > project.plannedHours
+  const doneDays = doneItems.reduce((sum, item) => sum + item.plannedDays, 0)
+  const over = decomposed > project.plannedDays
+  const crossQuarter = projectCrossQuarter(project, year, quarter)
+  const atRisk = crossQuarter || project.status === 'risk'
+  const quarterLabel = `Q${quarter}`
   const weekGroups = WEEK_ORDER.map((key) => ({
     key,
     meta: WEEKS[key],
@@ -354,7 +390,7 @@ function ProjectDetail({
     const item: ProjectWorkItem = {
       id: `wi-${Date.now()}`,
       title: '新工作项',
-      plannedHours: 4,
+      plannedDays: 0.5,
       weekKey: '2026-W42',
       status: 'todo',
     }
@@ -378,14 +414,22 @@ function ProjectDetail({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Project planning · {getCategory(project.categoryId).name}
+            GLOBAL PROJECT · {getCategory(project.categoryId).name} · 全局维度
           </div>
           <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
-            {project.span} · {project.status === 'risk' ? '有风险' : '进行中'} ·{' '}
-            {projectDoneCount(project)}/{project.milestones.length} 里程碑 ·{' '}
-            {project.workItems.length} 个工作项
+            {project.span} · 全局项目 · {projectDoneCount(project)}/{project.milestones.length}{' '}
+            里程碑 · {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
+            {fmtDays(quarterDays)} 人日
           </p>
+          <div className="project-scope-line">
+            <span className="tag">全局项目</span>
+            {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
+            <span>
+              全局规划 {project.plannedDays} 人日 · 本季度只看 {quarterLabel} 排期{' '}
+              {fmtDays(quarterDays)} 人日
+            </span>
+          </div>
         </div>
         <div className="head-actions">
           <button
@@ -399,57 +443,71 @@ function ProjectDetail({
         </div>
       </div>
 
+      {atRisk ? (
+        <div className="warn-banner project-risk-banner">
+          <WarningCircle size={14} style={{ flex: '0 0 14px', marginTop: 1 }} />
+          <span>
+            {crossQuarter
+              ? `项目计划结束 ${project.endDate}，超出当前季度；本季度只计 ${quarterLabel} 排期 ${fmtDays(quarterDays)} 人日，其余属于后续季度，已标记有风险。`
+              : '项目状态为有风险，请关注当前季度排期与里程碑。'}
+          </span>
+        </div>
+      ) : null}
+
       <div className="project-summary">
         <Card>
           <div className="project-summary-card">
-            <span className="stat-label">总规划工时</span>
+            <span className="stat-label">全局总规划人日</span>
             <div className="hours-edit">
               <input
                 className="hours-input num"
                 type="number"
                 min={0}
-                value={project.plannedHours}
+                step={0.25}
+                value={project.plannedDays}
                 onChange={(event) =>
-                  onChange({ ...project, plannedHours: Math.max(0, Number(event.target.value) || 0) })
+                  onChange({ ...project, plannedDays: Math.max(0, Number(event.target.value) || 0) })
                 }
               />
-              <span>h</span>
+              <span>人日</span>
             </div>
-            <span className="stat-foot">项目跨季度总投入，可随时调整</span>
+            <span className="stat-foot">项目全局维度总投入，可随时调整</span>
           </div>
         </Card>
         <Card>
           <div className="project-summary-card">
-            <span className="stat-label">已拆解</span>
+            <span className="stat-label">全局已拆解</span>
             <div className="project-summary-value">
-              <b className="num">{decomposed}</b>
-              <span>h</span>
+              <b className="num">{fmtDays(decomposed)}</b>
+              <span>人日</span>
             </div>
             <span className={cn('stat-foot', over && 'bad-text')}>
               {over
-                ? `超出总规划 ${decomposed - project.plannedHours}h`
-                : `剩余 ${Math.max(0, project.plannedHours - decomposed)}h 待拆解`}
+                ? `超出总规划 ${fmtDays(decomposed - project.plannedDays)} 人日`
+                : `剩余 ${fmtDays(Math.max(0, project.plannedDays - decomposed))} 人日待拆解`}
             </span>
           </div>
         </Card>
         <Card>
           <div className="project-summary-card">
-            <span className="stat-label">已排入周计划</span>
+            <span className="stat-label">本季度排期</span>
             <div className="project-summary-value">
-              <b className="num">{scheduled}</b>
-              <span>h</span>
+              <b className="num">{fmtDays(quarterDays)}</b>
+              <span>人日 / {quarterLabel}</span>
             </div>
-            <span className="stat-foot">覆盖 {weekGroups.length} 个周次，自动同步</span>
+            <span className="stat-foot">
+              季度内已完成 {fmtDays(quarterDoneDays)} 人日 · 全局已排 {fmtDays(scheduled)} 人日
+            </span>
           </div>
         </Card>
         <Card>
           <div className="project-summary-card">
-            <span className="stat-label">工作项完成</span>
+            <span className="stat-label">全局工作项完成</span>
             <div className="project-summary-value">
               <b className="num">{doneItems.length}</b>
               <span>/ {project.workItems.length}</span>
             </div>
-            <span className="stat-foot">已完成 {doneHours}h / {decomposed}h</span>
+            <span className="stat-foot">已完成 {fmtDays(doneDays)} / {fmtDays(decomposed)} 人日</span>
           </div>
         </Card>
       </div>
@@ -464,13 +522,13 @@ function ProjectDetail({
             <span className="auto-label">设置安排周 → 自动进入周计划</span>
           </div>
           <div className="workplan-note">
-            工作项会按「安排周」自动出现在对应周的「项目自动排期」中，并计入当周已排工时；
-            修改工时或周次会实时同步。
+            工作项会按「安排周」自动出现在对应周的「项目自动排期」中，并计入当周已排人日；
+            修改人日或周次会实时同步。
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
               <span>工作项</span>
-              <span>规划工时</span>
+              <span>规划人日</span>
               <span>安排周</span>
               <span>状态</span>
               <span />
@@ -487,14 +545,15 @@ function ProjectDetail({
                     className="hours-input num"
                     type="number"
                     min={0}
-                    value={item.plannedHours}
+                    step={0.25}
+                    value={item.plannedDays}
                     onChange={(event) =>
                       updateItem(item.id, {
-                        plannedHours: Math.max(0, Number(event.target.value) || 0),
+                        plannedDays: Math.max(0, Number(event.target.value) || 0),
                       })
                     }
                   />
-                  <span>h</span>
+                  <span>人日</span>
                 </div>
                 <select
                   className="workitem-week"
@@ -565,7 +624,7 @@ function ProjectDetail({
                     <span>{group.meta.range}</span>
                   </span>
                   <span className="week-plan-meta">
-                    {group.items.length} 项 · {group.items.reduce((sum, item) => sum + item.plannedHours, 0)}h
+                    {group.items.length} 项 · {fmtDays(group.items.reduce((sum, item) => sum + item.plannedDays, 0))} 人日
                   </span>
                   <ArrowRight size={10} />
                 </button>

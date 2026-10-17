@@ -1,7 +1,7 @@
 import { Clock, DotsThree, Target } from '@phosphor-icons/react'
 import type { Objective, Project, WeekTask } from '../types'
 import { getCategory } from '../data/mock'
-import { cn, fmtDue, isOverdue } from '../utils'
+import { cn, fmtDays, fmtDue, isOverdue } from '../utils'
 import { catStyle } from './ui'
 import { CheckBox } from './ui'
 
@@ -59,8 +59,8 @@ export function TaskRow({ task, project, objective, onToggle, onMenu }: TaskRowP
         </div>
       </div>
       <div className={cn('task-hours', task.done && 'done')}>
-        <b>{task.estimateHours}</b>
-        <span>h</span>
+        <b>{fmtDays(task.estimateDays)}</b>
+        <span>人日</span>
       </div>
       <button
         type="button"

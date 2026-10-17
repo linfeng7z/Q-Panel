@@ -21,7 +21,7 @@ import {
   WEEKS,
   quarterKey,
 } from './data/mock'
-import { dateISO, hoursOf, isOverdue, projectWorkItemHours, projectWorkItemsForWeek } from './utils'
+import { dateISO, daysOf, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
 import { MenuBar } from './components/MenuBar'
 import { TopBar } from './components/TopBar'
 import { Sidebar } from './components/Sidebar'
@@ -31,7 +31,6 @@ import { SettingsModal } from './components/SettingsModal'
 import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
-import { TodayView } from './views/TodayView'
 import { QuarterView } from './views/QuarterView'
 import { WeekView } from './views/WeekView'
 import { ProjectsView } from './views/ProjectsView'
@@ -39,8 +38,17 @@ import { StatsView } from './views/StatsView'
 import { NotesView } from './views/NotesView'
 import { LinksView } from './views/LinksView'
 
-const VIEWS: ViewId[] = ['today', 'quarter', 'week', 'projects', 'stats', 'notes', 'links']
+const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'stats', 'notes', 'links']
 const THEMES: ThemeId[] = ['noir', 'ops']
+
+function firstWeekKeyForQuarter(year: number, quarter: number): string | undefined {
+  return Object.keys(WEEKS).find((key) => {
+    const end = WEEKS[key].end
+    const endYear = Number(end.slice(0, 4))
+    const endMonth = Number(end.slice(5, 7))
+    return endYear === year && Math.floor((endMonth - 1) / 3) + 1 === quarter
+  })
+}
 
 function weekKeyForDate(date: string): string {
   const found = Object.values(WEEKS).find((week) => date >= week.start && date <= week.end)
@@ -90,15 +98,24 @@ export default function App() {
   const sideWeekMeta = WEEKS[sideWeekKey] ?? WEEKS['2026-W42']
   const sideWeekTasks = tasks.filter((task) => task.weekKey === sideWeekKey)
   const sideWeekProjectItems = projectWorkItemsForWeek(projects, sideWeekKey)
-  const weekAvailable = sideWeekMeta.workdays * 8 - sideWeekMeta.leaveHours
-  const weekPlanned = hoursOf(sideWeekTasks) + projectWorkItemHours(sideWeekProjectItems)
+  const weekAvailable = sideWeekMeta.workdays - sideWeekMeta.leaveDays
+  const weekPlanned = daysOf(sideWeekTasks) + projectWorkItemDays(sideWeekProjectItems)
   const weekCount =
     sideWeekTasks.filter((task) => !task.done).length +
     sideWeekProjectItems.filter((item) => item.status !== 'done').length
   const bellCount = tasks.filter(
     (task) => !task.done && (task.dueDate === TODAY || isOverdue(task)),
   ).length
-  const q4Objectives = objectives['2026-Q4'] ?? []
+  const periodObjectives = objectives[quarterKey(year, quarter)] ?? []
+
+  const changeWeek = (key: string) => {
+    setWeekKey(key)
+    const meta = WEEKS[key]
+    if (!meta) return
+    const endMonth = Number(meta.end.slice(5, 7))
+    setYear(Number(meta.end.slice(0, 4)))
+    setQuarter(Math.floor((endMonth - 1) / 3) + 1)
+  }
 
   const showToast = useCallback((message: string) => {
     setToast(message)
@@ -192,27 +209,11 @@ export default function App() {
     )
   }
 
-  const quickAdd = (title: string) => {
-    const task: WeekTask = {
-      id: `t-${Date.now()}`,
-      weekKey: '2026-W42',
-      title,
-      categoryId: filter === 'all' ? 'other' : filter,
-      dueDate: TODAY,
-      dueTime: '23:30',
-      estimateHours: 1,
-      done: false,
-      reminder: '提前 1 天 · 09:30',
-    }
-    setTasks((value) => [task, ...value])
-    showToast('已添加今日事项')
-  }
-
   const createTask = (data: {
     title: string
     categoryId: CategoryId
     dueDate: string
-    estimateHours: number
+    estimateDays: number
   }) => {
     const task: WeekTask = {
       id: `t-${Date.now()}`,
@@ -221,7 +222,7 @@ export default function App() {
       categoryId: data.categoryId,
       dueDate: data.dueDate,
       dueTime: data.dueDate === TODAY ? '23:30' : undefined,
-      estimateHours: data.estimateHours,
+      estimateDays: data.estimateDays,
       done: false,
       reminder: '提前 2 天 · 09:30',
     }
@@ -232,7 +233,7 @@ export default function App() {
   const createObjective = (data: {
     title: string
     categoryId: CategoryId
-    plannedHours: number
+    plannedDays: number
     dueDate: string
   }) => {
     const key = quarterKey(year, quarter)
@@ -240,7 +241,7 @@ export default function App() {
       id: `o-${Date.now()}`,
       title: data.title,
       categoryId: data.categoryId,
-      plannedHours: data.plannedHours,
+      plannedDays: data.plannedDays,
       progress: 0,
       status: 'planned',
       dueDate: data.dueDate,
@@ -264,8 +265,10 @@ export default function App() {
       categoryId: data.categoryId,
       description: data.description || '新建长期项目。',
       span: `2026.10 – ${targetYear}.${String(targetMonth).padStart(2, '0')}`,
+      startDate: '2026-10-17',
+      endDate: data.targetDate,
       status: 'active',
-      plannedHours: 0,
+      plannedDays: 0,
       workItems: [],
       milestones: [
         {
@@ -289,7 +292,7 @@ export default function App() {
       categoryId: task.categoryId,
       dueDate: task.dueDate,
       dueTime: task.dueTime,
-      estimateHours: task.estimateHours,
+      estimateDays: task.estimateDays,
       done: false,
       objectiveId: task.objectiveId,
       projectId: task.projectId,
@@ -331,18 +334,6 @@ export default function App() {
 
   const renderView = () => {
     switch (view) {
-      case 'today':
-        return (
-          <TodayView
-            tasks={tasks}
-            objectives={q4Objectives}
-            projects={projects}
-            onToggleTask={toggleTask}
-            onQuickAdd={quickAdd}
-            onOpenCreate={setCreateMode}
-            onNavigate={navigate}
-          />
-        )
       case 'quarter':
         return (
           <QuarterView
@@ -366,11 +357,11 @@ export default function App() {
           <WeekView
             weekKey={weekKey}
             tasks={tasks}
-            objectives={q4Objectives}
+            objectives={periodObjectives}
             projects={projects}
             filter={filter}
             onFilter={setFilter}
-            onWeekChange={setWeekKey}
+            onWeekChange={changeWeek}
             onToggleTask={toggleTask}
             onOpenCreate={setCreateMode}
             onMoveOverdue={moveOverdue}
@@ -382,13 +373,15 @@ export default function App() {
         return (
           <ProjectsView
             projects={projects}
+            year={year}
+            quarter={quarter}
             filter={filter}
             onFilter={setFilter}
             onOpenCreate={setCreateMode}
             onToast={showToast}
             onChangeProjects={setProjects}
             onOpenWeek={(key) => {
-              setWeekKey(key)
+              changeWeek(key)
               setView('week')
             }}
           />
@@ -398,6 +391,7 @@ export default function App() {
           <StatsView
             year={year}
             quarter={quarter}
+            projects={projects}
             onToast={showToast}
             onBack={() => setView('quarter')}
           />
@@ -430,6 +424,7 @@ export default function App() {
                 <TopBar
                   view={view}
                   onView={navigate}
+                  projects={projects}
                   onToggleTheme={() =>
                     setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))
                   }
@@ -438,6 +433,10 @@ export default function App() {
                   onPeriodChange={(nextYear, nextQuarter) => {
                     setYear(nextYear)
                     setQuarter(nextQuarter)
+                    if (view === 'week') {
+                      const nextWeek = firstWeekKeyForQuarter(nextYear, nextQuarter)
+                      if (nextWeek) setWeekKey(nextWeek)
+                    }
                   }}
                   onOpenCommand={() => setCommandOpen(true)}
                   onOpenAI={() => setAiOpen(true)}

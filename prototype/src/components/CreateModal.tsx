@@ -12,14 +12,14 @@ interface CreateModalProps {
   onCreateObjective: (data: {
     title: string
     categoryId: CategoryId
-    plannedHours: number
+    plannedDays: number
     dueDate: string
   }) => void
   onCreateTask: (data: {
     title: string
     categoryId: CategoryId
     dueDate: string
-    estimateHours: number
+    estimateDays: number
   }) => void
   onCreateProject: (data: {
     title: string
@@ -32,7 +32,7 @@ interface CreateModalProps {
 const TITLES: Record<CreateMode, { title: string; sub: string; kicker: string }> = {
   objective: {
     title: '新建季度任务',
-    sub: '一项季度任务会占用本季度的计划工时',
+    sub: '一项季度任务会占用本季度的人日',
     kicker: 'Quarter task',
   },
   task: {
@@ -59,7 +59,7 @@ export function CreateModal({
   const meta = TITLES[mode]
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId>(defaultCategory)
-  const [hours, setHours] = useState(mode === 'objective' ? 24 : mode === 'task' ? 2 : 0)
+  const [days, setDays] = useState(mode === 'objective' ? 15 : mode === 'task' ? 0.5 : 0)
   const [date, setDate] = useState(defaultDate || TODAY)
   const [description, setDescription] = useState('')
 
@@ -71,7 +71,7 @@ export function CreateModal({
       onCreateObjective({
         title: title.trim(),
         categoryId,
-        plannedHours: Number(hours) || 8,
+        plannedDays: Number(days) || 1,
         dueDate: date,
       })
     } else if (mode === 'task') {
@@ -79,7 +79,7 @@ export function CreateModal({
         title: title.trim(),
         categoryId,
         dueDate: date,
-        estimateHours: Number(hours) || 2,
+        estimateDays: Number(days) || 0.5,
       })
     } else {
       onCreateProject({
@@ -166,14 +166,15 @@ export function CreateModal({
               <div className="field-grid">
                 {mode !== 'project' ? (
                   <div className="field">
-                    <label>{mode === 'objective' ? '计划工时（小时）' : '预计工时（小时）'}</label>
+                    <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
                     <input
                       className="input num"
                       type="number"
-                      min={1}
-                      max={400}
-                      value={hours}
-                      onChange={(event) => setHours(Number(event.target.value))}
+                      min={0.25}
+                      max={200}
+                      step={0.25}
+                      value={days}
+                      onChange={(event) => setDays(Number(event.target.value))}
                     />
                   </div>
                 ) : null}

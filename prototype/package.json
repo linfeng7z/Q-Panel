@@ -1,9 +1,9 @@
 {
   "name": "q-panel-prototype",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
-  "description": "Q-Panel clickable UI prototype — security workbench with quarterly capacity, weekly focus, projects and AI.",
+  "description": "Q-Panel clickable UI prototype — security workbench in person-days: quarterly capacity, weekly plan, global projects and AI.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -1,5 +1,6 @@
 import { CalendarDots, DotsThree, FolderSimple, House } from '@phosphor-icons/react'
 import type { ViewId } from '../types'
+import { fmtDays } from '../utils'
 import { catStyle } from './ui'
 
 interface SidebarProps {
@@ -50,8 +51,8 @@ export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, w
           <div className="side-cap-top">
             <span>{weekLabel}</span>
             <b className={over ? 'over' : undefined}>
-              {weekPlanned}
-              <span className="faint"> / {weekAvailable}h</span>
+              {fmtDays(weekPlanned)}
+              <span className="faint"> / {weekAvailable} 人日</span>
             </b>
           </div>
           <div className="side-cap-bar">
@@ -61,8 +62,8 @@ export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, w
           </div>
           <div className="side-cap-foot">
             {over
-              ? `超出 ${weekPlanned - weekAvailable}h · 建议挪出`
-              : `剩余 ${weekAvailable - weekPlanned}h · 5 个工作日`}
+              ? `超出 ${fmtDays(weekPlanned - weekAvailable)} 人日 · 建议挪出`
+              : `剩余 ${fmtDays(weekAvailable - weekPlanned)} 人日 · 按工作日计`}
           </div>
         </div>
 

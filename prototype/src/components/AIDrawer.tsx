@@ -43,11 +43,11 @@ function proposalTask(
   categoryId: CategoryId,
   dueDate: string,
   dueTime: string | undefined,
-  estimateHours: number,
+  estimateDays: number,
   objectiveId: string,
   projectId: string,
 ): AiProposalTask {
-  return { title, categoryId, dueDate, dueTime, estimateHours, objectiveId, projectId }
+  return { title, categoryId, dueDate, dueTime, estimateDays, objectiveId, projectId }
 }
 
 export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
@@ -95,9 +95,9 @@ export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
             proposal: {
               title: '变更提案 · 创建 3 条周事项',
               tasks: [
-                proposalTask('输出等保差距分析初稿', 'appsec', '2026-10-17', '23:30', 6, 'o1', 'p1'),
-                proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 3, 'o1', 'p1'),
-                proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 4, 'o1', 'p1'),
+                proposalTask('输出等保差距分析初稿', 'appsec', '2026-10-17', '23:30', 0.75, 'o1', 'p1'),
+                proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
+                proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
               ],
             },
           },
@@ -198,7 +198,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
                             <b>{task.title}</b>
                             <span>
                               {getCategory(task.categoryId).name} · {fmtDue(task.dueDate, task.dueTime)} ·{' '}
-                              {task.estimateHours}h
+                              {task.estimateDays} 人日
                             </span>
                           </div>
                         </div>

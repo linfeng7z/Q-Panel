@@ -5,7 +5,7 @@ import {
   Export,
   Target,
 } from '@phosphor-icons/react'
-import type { Objective } from '../types'
+import type { Objective, Project } from '../types'
 import {
   CATEGORIES,
   MONTH_STATS,
@@ -21,14 +21,16 @@ import {
   cn,
   dateISO,
   monthGrid,
-  sumHours,
-  weightedCompletion,
+  projectWorkItemsInQuarter,
+  quarterLoad,
+  sumDays,
 } from '../utils'
 import { Card, Donut, Progress, catStyle } from '../components/ui'
 
 interface StatsViewProps {
   year: number
   quarter: number
+  projects: Project[]
   onToast: (message: string) => void
   onBack: () => void
 }
@@ -42,24 +44,30 @@ function monthWorkdays(year: number, month: number): number {
   return count
 }
 
-export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
+export function StatsView({ year, quarter, projects, onToast, onBack }: StatsViewProps) {
   const quarterRows = [1, 2, 3, 4].map((q) => {
     const key = quarterKey(year, q)
     const stats = QUARTER_STATS[key]
     const objectives = OBJECTIVES[key] ?? []
-    const available = stats ? stats.workdays * 8 - stats.leaveHours : 0
-    const allocated = sumHours(objectives)
-    const completion = weightedCompletion(objectives)
-    return { q, key, stats, objectives, available, allocated, completion }
+    const available = stats ? stats.workdays - stats.leaveDays : 0
+    const load = quarterLoad(objectives, projects, year, q, available)
+    return { q, key, stats, objectives, available, allocated: load.committedDays, completion: load.completion, load }
   })
   const yearWorkdays = quarterRows.reduce((sum, row) => sum + (row.stats?.workdays ?? 0), 0)
   const yearAvailable = quarterRows.reduce((sum, row) => sum + row.available, 0)
   const currentRow = quarterRows[quarter - 1]
   const currentObjectives: Objective[] = OBJECTIVES[`${year}-Q${quarter}`] ?? []
+  const currentProjectItems = projects.flatMap((project) =>
+    projectWorkItemsInQuarter(project, year, quarter).map((item) => ({ item, project })),
+  )
   const categorySegments = CATEGORIES.map((category) => ({
     category,
-    hours: sumHours(currentObjectives.filter((objective) => objective.categoryId === category.id)),
-  })).filter((segment) => segment.hours > 0)
+    days:
+      sumDays(currentObjectives.filter((objective) => objective.categoryId === category.id)) +
+      currentProjectItems
+        .filter(({ project }) => project.categoryId === category.id)
+        .reduce((sum, { item }) => sum + item.plannedDays, 0),
+  })).filter((segment) => segment.days > 0)
   const firstMonth = quarter * 3 - 2
   const months = [firstMonth, firstMonth + 1, firstMonth + 2]
   const isQ4 = year === 2026 && quarter === 4
@@ -70,8 +78,8 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
         return {
           month: `${month} 月`,
           workdays,
-          leaveHours: 0,
-          available: workdays * 8,
+          leaveDays: 0,
+          available: workdays,
           allocated: 0,
           completion: 0,
         }
@@ -89,7 +97,7 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
             容量与完成度 <span className="light">· Q{quarter}</span>
           </h1>
           <p className="page-sub">
-            {year} 年已录入 {yearWorkdays} 个工作日 · {yearAvailable}h 可用（已扣请假）· 数据源：中国法定节假日 + 调休补班
+            {year} 年已录入 {yearWorkdays} 个工作日 · {yearAvailable} 人日可用（已扣请假）· 数据源：中国法定节假日 + 调休补班
           </p>
         </div>
         <div className="head-actions">
@@ -121,23 +129,23 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
         </Card>
         <Card>
           <div className="stat">
-            <span className="stat-label">年度可用工时</span>
+            <span className="stat-label">年度可用人日</span>
             <span className="stat-value num">
               {yearAvailable}
-              <small>h</small>
+              <small>人日</small>
             </span>
-            <span className="stat-foot">按每日 8h · 请假 16h 已扣</span>
+            <span className="stat-foot">按工作日计 · 请假 2 人日已扣</span>
           </div>
         </Card>
         <Card>
           <div className="stat">
-            <span className="stat-label">Q{quarter} 已分配</span>
+            <span className="stat-label">Q{quarter} 已占用</span>
             <span className="stat-value num">
               {currentRow.allocated}
-              <small>h</small>
+              <small>人日</small>
             </span>
             <span className="stat-foot">
-              可用 {currentRow.available}h · 占比{' '}
+              季度任务 + 项目本季排期 · 可用 {currentRow.available} 人日 · 占比{' '}
               {currentRow.available ? Math.round((currentRow.allocated / currentRow.available) * 100) : 0}%
             </span>
           </div>
@@ -149,7 +157,7 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
               {currentRow.completion}
               <small>%</small>
             </span>
-            <span className="stat-foot">按计划工时加权 · {currentObjectives.length} 项季度任务</span>
+            <span className="stat-foot">按季度内事项加权 · {currentObjectives.length} 项季度任务 + Q4 项目排期</span>
           </div>
         </Card>
       </div>
@@ -222,14 +230,14 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
             <div className="card-head">
               <div className="card-title">
                 <Target size={13} />
-                分类工时
+                分类人日
               </div>
-              <span className="card-meta">{currentRow.allocated}h</span>
+              <span className="card-meta">{currentRow.allocated} 人日</span>
             </div>
             <div className="stat-donut">
               <Donut
                 segments={categorySegments.map((segment) => ({
-                  value: segment.hours,
+                  value: segment.days,
                   color: `var(${segment.category.colorVar})`,
                 }))}
                 centerValue={`${currentRow.available ? Math.round((currentRow.allocated / currentRow.available) * 100) : 0}%`}
@@ -240,7 +248,7 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
                   <div className="donut-row" key={segment.category.id}>
                     <span className="dot" style={catStyle(segment.category.id)} />
                     {segment.category.name}
-                    <b>{segment.hours}h</b>
+                    <b>{segment.days} 人日</b>
                   </div>
                 ))}
               </div>
@@ -249,8 +257,8 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
               {categorySegments.map((segment) => (
                 <div className="cat-bar-row" key={segment.category.id} style={catStyle(segment.category.id)}>
                   <span className="cat-bar-name">{segment.category.name}</span>
-                  <Progress value={(segment.hours / Math.max(1, currentRow.allocated)) * 100} catId={segment.category.id} />
-                  <span className="cat-bar-val">{Math.round((segment.hours / Math.max(1, currentRow.allocated)) * 100)}%</span>
+                  <Progress value={(segment.days / Math.max(1, currentRow.allocated)) * 100} catId={segment.category.id} />
+                  <span className="cat-bar-val">{Math.round((segment.days / Math.max(1, currentRow.allocated)) * 100)}%</span>
                 </div>
               ))}
             </div>
@@ -265,15 +273,15 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
               <ChartLineUp size={13} />
               季度拆分
             </div>
-            <span className="card-meta">可用 = 工作日 × 8h − 请假</span>
+            <span className="card-meta">口径：人日 · 可用 = 工作日 − 请假</span>
           </div>
           <table className="data-table">
             <thead>
               <tr>
                 <th>季度</th>
                 <th>工作日</th>
-                <th>可用</th>
-                <th>已分配</th>
+                <th>可用人日</th>
+                <th>已占用人日</th>
                 <th>容量占用</th>
                 <th>完成度</th>
               </tr>
@@ -283,8 +291,8 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
                 <tr key={row.q} className={cn(row.q === quarter && 'active')}>
                   <td>Q{row.q}</td>
                   <td>{row.stats?.workdays ?? '—'}</td>
-                  <td>{row.available || '—'}h</td>
-                  <td>{row.allocated}h</td>
+                  <td>{row.available || '—'}</td>
+                  <td>{row.allocated}</td>
                   <td>
                     <div className="cell-bar">
                       <Progress value={row.available ? (row.allocated / row.available) * 100 : 0} />
@@ -315,8 +323,8 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
                 <tr>
                   <th>月份</th>
                   <th>工作日</th>
-                  <th>可用</th>
-                  <th>已分配</th>
+                  <th>可用人日</th>
+                  <th>已分配人日</th>
                 </tr>
               </thead>
               <tbody>
@@ -324,8 +332,8 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
                   <tr key={row.month}>
                     <td>{row.month}</td>
                     <td>{row.workdays}</td>
-                    <td>{row.available}h</td>
-                    <td>{row.allocated ? `${row.allocated}h` : '—'}</td>
+                    <td>{row.available}</td>
+                    <td>{row.allocated ? row.allocated : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -344,22 +352,22 @@ export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
                 <tr>
                   <th>周</th>
                   <th>工作日</th>
-                  <th>可用</th>
-                  <th>已排</th>
-                  <th>完成</th>
+                  <th>可用人日</th>
+                  <th>已排人日</th>
+                  <th>完成人日</th>
                 </tr>
               </thead>
               <tbody>
                 {(isQ4
                   ? WEEK_STATS
-                  : [{ week: `W${Math.ceil(quarter * 13)}`, workdays: 5, available: 40, planned: 0, done: 0 }]
+                  : [{ week: `W${Math.ceil(quarter * 13)}`, workdays: 5, available: 5, planned: 0, done: 0 }]
                 ).map((row) => (
                   <tr key={row.week} className={cn(row.week === 'W42' && 'active')}>
                     <td>{row.week}</td>
                     <td>{row.workdays}</td>
-                    <td>{row.available}h</td>
-                    <td>{row.planned ? `${row.planned}h` : '—'}</td>
-                    <td>{row.done ? `${row.done}h` : '—'}</td>
+                    <td>{row.available}</td>
+                    <td>{row.planned ? row.planned : '—'}</td>
+                    <td>{row.done ? row.done : '—'}</td>
                   </tr>
                 ))}
               </tbody>

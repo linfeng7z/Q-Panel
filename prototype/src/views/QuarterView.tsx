@@ -24,10 +24,13 @@ import {
 import {
   dateISO,
   fmtDate,
+  fmtDays,
   monthGrid,
   pct,
-  sumHours,
-  weightedCompletion,
+  projectCrossQuarter,
+  projectWorkItemsInQuarter,
+  quarterLoad,
+  sumDays,
 } from '../utils'
 import { cn } from '../utils'
 import {
@@ -77,26 +80,39 @@ export function QuarterView({
     filter === 'all'
       ? objectivesOfPeriod
       : objectivesOfPeriod.filter((objective) => objective.categoryId === filter)
-  const allocated = sumHours(objectivesOfPeriod)
-  const available = stats ? stats.workdays * 8 - stats.leaveHours : 0
-  const remaining = available - allocated
-  const usedPercent = available > 0 ? Math.round((allocated / available) * 100) : 0
-  const completion = weightedCompletion(objectivesOfPeriod)
+  const available = stats ? stats.workdays - stats.leaveDays : 0
+  const load = quarterLoad(objectivesOfPeriod, projects, year, quarter, available)
+  const taskDays = load.taskDays
+  const projectDays = load.projectDays
+  const committed = load.committedDays
+  const remaining = load.remainingDays
+  const usedPercent = available > 0 ? Math.round((committed / available) * 100) : 0
+  const completion = load.completion
+  const globalProjectDays = projects.reduce((sum, project) => sum + project.plannedDays, 0)
+  const crossQuarterProjects = projects.filter((project) => projectCrossQuarter(project, year, quarter)).length
+  const projectItems = projects.flatMap((project) =>
+    projectWorkItemsInQuarter(project, year, quarter).map((item) => ({ item, project })),
+  )
   const firstMonth = quarter * 3 - 2
   const months = [firstMonth, firstMonth + 1, firstMonth + 2]
   const segments = CATEGORIES.map((category) => ({
     category,
-    hours: sumHours(objectivesOfPeriod.filter((objective) => objective.categoryId === category.id)),
-  })).filter((segment) => segment.hours > 0)
+    days:
+      sumDays(objectivesOfPeriod.filter((objective) => objective.categoryId === category.id)) +
+      projectItems
+        .filter(({ project }) => project.categoryId === category.id)
+        .reduce((sum, { item }) => sum + item.plannedDays, 0),
+  })).filter((segment) => segment.days > 0)
 
   const currentKey = '2026-Q4'
   const yearQuarters = [1, 2, 3, 4].map((q) => {
     const quarterKeyValue = quarterKey(year, q)
     const quarterStats = QUARTER_STATS[quarterKeyValue]
     const quarterObjectives = objectives[quarterKeyValue] ?? []
-    const quarterAvailable = quarterStats ? quarterStats.workdays * 8 - quarterStats.leaveHours : 0
-    const quarterAllocated = sumHours(quarterObjectives)
-    const quarterCompletion = weightedCompletion(quarterObjectives)
+    const quarterAvailable = quarterStats ? quarterStats.workdays - quarterStats.leaveDays : 0
+    const quarterLoadValue = quarterLoad(quarterObjectives, projects, year, q, quarterAvailable)
+    const quarterAllocated = quarterLoadValue.committedDays
+    const quarterCompletion = quarterLoadValue.completion
     const status =
       quarterCompletion >= 100
         ? '已完成'
@@ -126,7 +142,7 @@ export function QuarterView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            {yearOverview ? `Year overview · ${year}` : `Home · Quarter tasks · ${year}`}
+            {yearOverview ? `Year overview · ${year}` : `本季度 · Home · Quarter tasks · ${year}`}
           </div>
           <h1 className="page-title">
             {yearOverview ? (
@@ -142,8 +158,8 @@ export function QuarterView({
           </h1>
           <p className="page-sub">
             {yearOverview
-              ? `${year} 年 · 已录入 ${yearWorkdays} 个工作日 · ${yearAvailable}h 可用 · 点击季度卡片跳转`
-              : `${quarterRange(year, quarter)} · ${stats ? `${stats.workdays} 个工作日 · ${available}h 可用` : '该季度尚未规划'}`}
+              ? `${year} 年 · 已录入 ${yearWorkdays} 个工作日 · ${yearAvailable} 人日可用 · 点击季度卡片跳转`
+              : `${quarterRange(year, quarter)} · ${stats ? `${stats.workdays} 个工作日 · 本季度 ${available} 人日 · 全局项目 ${fmtDays(globalProjectDays)} 人日（${crossQuarterProjects} 个跨季度，只计本季排期）` : '该季度尚未规划'}`}
           </p>
         </div>
         <div className="head-actions">
@@ -197,11 +213,11 @@ export function QuarterView({
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.available || '—'}</b>
-                    <span>可用 h</span>
+                    <span>可用人日</span>
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.allocated}</b>
-                    <span>已分配 h</span>
+                    <span>已占人日</span>
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.completion}%</b>
@@ -240,7 +256,7 @@ export function QuarterView({
                 <div className="capacity-head">
                   <div className="capacity-title">
                     <Target size={14} />
-                    容量与分配
+                    本季度容量与分配
                   </div>
                   <span className={cn('capacity-badge', usedPercent > 100 ? 'bad' : usedPercent > 85 ? 'warn' : '')}>
                     {usedPercent > 100 ? `超载 ${usedPercent - 100}%` : `已用 ${usedPercent}%`}
@@ -248,30 +264,36 @@ export function QuarterView({
                 </div>
                 <div className="capacity-stats">
                   <div className="capacity-stat stat">
-                    <span className="stat-label">可用工时</span>
+                    <span className="stat-label">可用人日</span>
                     <span className="stat-value num">
                       {available}
-                      <small>h</small>
+                      <small>人日</small>
                     </span>
                     <span className="stat-foot">
-                      {stats.workdays} 天 × 8h − {stats.leaveHours}h 请假
+                      {stats.workdays} 个工作日 − {stats.leaveDays} 天请假
                     </span>
                   </div>
                   <div className="capacity-stat stat">
-                    <span className="stat-label">已分配</span>
+                    <span className="stat-label">已占用</span>
                     <span className="stat-value num">
-                      {allocated}
-                      <small>h</small>
+                      {fmtDays(committed)}
+                      <small>人日</small>
                     </span>
-                    <span className="stat-foot">{objectivesOfPeriod.length} 项任务</span>
+                    <span className="stat-foot">
+                      季度任务 {fmtDays(taskDays)} + 项目本季 {fmtDays(projectDays)}
+                    </span>
                   </div>
                   <div className="capacity-stat stat">
-                    <span className="stat-label">剩余</span>
-                    <span className="stat-value num">
-                      {remaining}
-                      <small>h</small>
+                    <span className={cn('stat-label', remaining < 0 && 'bad-text')}>
+                      {remaining < 0 ? '超载' : '剩余'}
                     </span>
-                    <span className="stat-foot">建议保留 10% 缓冲</span>
+                    <span className={cn('stat-value num', remaining < 0 && 'negative')}>
+                      {fmtDays(remaining)}
+                      <small>人日</small>
+                    </span>
+                    <span className={cn('stat-foot', remaining < 0 && 'bad-text')}>
+                      {remaining < 0 ? '负值表示已超本季度容量' : '建议保留 10% 缓冲'}
+                    </span>
                   </div>
                   <div className="capacity-stat stat">
                     <span className="stat-label">完成度</span>
@@ -279,7 +301,7 @@ export function QuarterView({
                       {completion}
                       <small>%</small>
                     </span>
-                    <span className="stat-foot">按计划工时加权</span>
+                    <span className="stat-foot">季度任务 + 项目本季事项</span>
                   </div>
                 </div>
                 <div className="capacity-bar-wrap">
@@ -288,10 +310,10 @@ export function QuarterView({
                       <i
                         key={segment.category.id}
                         style={{
-                          width: `${(segment.hours / Math.max(available, 1)) * 100}%`,
+                          width: `${(segment.days / Math.max(available, 1)) * 100}%`,
                           background: `var(${segment.category.colorVar})`,
                         }}
-                        title={`${segment.category.name} ${segment.hours}h`}
+                        title={`${segment.category.name} ${segment.days} 人日`}
                       />
                     ))}
                     <span className="remaining" />
@@ -300,12 +322,12 @@ export function QuarterView({
                     {segments.map((segment) => (
                       <span key={segment.category.id}>
                         <i style={{ background: `var(${segment.category.colorVar})` }} />
-                        {segment.category.name} {segment.hours}h
+                        {segment.category.name} {segment.days} 人日
                       </span>
                     ))}
                     <span>
                       <i style={{ background: 'var(--surface-3)' }} />
-                      剩余 {Math.max(0, remaining)}h
+                      {remaining < 0 ? '超载' : '剩余'} {fmtDays(Math.abs(remaining))} 人日
                     </span>
                   </div>
                 </div>
@@ -314,12 +336,12 @@ export function QuarterView({
                     {stats.estimated
                       ? '官方放假安排尚未发布，当前按周末规则估算'
                       : `${year} Q${quarter} 已按官方节假日 + 调休补班计算`}
-                    ；本季度剩余可排 <b>{Math.max(0, remaining)}h</b>
+                    ；本季度任务 {fmtDays(taskDays)} + 项目本季排期 {fmtDays(projectDays)} 人日，剩余 <b>{fmtDays(remaining)} 人日</b>
                   </span>
                   <span>
                     {stats.estimated
                       ? '数据源：待国务院公告 · 可手动编辑'
-                      : `8h/天 · 数据源：国务院办公厅 ${year} 放假安排`}
+                      : `单位：人日 · 数据源：国务院办公厅 ${year} 放假安排`}
                   </span>
                 </div>
               </Card>
@@ -413,8 +435,8 @@ export function QuarterView({
                               </div>
                             </div>
                             <div className="obj-hours">
-                              <b className="num">{objective.plannedHours}</b>
-                              <span>h</span>
+                              <b className="num">{objective.plannedDays}</b>
+                              <span>人日</span>
                             </div>
                             <div className="obj-progress">
                               <div className="meter-row">
@@ -504,7 +526,7 @@ export function QuarterView({
                       <div className="donut-wrap">
                         <Donut
                           segments={segments.map((segment) => ({
-                            value: segment.hours,
+                            value: segment.days,
                             color: `var(${segment.category.colorVar})`,
                           }))}
                           centerValue={`${usedPercent}%`}
@@ -515,7 +537,7 @@ export function QuarterView({
                             <div className="donut-row" key={segment.category.id}>
                               <span className="dot" style={catStyle(segment.category.id)} />
                               {segment.category.name}
-                              <b>{segment.hours}h</b>
+                              <b>{segment.days} 人日</b>
                             </div>
                           ))}
                         </div>
@@ -555,7 +577,7 @@ export function QuarterView({
                 <div className="modal-body">
                   <div className="row" style={{ justifyContent: 'space-between' }}>
                     <StatusChip status={selectedObjective.status} />
-                    <span className="card-meta">{selectedObjective.plannedHours}h 计划工时</span>
+                    <span className="card-meta">{selectedObjective.plannedDays} 人日计划</span>
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <div className="meter-row">

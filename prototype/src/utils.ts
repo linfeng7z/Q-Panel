@@ -1,5 +1,5 @@
 import type { Objective, Project, ProjectWorkItem, WeekTask } from './types'
-import { NOW } from './data/mock'
+import { NOW, WEEKS } from './data/mock'
 
 export function cn(...xs: Array<string | false | null | undefined>): string {
   return xs.filter(Boolean).join(' ')
@@ -48,14 +48,14 @@ export interface ProjectWeekItem extends ProjectWorkItem {
   project: Project
 }
 
-export function projectDecomposedHours(project: Project): number {
-  return project.workItems.reduce((sum, item) => sum + item.plannedHours, 0)
+export function projectDecomposedDays(project: Project): number {
+  return project.workItems.reduce((sum, item) => sum + item.plannedDays, 0)
 }
 
-export function projectScheduledHours(project: Project): number {
+export function projectScheduledDays(project: Project): number {
   return project.workItems
     .filter((item) => Boolean(item.weekKey))
-    .reduce((sum, item) => sum + item.plannedHours, 0)
+    .reduce((sum, item) => sum + item.plannedDays, 0)
 }
 
 export function projectWorkItemsForWeek(projects: Project[], weekKey: string): ProjectWeekItem[] {
@@ -66,26 +66,34 @@ export function projectWorkItemsForWeek(projects: Project[], weekKey: string): P
   )
 }
 
-export function projectWorkItemHours(items: ProjectWeekItem[]): number {
-  return items.reduce((sum, item) => sum + item.plannedHours, 0)
+export function projectWorkItemDays(items: ProjectWeekItem[]): number {
+  return items.reduce((sum, item) => sum + item.plannedDays, 0)
 }
 
 export function weightedCompletion(objectives: Objective[]): number {
-  const hours = objectives.reduce((sum, o) => sum + o.plannedHours, 0)
-  if (!hours) return 0
-  return Math.round(objectives.reduce((sum, o) => sum + o.plannedHours * (o.progress / 100), 0) / hours * 100)
+  const days = objectives.reduce((sum, o) => sum + o.plannedDays, 0)
+  if (!days) return 0
+  return Math.round(objectives.reduce((sum, o) => sum + o.plannedDays * (o.progress / 100), 0) / days * 100)
 }
 
-export function sumHours(objectives: Objective[]): number {
-  return objectives.reduce((sum, o) => sum + o.plannedHours, 0)
+export function roundDays(value: number): number {
+  return Math.round(value * 100) / 100
 }
 
-export function hoursOf(tasks: WeekTask[]): number {
-  return tasks.reduce((sum, t) => sum + t.estimateHours, 0)
+export function fmtDays(value: number): string {
+  return String(roundDays(value))
 }
 
-export function doneHoursOf(tasks: WeekTask[]): number {
-  return tasks.filter((t) => t.done).reduce((sum, t) => sum + t.estimateHours, 0)
+export function sumDays(objectives: Objective[]): number {
+  return objectives.reduce((sum, o) => sum + o.plannedDays, 0)
+}
+
+export function daysOf(tasks: WeekTask[]): number {
+  return tasks.reduce((sum, t) => sum + t.estimateDays, 0)
+}
+
+export function doneDaysOf(tasks: WeekTask[]): number {
+  return tasks.filter((t) => t.done).reduce((sum, t) => sum + t.estimateDays, 0)
 }
 
 export function monthGrid(year: number, month: number): Array<number | null> {
@@ -118,4 +126,93 @@ export function untilQuarterEnd(): number {
 
 export function pct(n: number): string {
   return `${Math.round(n)}%`
+}
+
+
+export function quarterStartISO(year: number, quarter: number): string {
+  const month = quarter * 3 - 2
+  return `${year}-${String(month).padStart(2, '0')}-01`
+}
+
+export function quarterEndISO(year: number, quarter: number): string {
+  const month = quarter * 3
+  const day = new Date(year, month, 0).getDate()
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+export function projectWorkItemsInQuarter(
+  project: Project,
+  year: number,
+  quarter: number,
+): ProjectWorkItem[] {
+  const start = quarterStartISO(year, quarter)
+  const end = quarterEndISO(year, quarter)
+  return project.workItems.filter((item) => {
+    const week = WEEKS[item.weekKey]
+    return Boolean(week && week.end >= start && week.end <= end)
+  })
+}
+
+export function projectQuarterDays(project: Project, year: number, quarter: number): number {
+  return roundDays(
+    projectWorkItemsInQuarter(project, year, quarter).reduce((sum, item) => sum + item.plannedDays, 0),
+  )
+}
+
+export function projectQuarterDoneDays(project: Project, year: number, quarter: number): number {
+  return roundDays(
+    projectWorkItemsInQuarter(project, year, quarter)
+      .filter((item) => item.status === 'done')
+      .reduce((sum, item) => sum + item.plannedDays, 0),
+  )
+}
+
+export function projectsQuarterDays(projects: Project[], year: number, quarter: number): number {
+  return roundDays(projects.reduce((sum, project) => sum + projectQuarterDays(project, year, quarter), 0))
+}
+
+export function projectCrossQuarter(project: Project, year: number, quarter: number): boolean {
+  return project.endDate > quarterEndISO(year, quarter)
+}
+
+export interface QuarterLoad {
+  taskDays: number
+  projectDays: number
+  committedDays: number
+  taskDoneDays: number
+  projectDoneDays: number
+  doneDays: number
+  availableDays: number
+  remainingDays: number
+  completion: number
+}
+
+export function quarterLoad(
+  objectives: Objective[],
+  projects: Project[],
+  year: number,
+  quarter: number,
+  availableDays: number,
+): QuarterLoad {
+  const taskDays = roundDays(sumDays(objectives))
+  const taskDoneDays = roundDays(
+    objectives.reduce((sum, objective) => sum + objective.plannedDays * (objective.progress / 100), 0),
+  )
+  const projectDays = projectsQuarterDays(projects, year, quarter)
+  const projectDoneDays = roundDays(
+    projects.reduce((sum, project) => sum + projectQuarterDoneDays(project, year, quarter), 0),
+  )
+  const committedDays = roundDays(taskDays + projectDays)
+  const doneDays = roundDays(taskDoneDays + projectDoneDays)
+  return {
+    taskDays,
+    projectDays,
+    committedDays,
+    taskDoneDays,
+    projectDoneDays,
+    doneDays,
+    availableDays: roundDays(availableDays),
+    remainingDays: roundDays(availableDays - committedDays),
+    completion: committedDays > 0 ? Math.round((doneDays / committedDays) * 100) : 0,
+  }
 }

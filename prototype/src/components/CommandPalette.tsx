@@ -76,7 +76,7 @@ export function CommandPalette({
         id: `obj-${item.id}`,
         group: '季度任务',
         label: item.title,
-        hint: `${item.plannedHours}h`,
+        hint: `${item.plannedDays} 人日`,
         icon: <Target size={15} />,
         run: () => onView('quarter'),
       }))

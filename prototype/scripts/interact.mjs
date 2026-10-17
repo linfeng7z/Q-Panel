@@ -17,6 +17,7 @@ await page.goto('http://127.0.0.1:5178/?view=quarter&theme=noir&noreminder=1', {
 await page.waitForTimeout(500)
 check('sidebar reduced to 3 items', await page.locator('.sidebar .nav-item').count() === 3)
 check('home is quarter tasks', (await page.locator('.page-title').innerText()).includes('季度任务'))
+check('home uses person-days', (await page.locator('.capacity-stat .stat-label').first().innerText()).includes('人日'))
 
 // period popover + 2027 warning
 await page.click('.period-btn')
@@ -44,10 +45,13 @@ await page.getByRole('button', { name: '返回季度' }).click()
 // project planning + auto schedule
 await page.locator('.nav-item:has-text("项目")').click()
 await page.waitForTimeout(300)
+check('project risk badge visible', await page.locator('.proj-featured .status.risk').isVisible())
+check('project global tag visible', (await page.locator('.proj-featured .proj-cat').innerText()).includes('全局'))
 await page.locator('.proj-featured .proj-card').click()
 await page.waitForTimeout(300)
 check('project detail visible', await page.locator('.project-detail-view').isVisible())
-await page.locator('.project-summary .hours-input').first().fill('140')
+check('project scope line', (await page.locator('.project-scope-line').innerText()).includes('本季度'))
+await page.locator('.project-summary .hours-input').first().fill('18.5')
 await page.locator('.workitem-week').first().selectOption('2026-W44')
 await page.getByRole('button', { name: /打开周计划/ }).click()
 await page.waitForTimeout(400)
@@ -110,6 +114,19 @@ await shot('22-collapsed')
 await page.locator('.notch').click()
 await page.waitForTimeout(500)
 check('expanded again', await page.locator('.panel').isVisible())
+
+
+// cross-quarter project -> future week
+await page.locator('.nav-item:has-text("项目")').click()
+await page.waitForTimeout(300)
+await page.locator('.proj-featured .proj-card').click()
+await page.waitForTimeout(300)
+await page.locator('.week-plan-row').filter({ hasText: '第 1 周' }).first().click()
+await page.waitForTimeout(400)
+check('future week opens', (await page.locator('.page-title').innerText()).includes('第 1 周'))
+check('future period sync', (await page.locator('.period-btn').innerText()).includes('2027'))
+check('future auto schedule visible', (await page.locator('.auto-row').count()) > 0)
+await shot('23-future-quarter')
 
 fs.writeFileSync(`${outDir}results.json`, JSON.stringify({ results, errors }, null, 2))
 console.log('ERRORS', errors)

@@ -2482,6 +2482,7 @@
   align-items: baseline;
   gap: 3px;
   margin-top: 1px;
+  white-space: nowrap;
 }
 
 .hours-input {
@@ -2548,7 +2549,7 @@
 
 .workplan-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 68px 136px 68px 24px;
+  grid-template-columns: minmax(0, 1fr) 80px 128px 68px 24px;
   align-items: center;
   gap: 7px;
   min-height: 39px;
@@ -2729,4 +2730,55 @@
   font-size: 8px;
   font-weight: 500;
   letter-spacing: 0;
+}
+
+/* ---- Person-day scope and risk ---- */
+.tag.risk-tag {
+  border-color: color-mix(in srgb, var(--bad) 34%, transparent);
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.project-scope-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+  color: var(--text-3);
+  font-size: 8.5px;
+  letter-spacing: 0.01em;
+}
+
+.project-scope-line .tag {
+  height: 18px;
+  font-size: 8px;
+}
+
+.project-risk-banner {
+  margin: 0 0 10px;
+}
+
+.stat-value.negative {
+  color: var(--bad);
+}
+
+.task-hours {
+  width: 44px;
+  flex-basis: 44px;
+  white-space: nowrap;
+}
+
+.task-hours span {
+  margin-left: 2px;
+  font-size: 8px;
+  color: var(--text-3);
+}
+
+.hours-edit.compact .hours-input {
+  width: 48px;
+}
+
+.hours-edit.compact > span {
+  font-size: 8px;
 }

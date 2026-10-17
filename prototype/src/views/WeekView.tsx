@@ -14,13 +14,14 @@ import type { CategoryId, CreateMode, Objective, Project, WeekTask } from '../ty
 import { CATEGORIES, TODAY, WEEKDAY_CN, WEEK_ORDER, WEEKS, dayInfo, getCategory } from '../data/mock'
 import {
   cn,
-  doneHoursOf,
+  doneDaysOf,
   fmtDate,
-  hoursOf,
+  fmtDays,
+  daysOf,
   isOverdue,
   projectNext,
   projectProgress,
-  projectWorkItemHours,
+  projectWorkItemDays,
   projectWorkItemsForWeek,
 } from '../utils'
 import { TaskRow } from '../components/TaskRow'
@@ -66,6 +67,7 @@ export function WeekView({
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
+  const weekYear = Number(meta.end.slice(0, 4))
   const weekTasks = tasks.filter((task) => task.weekKey === weekKey)
   const autoItems = projectWorkItemsForWeek(projects, weekKey)
   const filteredTasks =
@@ -79,15 +81,15 @@ export function WeekView({
     : filteredTasks
   const undone = visibleTasks.filter((task) => !task.done)
   const done = visibleTasks.filter((task) => task.done)
-  const autoPlanned = projectWorkItemHours(autoItems)
+  const autoPlanned = projectWorkItemDays(autoItems)
   const autoDone = autoItems
     .filter((item) => item.status === 'done')
-    .reduce((sum, item) => sum + item.plannedHours, 0)
-  const planned = hoursOf(weekTasks) + autoPlanned
-  const doneHours = doneHoursOf(weekTasks) + autoDone
-  const available = meta.workdays * 8 - meta.leaveHours
+    .reduce((sum, item) => sum + item.plannedDays, 0)
+  const planned = daysOf(weekTasks) + autoPlanned
+  const doneDays = doneDaysOf(weekTasks) + autoDone
+  const available = meta.workdays - meta.leaveDays
   const remaining = available - planned
-  const overdue = tasks.filter(isOverdue)
+  const overdue = meta.end <= '2026-12-31' ? tasks.filter(isOverdue) : []
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
   const weekIndex = WEEK_ORDER.indexOf(weekKey)
   const prevWeek = weekIndex > 0 ? WEEKS[WEEK_ORDER[weekIndex - 1]] : null
@@ -114,12 +116,12 @@ export function WeekView({
     .slice(0, 3)
   const segments = CATEGORIES.map((category) => ({
     category,
-    hours:
-      hoursOf(weekTasks.filter((task) => task.categoryId === category.id)) +
+    days:
+      daysOf(weekTasks.filter((task) => task.categoryId === category.id)) +
       autoItems
         .filter((item) => item.project.categoryId === category.id)
-        .reduce((sum, item) => sum + item.plannedHours, 0),
-  })).filter((segment) => segment.hours > 0)
+        .reduce((sum, item) => sum + item.plannedDays, 0),
+  })).filter((segment) => segment.days > 0)
   const totalItems = weekTasks.length + autoItems.length
   const totalDone =
     weekTasks.filter((task) => task.done).length +
@@ -138,13 +140,13 @@ export function WeekView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Week {meta.num} · 2026 · 周计划
+            Week {meta.num} · {weekYear} · 周计划
           </div>
           <h1 className="page-title">
             第 {meta.num} 周 <span className="light">周计划</span>
           </h1>
           <p className="page-sub">
-            {meta.range} · {meta.workdays} 个工作日 · 可用 {available}h
+            {meta.range} · {meta.workdays} 个工作日 · 可用 {available} 人日
             {meta.note ? ` · ${meta.note}` : ''}
           </p>
         </div>
@@ -174,7 +176,7 @@ export function WeekView({
             第 {meta.num} 周 <span className="faint">/ {meta.range}</span>
           </b>
           <span>
-            {meta.workdays} 个工作日 · 可用 {available}h
+            {meta.workdays} 个工作日 · 可用 {available} 人日
           </span>
         </div>
         <button
@@ -199,22 +201,22 @@ export function WeekView({
       <Card className="week-cap" innerClassName="week-cap-inner">
         <div className="week-cap-stats">
           <div className="week-cap-stat">
-            <b className="num">{available}h</b>
-            <span>可用工时</span>
+            <b className="num">{fmtDays(available)}</b>
+            <span>可用人日</span>
           </div>
           <div className="week-cap-stat">
-            <b className="num">{planned}h</b>
-            <span>已排工时</span>
+            <b className="num">{fmtDays(planned)}</b>
+            <span>已排人日</span>
           </div>
           <div className="week-cap-stat">
-            <b className="num">{doneHours}h</b>
+            <b className="num">{fmtDays(doneDays)}</b>
             <span>已完成</span>
           </div>
           <div className="week-cap-stat">
             <b className={cn('num', remaining < 0 && 'negative')}>
-              {remaining < 0 ? `-${Math.abs(remaining)}` : remaining}h
+              {remaining < 0 ? `-${fmtDays(Math.abs(remaining))}` : fmtDays(remaining)}
             </b>
-            <span>{remaining < 0 ? '超载' : '剩余'}</span>
+            <span>{remaining < 0 ? '超载人日' : '剩余人日'}</span>
           </div>
         </div>
         <div className="week-cap-viz">
@@ -223,7 +225,7 @@ export function WeekView({
               <i
                 key={segment.category.id}
                 style={{
-                  width: `${(segment.hours / Math.max(available, 1)) * 100}%`,
+                  width: `${(segment.days / Math.max(available, 1)) * 100}%`,
                   background: `var(${segment.category.colorVar})`,
                 }}
               />
@@ -234,12 +236,12 @@ export function WeekView({
             {segments.map((segment) => (
               <span key={segment.category.id}>
                 <i style={{ background: `var(${segment.category.colorVar})` }} />
-                {segment.category.name} {segment.hours}h
+                {segment.category.name} {segment.days} 人日
               </span>
             ))}
             {autoPlanned > 0 ? (
               <span className="auto-cap-note">
-                <FolderSimple size={9} /> 项目排期 {autoPlanned}h
+                <FolderSimple size={9} /> 项目排期 {fmtDays(autoPlanned)} 人日
               </span>
             ) : null}
             <span style={{ marginLeft: 'auto' }}>
@@ -409,7 +411,7 @@ export function WeekView({
                 <div className="section-label auto-section-label">
                   <FolderSimple size={10} />
                   项目自动排期 · {visibleAutoItems.length} 项 ·{' '}
-                  {visibleAutoItems.reduce((sum, item) => sum + item.plannedHours, 0)}h
+                  {fmtDays(visibleAutoItems.reduce((sum, item) => sum + item.plannedDays, 0))} 人日
                   <span className="auto-section-hint">来自项目工作规划</span>
                 </div>
                 <div className="task-rows">
@@ -442,8 +444,8 @@ export function WeekView({
                           </div>
                         </div>
                         <div className={cn('task-hours', item.status === 'done' && 'done')}>
-                          <b>{item.plannedHours}</b>
-                          <span>h</span>
+                          <b>{fmtDays(item.plannedDays)}</b>
+                          <span>人日</span>
                         </div>
                         <span className="auto-row-pad" />
                       </div>
