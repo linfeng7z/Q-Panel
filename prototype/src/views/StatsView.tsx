@@ -91,10 +91,10 @@ export function StatsView({ year, quarter, projects, onToast, onBack }: StatsVie
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Analytics · {year}
+            分析 · {year}
           </div>
           <h1 className="page-title">
-            容量与完成度 <span className="light">· Q{quarter}</span>
+            统计与容量 <span className="light">· Q{quarter}</span>
           </h1>
           <p className="page-sub">
             {year} 年已录入 {yearWorkdays} 个工作日 · {yearAvailable} 人日可用（已扣请假）· 数据源：中国法定节假日 + 调休补班
@@ -103,7 +103,7 @@ export function StatsView({ year, quarter, projects, onToast, onBack }: StatsVie
         <div className="head-actions">
           <button type="button" className="btn ghost" onClick={onBack}>
             <CaretLeft size={14} />
-            返回首页
+            返回季度规划
           </button>
           <button
             type="button"

@@ -19,6 +19,7 @@ import {
   PROJECTS,
   TODAY,
   WEEKS,
+  addCategory,
   quarterKey,
 } from './data/mock'
 import { dateISO, daysOf, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
@@ -28,6 +29,7 @@ import { Sidebar } from './components/Sidebar'
 import { CommandPalette } from './components/CommandPalette'
 import { AIDrawer } from './components/AIDrawer'
 import { SettingsModal } from './components/SettingsModal'
+import type { SettingsTab } from './components/SettingsModal'
 import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
@@ -88,6 +90,8 @@ export default function App() {
   const [commandOpen, setCommandOpen] = useState(params.get('cmd') === '1')
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('general')
+  const [, setCategoryVersion] = useState(0)
   const [reminderOpen, setReminderOpen] = useState(false)
   const [createMode, setCreateMode] = useState<CreateMode | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -122,6 +126,19 @@ export default function App() {
     if (toastTimer.current) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 3000)
   }, [])
+
+  const openSettings = (tab: SettingsTab = 'general') => {
+    setSettingsInitialTab(tab)
+    setSettingsOpen(true)
+  }
+
+  const handleAddCategory = (name: string, colorVar: string) => {
+    addCategory(name, colorVar)
+    setCategoryVersion((value) => value + 1)
+    showToast(`已新增分类「${name}」`)
+  }
+
+  const manageCategories = () => openSettings('categories')
 
   useEffect(() => {
     return () => {
@@ -350,6 +367,7 @@ export default function App() {
             }}
             onToast={showToast}
             onOpenStats={() => setView('stats')}
+            onManageCategories={manageCategories}
           />
         )
       case 'week':
@@ -367,6 +385,7 @@ export default function App() {
             onMoveOverdue={moveOverdue}
             onToast={showToast}
             onToggleWorkItem={toggleProjectWorkItem}
+            onManageCategories={manageCategories}
           />
         )
       case 'projects':
@@ -384,6 +403,7 @@ export default function App() {
               changeWeek(key)
               setView('week')
             }}
+            onManageCategories={manageCategories}
           />
         )
       case 'stats':
@@ -422,8 +442,6 @@ export default function App() {
             <div className="panel-shell">
               <div className="panel" data-theme={theme}>
                 <TopBar
-                  view={view}
-                  onView={navigate}
                   projects={projects}
                   onToggleTheme={() =>
                     setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))
@@ -440,7 +458,7 @@ export default function App() {
                   }}
                   onOpenCommand={() => setCommandOpen(true)}
                   onOpenAI={() => setAiOpen(true)}
-                  onOpenSettings={() => setSettingsOpen(true)}
+                  onOpenSettings={() => openSettings('general')}
                   onOpenReminder={() => setReminderOpen(true)}
                   onCollapse={() => setExpanded(false)}
                   aiOpen={aiOpen}
@@ -527,7 +545,7 @@ export default function App() {
             setQuarter(nextQuarter)
           }}
           onOpenAI={() => setAiOpen(true)}
-          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenSettings={() => openSettings('general')}
           onToggleTheme={() => setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))}
         />
       ) : null}
@@ -539,6 +557,8 @@ export default function App() {
           onTheme={setTheme}
           onTestReminder={() => setReminderOpen(true)}
           onToast={showToast}
+          initialTab={settingsInitialTab}
+          onAddCategory={handleAddCategory}
         />
       ) : null}
 

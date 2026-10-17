@@ -6,6 +6,7 @@ import {
   Check,
   FolderSimple,
   Plus,
+  Tag,
   Target,
   Trash,
   WarningCircle,
@@ -37,6 +38,7 @@ interface ProjectsViewProps {
   onToast: (message: string) => void
   onChangeProjects: (projects: Project[]) => void
   onOpenWeek: (weekKey: string) => void
+  onManageCategories: () => void
 }
 
 function projectStatus(project: Project, year: number, quarter: number) {
@@ -61,6 +63,7 @@ export function ProjectsView({
   onToast,
   onChangeProjects,
   onOpenWeek,
+  onManageCategories,
 }: ProjectsViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? projects.find((project) => project.id === selectedId) : null
@@ -68,13 +71,6 @@ export function ProjectsView({
   useEffect(() => {
     document.querySelector('.view-scroll')?.scrollTo({ top: 0 })
   }, [selectedId])
-  const visibleProjects =
-    filter === 'all' ? projects : projects.filter((project) => project.categoryId === filter)
-  const showFeatured = filter === 'all' && visibleProjects.length > 0
-  const featured = showFeatured ? visibleProjects[0] : null
-  const rest = showFeatured ? visibleProjects.slice(1) : visibleProjects
-  const featuredProgress = featured ? projectProgress(featured) : 0
-  const featuredNext = featured ? projectNext(featured) : undefined
 
   if (selected) {
     return (
@@ -92,26 +88,43 @@ export function ProjectsView({
     )
   }
 
+  const visibleProjects =
+    filter === 'all' ? projects : projects.filter((project) => project.categoryId === filter)
+  const globalDays = projects.reduce((sum, project) => sum + project.plannedDays, 0)
+  const crossCount = projects.filter((project) => projectCrossQuarter(project, year, quarter)).length
+  const riskCount = projects.filter(
+    (project) => project.status === 'risk' || projectCrossQuarter(project, year, quarter),
+  ).length
+  const quarterDays = projects.reduce(
+    (sum, project) => sum + projectQuarterDays(project, year, quarter),
+    0,
+  )
+  const sortedProjects = [...visibleProjects].sort((a, b) => {
+    const rank = (project: Project) => {
+      if (project.status === 'risk' || projectCrossQuarter(project, year, quarter)) return 0
+      return 1
+    }
+    return rank(a) - rank(b)
+  })
+
   return (
     <div className="view projects-view">
       <div className="page-head">
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            GLOBAL PROJECTS · {year} · 全局维度
+            全局 · PROJECTS · {year}
           </div>
-          <h1 className="page-title">
-            全局项目 <span className="light">与工作规划</span>
-          </h1>
+          <h1 className="page-title">全局项目</h1>
           <p className="page-sub">
-            {projects.length} 个全局项目 · 共{' '}
-            {projects.reduce((sum, project) => sum + project.workItems.length, 0)} 个工作项 ·{' '}
-            {projects.filter((project) => projectCrossQuarter(project, year, quarter)).length} 个跨季度 ·{' '}
-            {projects.filter((project) => project.status === 'risk' || projectCrossQuarter(project, year, quarter)).length} 个有风险 ·
-            本季度排期单独计入 Q{quarter}
+            跨季度项目按全局维度管理 · 本季度只统计 Q{quarter} 排期
           </p>
         </div>
         <div className="head-actions">
+          <button type="button" className="btn ghost" onClick={onManageCategories}>
+            <Tag size={14} />
+            分类管理
+          </button>
           <button type="button" className="btn primary" onClick={() => onOpenCreate('project')}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
@@ -119,6 +132,30 @@ export function ProjectsView({
             新建项目
           </button>
         </div>
+      </div>
+
+      <div className="global-scope-strip">
+        <div>
+          <span>全局项目</span>
+          <b>{projects.length}</b>
+        </div>
+        <div>
+          <span>全局规划</span>
+          <b>{fmtDays(globalDays)} 人日</b>
+        </div>
+        <div>
+          <span>跨季度</span>
+          <b>{crossCount}</b>
+        </div>
+        <div>
+          <span>有风险</span>
+          <b className="bad-text">{riskCount}</b>
+        </div>
+        <div>
+          <span>本季排期</span>
+          <b>{fmtDays(quarterDays)} 人日</b>
+        </div>
+        <span className="scope-strip-note">本季度只计 Q{quarter} 排期</span>
       </div>
 
       <div className="filter-row">
@@ -134,7 +171,7 @@ export function ProjectsView({
         </button>
         {CATEGORIES.map((category) => {
           const count = projects.filter((project) => project.categoryId === category.id).length
-          if (!count) return null
+          if (!count && !category.id.startsWith('cat-')) return null
           return (
             <button
               key={category.id}
@@ -149,8 +186,12 @@ export function ProjectsView({
             </button>
           )
         })}
+        <button type="button" className="chip add" onClick={onManageCategories}>
+          <Plus size={10} />
+          分类
+        </button>
         <span className="filter-spacer" />
-        <span className="card-meta">进度 = 已完成里程碑 / 总里程碑（等权）</span>
+        <span className="card-meta">按风险优先 · 点击项目查看工作规划</span>
       </div>
 
       {visibleProjects.length === 0 ? (
@@ -158,7 +199,7 @@ export function ProjectsView({
           <EmptyState
             icon={<FolderSimple size={20} />}
             title="这个分类下还没有项目"
-            sub="长期推进的事情放这里，周事项可以关联到项目里程碑。"
+            sub="项目是全局维度，跨季度推进；可以按分类筛选。"
             action={
               <button type="button" className="btn primary sm" onClick={() => onOpenCreate('project')}>
                 <Plus size={12} /> 新建项目
@@ -167,180 +208,83 @@ export function ProjectsView({
           />
         </Card>
       ) : (
-        <div className="proj-grid">
-          {featured ? (
-            <Card className="proj-featured">
-              <div className="proj-card proj-card-featured" onClick={() => setSelectedId(featured.id)}>
-                <div className="proj-top">
-                  <div className="proj-cat" style={catStyle(featured.categoryId)}>
-                    <span className="dot" />
-                    {getCategory(featured.categoryId).name}
-                    <span className="tag" style={{ marginLeft: 4 }}>
-                      全局项目
-                    </span>
-                    {projectCrossQuarter(featured, year, quarter) ? (
-                      <span className="tag risk-tag">跨季度</span>
-                    ) : null}
-                  </div>
-                  <span className={cn('status', projectStatus(featured, year, quarter).cls)}>
-                    <span className="mini-dot" />
-                    {projectStatus(featured, year, quarter).label}
-                  </span>
-                </div>
-                <h3>{featured.title}</h3>
-                <p className="proj-desc">{featured.description}</p>
-                <div className="proj-meta">
-                  <Target size={10} />
-                  {featured.span}
-                  <span className="sep" />
-                  {projectDoneCount(featured)}/{featured.milestones.length} 里程碑
-                  <span className="sep" />
-                  下一里程碑 {featuredNext ? fmtDate(featuredNext.targetDate) : '—'}
-                </div>
-                <div className="proj-plan-line">
-                  <span>
-                    全局规划 <b>{featured.plannedDays} 人日</b>
-                  </span>
-                  <span>
-                    已拆解 <b>{fmtDays(projectDecomposedDays(featured))} 人日</b>
-                  </span>
-                  <span>
-                    本季排期 <b>{fmtDays(projectQuarterDays(featured, year, quarter))} 人日</b>
-                  </span>
-                  <span>{featured.workItems.length} 个工作项</span>
-                  <span className="auto-label">自动排入周计划</span>
-                </div>
-                <div className="featured-body">
-                  <div>
-                    <div
-                      className="milestone-bar"
-                      style={{ height: 8, marginTop: 0 }}
-                      title={`${featuredProgress}% 完成`}
-                    >
-                      {featured.milestones.map((milestone) => (
-                        <i
-                          key={milestone.id}
-                          className={
-                            milestone.status === 'done'
-                              ? 'done'
-                              : milestone.status === 'doing'
-                                ? 'doing'
-                                : ''
-                          }
-                        />
-                      ))}
-                    </div>
-                    <div className="featured-timeline" style={{ marginTop: 15 }}>
-                      {featured.milestones.map((milestone) => (
-                        <div
-                          key={milestone.id}
-                          className={cn(
-                            'timeline-item',
-                            milestone.status === 'done' && 'done',
-                            milestone.status === 'doing' && 'doing',
-                          )}
-                        >
-                          <span className="timeline-dot" />
-                          <span className="tl-title">{milestone.title}</span>
-                          <span className="tl-date">{fmtDate(milestone.targetDate)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="featured-side">
-                    <div className="featured-kpi">
-                      <span>整体进度</span>
-                      <b>
-                        {featuredProgress}
-                        <small>%</small>
-                      </b>
-                      <div style={{ marginTop: 8 }}>
-                        <Progress value={featuredProgress} catId={featured.categoryId} />
-                      </div>
-                    </div>
-                    <div className="featured-kpi">
-                      <span>下一里程碑</span>
-                      <b style={{ fontSize: 12, lineHeight: 1.4 }}>
-                        {featuredNext?.title ?? '全部完成'}
-                      </b>
-                      <span style={{ marginTop: 4 }}>
-                        {featuredNext ? `目标 ${fmtDate(featuredNext.targetDate)}` : ''}
+        <Card className="project-overview-card" innerClassName="project-overview-inner">
+          <div className="list-head">
+            <div className="list-title">
+              项目概览
+              <span className="list-count num">{sortedProjects.length}</span>
+            </div>
+            <span className="card-meta">全局规划 / 本季排期 / 进度</span>
+          </div>
+          <div className="project-overview-head">
+            <span>项目</span>
+            <div className="project-overview-head-metrics">
+              <span>全局规划</span>
+              <span>本季排期</span>
+              <span>已拆解</span>
+              <span>里程碑</span>
+            </div>
+            <span>进度</span>
+            <span />
+          </div>
+          <div className="project-overview-rows">
+            {sortedProjects.map((project) => {
+              const status = projectStatus(project, year, quarter)
+              const progress = projectProgress(project)
+              const next = projectNext(project)
+              const cross = projectCrossQuarter(project, year, quarter)
+              return (
+                <button
+                  key={project.id}
+                  type="button"
+                  className="project-overview-row"
+                  onClick={() => setSelectedId(project.id)}
+                >
+                  <div className="project-row-main">
+                    <div className="project-row-title">
+                      <span className="dot" style={catStyle(project.categoryId)} />
+                      <b>{project.title}</b>
+                      <span className="tag">全局</span>
+                      {cross ? <span className="tag risk-tag">跨季度</span> : null}
+                      <span className={cn('status', status.cls)}>
+                        <span className="mini-dot" />
+                        {status.label}
                       </span>
                     </div>
-                    <button type="button" className="btn sm" style={{ marginTop: 'auto' }}>
-                      编辑项目规划
-                      <ArrowRight size={11} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ) : null}
-
-          {rest.map((project) => {
-            const progress = projectProgress(project)
-            const next = projectNext(project)
-            return (
-              <Card key={project.id}>
-                <div className="proj-card" onClick={() => setSelectedId(project.id)}>
-                  <div className="proj-top">
-                    <div className="proj-cat" style={catStyle(project.categoryId)}>
-                      <span className="dot" />
-                      {getCategory(project.categoryId).name}
-                      <span className="tag" style={{ marginLeft: 4 }}>全局</span>
-                      {projectCrossQuarter(project, year, quarter) ? (
-                        <span className="tag risk-tag">跨季度</span>
-                      ) : null}
+                    <div className="project-row-desc">
+                      {getCategory(project.categoryId).name} · {project.span} ·{' '}
+                      {next ? `下一里程碑 ${fmtDate(next.targetDate)}` : '里程碑已完成'}
                     </div>
-                    <span className={cn('status', projectStatus(project, year, quarter).cls)}>
-                      <span className="mini-dot" />
-                      {projectStatus(project, year, quarter).label}
-                    </span>
                   </div>
-                  <h3>{project.title}</h3>
-                  <p className="proj-desc">{project.description}</p>
-                  <div className="proj-meta">
-                    <Target size={10} />
-                    {project.span}
-                    <span className="sep" />
-                    {projectDoneCount(project)}/{project.milestones.length} 里程碑
+                  <div className="project-row-metrics">
+                    <div>
+                      <b>{fmtDays(project.plannedDays)} 人日</b>
+                    </div>
+                    <div>
+                      <b>{fmtDays(projectQuarterDays(project, year, quarter))} 人日</b>
+                    </div>
+                    <div>
+                      <b>{fmtDays(projectDecomposedDays(project))} 人日</b>
+                    </div>
+                    <div>
+                      <b>
+                        {projectDoneCount(project)}/{project.milestones.length}
+                      </b>
+                    </div>
                   </div>
-                  <div className="proj-plan-line">
-                    <span>
-                      全局 <b>{project.plannedDays} 人日</b>
-                    </span>
-                    <span>
-                      已拆 <b>{fmtDays(projectDecomposedDays(project))}</b>
-                    </span>
-                    <span>
-                      本季 <b>{fmtDays(projectQuarterDays(project, year, quarter))} 人日</b>
-                    </span>
+                  <div className="project-row-progress">
+                    <div className="project-row-progress-top">
+                      <span>进度</span>
+                      <b>{progress}%</b>
+                    </div>
+                    <Progress value={progress} catId={project.categoryId} />
                   </div>
-                  <div className="milestone-bar">
-                    {project.milestones.map((milestone) => (
-                      <i
-                        key={milestone.id}
-                        className={
-                          milestone.status === 'done'
-                            ? 'done'
-                            : milestone.status === 'doing'
-                              ? 'doing'
-                              : ''
-                        }
-                      />
-                    ))}
-                  </div>
-                  <div className="proj-foot">
-                    <span>
-                      进度 <b>{progress}%</b>
-                    </span>
-                    <span>{next ? `下一里程碑 ${fmtDate(next.targetDate)}` : '已完成'}</span>
-                  </div>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+                  <ArrowRight size={13} className="project-row-arrow" />
+                </button>
+              )
+            })}
+          </div>
+        </Card>
       )}
     </div>
   )
@@ -395,26 +339,26 @@ function ProjectDetail({
       status: 'todo',
     }
     onChange({ ...project, workItems: [...project.workItems, item] })
-    onToast('已添加工作项，按安排周自动进入周计划')
+    onToast('已添加工作项，按安排周自动进入本周安排')
   }
 
   const removeItem = (id: string) => {
     onChange({ ...project, workItems: project.workItems.filter((item) => item.id !== id) })
-    onToast('已删除工作项，周计划已同步')
+    onToast('已删除工作项，本周安排已同步')
   }
 
   return (
     <div className="view project-detail-view">
       <button type="button" className="back-link" onClick={onBack}>
         <CaretLeft size={13} />
-        全部项目
+        全局项目
       </button>
 
       <div className="page-head project-detail-head">
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            GLOBAL PROJECT · {getCategory(project.categoryId).name} · 全局维度
+            全局项目 · {getCategory(project.categoryId).name}
           </div>
           <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
@@ -438,7 +382,7 @@ function ProjectDetail({
             onClick={() => onOpenWeek(project.workItems[0]?.weekKey ?? '2026-W42')}
           >
             <CalendarDots size={14} />
-            打开周计划
+            打开本周安排
           </button>
         </div>
       </div>
@@ -519,7 +463,7 @@ function ProjectDetail({
               工作规划
               <span className="list-count num">{project.workItems.length}</span>
             </div>
-            <span className="auto-label">设置安排周 → 自动进入周计划</span>
+            <span className="auto-label">设置安排周 → 自动进入本周安排</span>
           </div>
           <div className="workplan-note">
             工作项会按「安排周」自动出现在对应周的「项目自动排期」中，并计入当周已排人日；
@@ -590,7 +534,7 @@ function ProjectDetail({
             ))}
             {project.workItems.length === 0 ? (
               <div className="task-empty" style={{ padding: '18px 10px' }}>
-                还没有工作项。先把项目拆成可排进周计划的小块。
+                还没有工作项。先把项目拆成可排进本周安排的小块。
               </div>
             ) : null}
           </div>
@@ -635,7 +579,7 @@ function ProjectDetail({
                 </div>
               ) : null}
               <div className="auto-note">
-                修改安排周后，对应周计划会自动更新，不需要手动搬事项。
+                修改安排周后，对应本周安排会自动更新，不需要手动搬事项。
               </div>
             </div>
           </Card>

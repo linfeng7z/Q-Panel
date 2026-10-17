@@ -45,12 +45,13 @@ await goto('?view=projects&theme=noir&noreminder=1')
 await shot('05-projects')
 
 await goto('?view=projects&theme=noir&noreminder=1')
-await page.locator('.proj-featured .proj-card').click()
+await page.locator('.project-overview-row').first().click()
 await shot('06-project-detail')
 
-await goto('?view=quarter&theme=noir&noreminder=1')
-await page.locator('.icon-btn[title="工具"]').click()
-await shot('07-tools-menu')
+await goto('?view=quarter&theme=noir&settings=1&noreminder=1')
+await page.locator('.settings-tab:has-text("分类")').click()
+await page.waitForTimeout(250)
+await shot('07-category-manager')
 
 await goto('?view=quarter&theme=noir&ai=1&noreminder=1')
 await shot('08-ai')

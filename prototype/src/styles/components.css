@@ -1834,3 +1834,29 @@
 .bad-text {
   color: var(--bad) !important;
 }
+
+.category-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.category-label .dot {
+  width: 8px;
+  height: 8px;
+}
+
+.category-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-add-row .input {
+  width: 100%;
+}
+
+.category-add-row .select {
+  width: 100%;
+}

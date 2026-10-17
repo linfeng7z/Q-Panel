@@ -3,23 +3,17 @@ import {
   Bell,
   CaretDown,
   CaretUp,
-  ChartLineUp,
   GearSix,
-  LinkSimple,
   MagnifyingGlass,
-  NotePencil,
   Palette,
   Sparkle,
-  SquaresFour,
 } from '@phosphor-icons/react'
 import { OBJECTIVES, QUARTER_STATS, YEARS, quarterKey, quarterRange } from '../data/mock'
 import { quarterLoad } from '../utils'
 import { cn } from '../utils'
-import type { Project, ViewId } from '../types'
+import type { Project } from '../types'
 
 interface TopBarProps {
-  view: ViewId
-  onView: (view: ViewId) => void
   onToggleTheme: () => void
   projects: Project[]
   year: number
@@ -34,15 +28,7 @@ interface TopBarProps {
   bellCount: number
 }
 
-const toolItems: Array<{ id: ViewId; label: string; hint: string; icon: typeof ChartLineUp }> = [
-  { id: 'stats', label: '统计与容量', hint: '季度 / 月度 / 周口径', icon: ChartLineUp },
-  { id: 'notes', label: '随笔记', hint: 'Markdown 本地速记', icon: NotePencil },
-  { id: 'links', label: '链接收藏', hint: '常用安全入口', icon: LinkSimple },
-]
-
 export function TopBar({
-  view,
-  onView,
   onToggleTheme,
   projects,
   year,
@@ -57,9 +43,7 @@ export function TopBar({
   bellCount,
 }: TopBarProps) {
   const [open, setOpen] = useState(false)
-  const [toolsOpen, setToolsOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const toolsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -69,17 +53,6 @@ export function TopBar({
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
   }, [open])
-
-  useEffect(() => {
-    if (!toolsOpen) return
-    const onPointerDown = (event: MouseEvent) => {
-      if (toolsRef.current && !toolsRef.current.contains(event.target as Node)) setToolsOpen(false)
-    }
-    document.addEventListener('mousedown', onPointerDown)
-    return () => document.removeEventListener('mousedown', onPointerDown)
-  }, [toolsOpen])
-
-  const toolPageActive = view === 'stats' || view === 'notes' || view === 'links'
 
   return (
     <div className="topbar">
@@ -109,7 +82,6 @@ export function TopBar({
             type="button"
             className={cn('period-btn', open && 'open')}
             onClick={() => {
-              setToolsOpen(false)
               setOpen((value) => !value)
             }}
             aria-haspopup="dialog"
@@ -225,50 +197,6 @@ export function TopBar({
           <Bell size={16} />
           {bellCount > 0 ? <span className="ping" /> : null}
         </button>
-
-        <div ref={toolsRef} style={{ position: 'relative' }}>
-          <button
-            type="button"
-            className={cn('icon-btn', (toolsOpen || toolPageActive) && 'active')}
-            onClick={() => {
-              setOpen(false)
-              setToolsOpen((value) => !value)
-            }}
-            title="工具"
-            aria-haspopup="menu"
-            aria-expanded={toolsOpen}
-          >
-            <SquaresFour size={16} />
-          </button>
-          {toolsOpen ? (
-            <div className="tools-pop" role="menu" aria-label="工具">
-              <div className="tools-pop-head">工具</div>
-              {toolItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={cn('tools-item', view === item.id && 'active')}
-                    role="menuitem"
-                    onClick={() => {
-                      onView(item.id)
-                      setToolsOpen(false)
-                    }}
-                  >
-                    <span className="tools-item-icon">
-                      <Icon size={15} />
-                    </span>
-                    <span className="tools-item-copy">
-                      <b>{item.label}</b>
-                      <span>{item.hint}</span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          ) : null}
-        </div>
 
         <button type="button" className="icon-btn" onClick={onToggleTheme} title="切换皮肤">
           <Palette size={16} />

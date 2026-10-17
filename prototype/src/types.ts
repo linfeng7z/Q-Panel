@@ -8,7 +8,7 @@ export type ViewId =
   | 'notes'
   | 'links'
 
-export type CategoryId = 'appsec' | 'secops' | 'team' | 'other'
+export type CategoryId = string
 
 export interface Category {
   id: CategoryId
@@ -63,7 +63,7 @@ export interface Project {
   status: 'active' | 'done' | 'risk'
   /** 项目全局规划人日，可编辑 */
   plannedDays: number
-  /** 拆解后的工作项，按安排周自动进入周计划 */
+  /** 拆解后的工作项，按安排周自动进入本周安排 */
   workItems: ProjectWorkItem[]
   milestones: Milestone[]
   objectiveId?: string

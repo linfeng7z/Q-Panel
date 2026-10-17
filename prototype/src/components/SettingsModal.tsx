@@ -9,13 +9,15 @@ import {
   Plus,
   SlidersHorizontal,
   Sparkle,
+  Tag,
   X,
 } from '@phosphor-icons/react'
 import type { ThemeId } from '../types'
+import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
 
-type SettingsTab = 'general' | 'work' | 'reminders' | 'ai' | 'data'
+export type SettingsTab = 'general' | 'work' | 'categories' | 'reminders' | 'ai' | 'data'
 
 interface SettingsModalProps {
   onClose: () => void
@@ -23,11 +25,14 @@ interface SettingsModalProps {
   onTheme: (theme: ThemeId) => void
   onTestReminder: () => void
   onToast: (message: string) => void
+  initialTab?: SettingsTab
+  onAddCategory: (name: string, colorVar: string) => void
 }
 
 const tabs: Array<{ id: SettingsTab; label: string; icon: typeof Bell }> = [
   { id: 'general', label: '通用', icon: SlidersHorizontal },
   { id: 'work', label: '人日与日历', icon: CalendarBlank },
+  { id: 'categories', label: '分类', icon: Tag },
   { id: 'reminders', label: '提醒', icon: Bell },
   { id: 'ai', label: 'AI 助手', icon: Sparkle },
   { id: 'data', label: '数据', icon: HardDrives },
@@ -39,8 +44,12 @@ export function SettingsModal({
   onTheme,
   onTestReminder,
   onToast,
+  initialTab = 'general',
+  onAddCategory,
 }: SettingsModalProps) {
-  const [tab, setTab] = useState<SettingsTab>('general')
+  const [tab, setTab] = useState<SettingsTab>(initialTab)
+  const [categoryName, setCategoryName] = useState('')
+  const [categoryColor, setCategoryColor] = useState(CATEGORY_COLORS[0].value)
   const [autoLaunch, setAutoLaunch] = useState(true)
   const [popup, setPopup] = useState(true)
   const [nativeNotif, setNativeNotif] = useState(true)
@@ -49,7 +58,7 @@ export function SettingsModal({
   const [buffer, setBuffer] = useState(0)
   const [defaultOffset, setDefaultOffset] = useState('提前 2 天')
   const [defaultTime, setDefaultTime] = useState('09:30')
-  const [defaultView, setDefaultView] = useState('首页')
+  const [defaultView, setDefaultView] = useState('季度规划')
   const [provider, setProvider] = useState('OpenAI 兼容')
   const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
   const [model, setModel] = useState('deepseek-chat')
@@ -154,9 +163,9 @@ export function SettingsModal({
                           <div className="settings-help">点击刘海展开时先看到的页面。</div>
                         </div>
                         <select className="select" style={{ width: 120 }} value={defaultView} onChange={(event) => setDefaultView(event.target.value)}>
-                          <option>首页</option>
-                          <option>周计划</option>
-                          <option>项目</option>
+                          <option>季度规划</option>
+                          <option>本周安排</option>
+                          <option>全局项目</option>
                         </select>
                       </div>
                     </div>
@@ -233,6 +242,99 @@ export function SettingsModal({
                         <button type="button" className="btn sm" onClick={() => onToast('请假管理将在功能版接入')}>
                           管理
                         </button>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+
+                {tab === 'categories' ? (
+                  <>
+                    <div className="settings-pane-title">分类</div>
+                    <div className="settings-pane-sub">
+                      分类用于筛选季度任务、本周事项和全局项目；新增后立即出现在所有选择器。
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">现有分类</div>
+                      {CATEGORIES.map((category) => (
+                        <div className="settings-row" key={category.id}>
+                          <div>
+                            <div className="settings-label category-label">
+                              <span
+                                className="dot"
+                                style={{ background: `var(${category.colorVar})` }}
+                              />
+                              {category.name}
+                            </div>
+                            <div className="settings-help">
+                              {category.id.startsWith('cat-') ? '自定义分类' : '内置分类'}
+                            </div>
+                          </div>
+                          <span className="card-meta">{category.id.startsWith('cat-') ? '自定义' : '默认'}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">新增分类</div>
+                      <div className="settings-row category-add-row">
+                        <input
+                          className="input"
+                          value={categoryName}
+                          onChange={(event) => setCategoryName(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault()
+                              const name = categoryName.trim()
+                              if (!name) {
+                                onToast('请输入分类名称')
+                                return
+                              }
+                              if (CATEGORIES.some((item) => item.name === name)) {
+                                onToast('分类名称已存在')
+                                return
+                              }
+                              onAddCategory(name, categoryColor)
+                              setCategoryName('')
+                            }
+                          }}
+                          placeholder="例如：合规审计"
+                          maxLength={12}
+                        />
+                        <select
+                          className="select"
+                          value={categoryColor}
+                          onChange={(event) => setCategoryColor(event.target.value)}
+                        >
+                          {CATEGORY_COLORS.map((color) => (
+                            <option value={color.value} key={color.value}>
+                              {color.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn primary sm"
+                          onClick={() => {
+                            const name = categoryName.trim()
+                            if (!name) {
+                              onToast('请输入分类名称')
+                              return
+                            }
+                            if (CATEGORIES.some((item) => item.name === name)) {
+                              onToast('分类名称已存在')
+                              return
+                            }
+                            onAddCategory(name, categoryColor)
+                            setCategoryName('')
+                          }}
+                        >
+                          <Plus size={12} />
+                          添加
+                        </button>
+                      </div>
+                      <div className="settings-help" style={{ padding: '6px 18px 2px' }}>
+                        当前原型新增分类保存在内存中，刷新页面会恢复默认分类；功能版写入本地工作区。
                       </div>
                     </div>
                   </>

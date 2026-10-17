@@ -40,6 +40,7 @@ interface WeekViewProps {
   onMoveOverdue: (ids: string[]) => void
   onToast: (message: string) => void
   onToggleWorkItem: (projectId: string, itemId: string) => void
+  onManageCategories: () => void
 }
 
 function addDays(iso: string, amount: number): string {
@@ -64,6 +65,7 @@ export function WeekView({
   onMoveOverdue,
   onToast,
   onToggleWorkItem,
+  onManageCategories,
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
@@ -140,10 +142,10 @@ export function WeekView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Week {meta.num} · {weekYear} · 周计划
+            本周安排 · Week {meta.num} · {weekYear}
           </div>
           <h1 className="page-title">
-            第 {meta.num} 周 <span className="light">周计划</span>
+            第 {meta.num} 周
           </h1>
           <p className="page-sub">
             {meta.range} · {meta.workdays} 个工作日 · 可用 {available} 人日
@@ -296,7 +298,7 @@ export function WeekView({
         <Card>
           <div className="list-head">
             <div className="list-title">
-              本周安排
+              本周事项
               <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
               {visibleAutoItems.length > 0 ? (
                 <span className="auto-head-tag">项目自动排期 {visibleAutoItems.length} 项</span>
@@ -314,7 +316,7 @@ export function WeekView({
                 const count =
                   weekTasks.filter((task) => task.categoryId === category.id).length +
                   autoItems.filter((item) => item.project.categoryId === category.id).length
-                if (!count) return null
+                if (!count && !category.id.startsWith('cat-')) return null
                 return (
                   <button
                     key={category.id}
@@ -328,6 +330,10 @@ export function WeekView({
                   </button>
                 )
               })}
+              <button type="button" className="chip add" onClick={onManageCategories}>
+                <Plus size={10} />
+                分类
+              </button>
             </div>
           </div>
           <div className="list-body">
@@ -412,7 +418,7 @@ export function WeekView({
                   <FolderSimple size={10} />
                   项目自动排期 · {visibleAutoItems.length} 项 ·{' '}
                   {fmtDays(visibleAutoItems.reduce((sum, item) => sum + item.plannedDays, 0))} 人日
-                  <span className="auto-section-hint">来自项目工作规划</span>
+                  <span className="auto-section-hint">来自全局项目规划</span>
                 </div>
                 <div className="task-rows">
                   {visibleAutoItems.map((item) => {
@@ -478,9 +484,9 @@ export function WeekView({
                 <button
                   type="button"
                   className="card-link"
-                  onClick={() => onToast('季度任务详情在首页查看')}
+                  onClick={() => onToast('季度任务详情在季度规划查看')}
                 >
-                  首页 <ArrowRight size={10} />
+                  季度规划 <ArrowRight size={10} />
                 </button>
               </div>
               {sideObjectives.map((objective) => (

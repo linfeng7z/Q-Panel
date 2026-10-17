@@ -867,3 +867,23 @@
 .side-cap-top b.over {
   color: var(--bad);
 }
+
+.side-section + .side-section {
+  margin-top: 13px;
+}
+
+.side-section .side-label {
+  margin-top: 0;
+}
+
+.nav-note {
+  margin-left: auto;
+  font-size: 8.5px;
+  color: var(--text-4);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.nav-item.active .nav-note {
+  color: var(--text-3);
+}

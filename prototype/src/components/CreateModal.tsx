@@ -42,7 +42,7 @@ const TITLES: Record<CreateMode, { title: string; sub: string; kicker: string }>
   },
   project: {
     title: '新建长期项目',
-    sub: '项目可以跨季度推进，工作项按安排周自动进入周计划',
+    sub: '项目可以跨季度推进，工作项按安排周自动进入本周安排',
     kicker: 'Long-running project',
   },
 }

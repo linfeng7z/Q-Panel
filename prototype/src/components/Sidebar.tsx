@@ -1,4 +1,12 @@
-import { CalendarDots, DotsThree, FolderSimple, House } from '@phosphor-icons/react'
+import {
+  CalendarDots,
+  ChartLineUp,
+  DotsThree,
+  FolderSimple,
+  House,
+  LinkSimple,
+  NotePencil,
+} from '@phosphor-icons/react'
 import type { ViewId } from '../types'
 import { fmtDays } from '../utils'
 import { catStyle } from './ui'
@@ -12,10 +20,39 @@ interface SidebarProps {
   weekLabel: string
 }
 
-const mainNav: Array<{ id: ViewId; label: string; icon: typeof House; badge?: 'week' }> = [
-  { id: 'quarter', label: '首页', icon: House },
-  { id: 'week', label: '周计划', icon: CalendarDots, badge: 'week' },
-  { id: 'projects', label: '项目', icon: FolderSimple },
+interface NavItem {
+  id: ViewId
+  label: string
+  icon: typeof House
+  badge?: 'week'
+  note?: string
+}
+
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: '工作台',
+    items: [
+      { id: 'quarter', label: '季度规划', icon: House },
+      { id: 'week', label: '本周安排', icon: CalendarDots, badge: 'week' },
+    ],
+  },
+  {
+    label: '全局',
+    items: [{ id: 'projects', label: '项目', icon: FolderSimple, note: '跨季度' }],
+  },
+  {
+    label: '工具',
+    items: [
+      { id: 'stats', label: '统计与容量', icon: ChartLineUp },
+      { id: 'notes', label: '临时笔记', icon: NotePencil },
+      { id: 'links', label: '收藏链接', icon: LinkSimple },
+    ],
+  },
 ]
 
 export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, weekLabel }: SidebarProps) {
@@ -24,27 +61,32 @@ export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, w
 
   return (
     <aside className="sidebar">
-      <div className="side-label">工作台</div>
-      <div className="side-group">
-        {mainNav.map((item) => {
-          const Icon = item.icon
-          const badge = item.badge === 'week' ? weekCount : null
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`nav-item${view === item.id ? ' active' : ''}`}
-              onClick={() => onView(item.id)}
-            >
-              <span className="nav-icon">
-                <Icon size={17} />
-              </span>
-              {item.label}
-              {badge ? <span className="nav-badge num">{badge}</span> : null}
-            </button>
-          )
-        })}
-      </div>
+      {navGroups.map((group) => (
+        <div className="side-section" key={group.label}>
+          <div className="side-label">{group.label}</div>
+          <div className="side-group">
+            {group.items.map((item) => {
+              const Icon = item.icon
+              const badge = item.badge === 'week' ? weekCount : null
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`nav-item${view === item.id ? ' active' : ''}`}
+                  onClick={() => onView(item.id)}
+                >
+                  <span className="nav-icon">
+                    <Icon size={17} />
+                  </span>
+                  {item.label}
+                  {item.note ? <span className="nav-note">{item.note}</span> : null}
+                  {badge ? <span className="nav-badge num">{badge}</span> : null}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
 
       <div className="sidebar-bottom">
         <div className="side-cap" style={catStyle('appsec')}>

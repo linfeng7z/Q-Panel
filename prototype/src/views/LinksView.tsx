@@ -65,11 +65,9 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Links · local collection
+            本地 · LINKS
           </div>
-          <h1 className="page-title">
-            链接收藏 <span className="light">与常用入口</span>
-          </h1>
+          <h1 className="page-title">收藏链接</h1>
           <p className="page-sub">{links.length} 条链接 · 自动补齐标题与图标 · 点击用系统浏览器打开</p>
         </div>
         <div className="head-actions">

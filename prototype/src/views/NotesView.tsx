@@ -108,11 +108,9 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Notes · local markdown
+            本地 · NOTES
           </div>
-          <h1 className="page-title">
-            随笔记 <span className="light">Markdown</span>
-          </h1>
+          <h1 className="page-title">临时笔记</h1>
           <p className="page-sub">{notes.length} 条笔记 · 纯本地保存 · 自动写入工作区</p>
         </div>
         <div className="head-actions">

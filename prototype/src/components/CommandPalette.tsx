@@ -60,12 +60,12 @@ export function CommandPalette({
 
   const items = useMemo<CommandItem[]>(() => {
     const viewItems: Array<[ViewId, string, ReactNode]> = [
-      ['quarter', '首页 · 季度任务', <House size={15} key="quarter" />],
-      ['week', '周计划', <CalendarDots size={15} key="week" />],
-      ['projects', '长期项目', <FolderSimple size={15} key="projects" />],
+      ['quarter', '季度规划', <House size={15} key="quarter" />],
+      ['week', '本周安排', <CalendarDots size={15} key="week" />],
+      ['projects', '全局项目', <FolderSimple size={15} key="projects" />],
       ['stats', '统计与容量', <ChartLineUp size={15} key="stats" />],
-      ['notes', '随笔记', <NotePencil size={15} key="notes" />],
-      ['links', '链接收藏', <LinkSimple size={15} key="links" />],
+      ['notes', '临时笔记', <NotePencil size={15} key="notes" />],
+      ['links', '收藏链接', <LinkSimple size={15} key="links" />],
     ]
     const currentKey = `${year}-Q${quarter}`
     const objectiveItems = Object.entries(objectives)

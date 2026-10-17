@@ -53,6 +53,7 @@ interface QuarterViewProps {
   onSelectPeriod: (year: number, quarter: number) => void
   onToast: (message: string) => void
   onOpenStats: () => void
+  onManageCategories: () => void
 }
 
 function monthName(month: number): string {
@@ -70,6 +71,7 @@ export function QuarterView({
   onSelectPeriod,
   onToast,
   onOpenStats,
+  onManageCategories,
 }: QuarterViewProps) {
   const [yearOverview, setYearOverview] = useState(false)
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null)
@@ -142,7 +144,7 @@ export function QuarterView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            {yearOverview ? `Year overview · ${year}` : `本季度 · Home · Quarter tasks · ${year}`}
+            {yearOverview ? `Year overview · ${year}` : `本季度 · PLAN · ${year}`}
           </div>
           <h1 className="page-title">
             {yearOverview ? (
@@ -152,7 +154,7 @@ export function QuarterView({
             ) : (
               <>
                 <span className="q-num">Q{quarter}</span>
-                <span className="light">季度任务</span>
+                <span className="light">季度规划</span>
               </>
             )}
           </h1>
@@ -365,7 +367,7 @@ export function QuarterView({
                         const count = objectivesOfPeriod.filter(
                           (objective) => objective.categoryId === category.id,
                         ).length
-                        if (!count) return null
+                        if (!count && !category.id.startsWith('cat-')) return null
                         return (
                           <button
                             key={category.id}
@@ -380,6 +382,10 @@ export function QuarterView({
                           </button>
                         )
                       })}
+                      <button type="button" className="chip add" onClick={onManageCategories}>
+                        <Plus size={10} />
+                        分类
+                      </button>
                     </div>
                   </div>
                   <div className="list-body">

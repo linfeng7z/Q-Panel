@@ -28,8 +28,25 @@ export const STATUS_LABEL: Record<Objective['status'], string> = {
   done: '已完成',
 }
 
+export const CATEGORY_COLORS = [
+  { value: '--cat-appsec', label: '蓝 · 应用安全' },
+  { value: '--cat-secops', label: '橙 · 安全运营' },
+  { value: '--cat-team', label: '绿 · 团队建设' },
+  { value: '--cat-other', label: '紫 · 其它' },
+]
+
 export function getCategory(id: CategoryId): Category {
-  return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[3]
+  return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1]
+}
+
+export function addCategory(name: string, colorVar: string): Category {
+  const category: Category = {
+    id: `cat-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+    name,
+    colorVar,
+  }
+  CATEGORIES.push(category)
+  return category
 }
 
 export const YEARS = [2025, 2026, 2027, 2028]
