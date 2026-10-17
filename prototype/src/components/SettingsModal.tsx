@@ -86,7 +86,6 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const [tab, setTab] = useState<SettingsTab>(initialTab)
   const [categoryName, setCategoryName] = useState('')
-  const [categoryColor, setCategoryColor] = useState(CATEGORY_COLORS[0].value)
   const [autoLaunch, setAutoLaunch] = useState(true)
   const [popup, setPopup] = useState(true)
   const [nativeNotif, setNativeNotif] = useState(true)
@@ -98,6 +97,21 @@ export function SettingsModal({
   const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
   const [apiKey, setApiKey] = useState('sk-••••••••••••••••')
   const [scope, setScope] = useState('摘要（推荐）')
+
+  const addCategoryFromInput = () => {
+    const name = categoryName.trim()
+    if (!name) {
+      onToast('请输入分类名称')
+      return
+    }
+    if (CATEGORIES.some((item) => item.name === name)) {
+      onToast('分类名称已存在')
+      return
+    }
+    const color = CATEGORY_COLORS[Math.floor(Math.random() * CATEGORY_COLORS.length)].value
+    onAddCategory(name, color)
+    setCategoryName('')
+  }
 
   return (
     <>
@@ -321,49 +335,16 @@ export function SettingsModal({
                           onKeyDown={(event) => {
                             if (event.key === 'Enter') {
                               event.preventDefault()
-                              const name = categoryName.trim()
-                              if (!name) {
-                                onToast('请输入分类名称')
-                                return
-                              }
-                              if (CATEGORIES.some((item) => item.name === name)) {
-                                onToast('分类名称已存在')
-                                return
-                              }
-                              onAddCategory(name, categoryColor)
-                              setCategoryName('')
+                              addCategoryFromInput()
                             }
                           }}
                           placeholder="例如：合规审计"
                           maxLength={12}
                         />
-                        <select
-                          className="select"
-                          value={categoryColor}
-                          onChange={(event) => setCategoryColor(event.target.value)}
-                        >
-                          {CATEGORY_COLORS.map((color) => (
-                            <option value={color.value} key={color.value}>
-                              {color.label}
-                            </option>
-                          ))}
-                        </select>
                         <button
                           type="button"
                           className="btn primary sm"
-                          onClick={() => {
-                            const name = categoryName.trim()
-                            if (!name) {
-                              onToast('请输入分类名称')
-                              return
-                            }
-                            if (CATEGORIES.some((item) => item.name === name)) {
-                              onToast('分类名称已存在')
-                              return
-                            }
-                            onAddCategory(name, categoryColor)
-                            setCategoryName('')
-                          }}
+                          onClick={addCategoryFromInput}
                         >
                           <Plus size={12} />
                           添加
