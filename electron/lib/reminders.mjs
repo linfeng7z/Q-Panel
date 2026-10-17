@@ -72,19 +72,32 @@ export class ReminderScheduler {
     this.timers = new Map()
   }
 
-  sync(workspace) {
+  sync(workspace, state = {}) {
     this.clear()
     const now = this.now().getTime()
+    const lastRunAt = state.lastRunAt ? Date.parse(state.lastRunAt) : null
+    const fired = state.fired && typeof state.fired === 'object' ? state.fired : {}
+    const snoozed = state.snoozed && typeof state.snoozed === 'object' ? state.snoozed : {}
+    const missed = []
     for (const entry of collectReminderEntries(workspace)) {
-      const remindAt = new Date(entry.remindAt).getTime()
-      const delay = remindAt - now
-      if (delay <= 0 || delay > this.horizonMs) continue
+      const snoozedAt = snoozed[entry.key] ? Date.parse(snoozed[entry.key]) : null
+      if (fired[entry.key] && !snoozedAt) continue
+      const targetAt = snoozedAt ?? Date.parse(entry.remindAt)
+      const delay = targetAt - now
+      if (delay <= 0) {
+        const wasSnoozed = snoozedAt !== null
+        const inCatchUpWindow = lastRunAt !== null && targetAt > lastRunAt && now - targetAt <= 24 * 60 * 60 * 1000
+        if (wasSnoozed || inCatchUpWindow) missed.push(entry)
+        continue
+      }
+      if (delay > this.horizonMs) continue
       const timer = setTimeout(() => {
         this.timers.delete(entry.key)
         this.onDue?.(entry)
       }, delay)
       this.timers.set(entry.key, timer)
     }
+    return { missed, scheduled: this.timers.size }
   }
 
   triggerTest() {

@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, i
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ReminderScheduler } from './lib/reminders.mjs'
+import { ReminderStateStore } from './lib/reminder-state.mjs'
 import { exportWorkspaceFile, importWorkspaceFile, normalizeWorkspace } from './lib/workspace-io.mjs'
 import { WorkspaceStore } from './lib/store.mjs'
 
@@ -23,6 +24,8 @@ let notchWindow = null
 let tray = null
 let store = null
 let reminderScheduler = null
+let reminderStateStore = null
+let lastWorkspace = null
 
 const NOTCH_WIDTH = 210
 const NOTCH_HEIGHT = 38
@@ -97,9 +100,53 @@ function showReminderNotification(entry) {
   notification.show()
 }
 
+function markReminderFired(entry) {
+  if (!reminderStateStore) return
+  reminderStateStore.markFired(entry.key)
+  void reminderStateStore.save()
+}
+
 function handleReminderDue(entry) {
+  markReminderFired(entry)
   showReminderNotification(entry)
   sendReminderToPanel(entry)
+}
+
+function handleMissedReminders(entries) {
+  if (entries.length === 0) return
+  for (const entry of entries) markReminderFired(entry)
+  if (process.env.Q_PANEL_NO_NOTIFICATIONS !== '1' && Notification.isSupported()) {
+    const notification = new Notification({
+      title: `Q-Panel · ${entries.length} 条错过的提醒`,
+      body: entries.slice(0, 3).map((entry) => entry.title).join('\n'),
+    })
+    notification.on('click', () => showWindow())
+    notification.show()
+  }
+  mainWindow?.webContents.send('reminders:missed', { entries })
+}
+
+let reminderSyncQueue = Promise.resolve()
+
+async function syncRemindersNow(workspace) {
+  if (!workspace || !reminderScheduler || !reminderStateStore) return
+  lastWorkspace = workspace
+  await reminderStateStore.load()
+  const result = reminderScheduler.sync(workspace, reminderStateStore.data)
+  if (result.missed.length > 0) handleMissedReminders(result.missed)
+  reminderStateStore.setLastRunAt()
+  await reminderStateStore.save()
+}
+
+function syncReminders(workspace) {
+  // The panel and notch windows both load the workspace at startup; serialize
+  // reminder-state writes so a load can never fail because of a write race.
+  reminderSyncQueue = reminderSyncQueue
+    .then(() => syncRemindersNow(workspace))
+    .catch((error) => {
+      console.error('reminder sync failed', error)
+    })
+  return reminderSyncQueue
 }
 
 function createWindow() {
@@ -248,14 +295,14 @@ function registerIpc() {
     const normalized = normalizeWorkspace(result.data)
     if (!normalized.ok) return { ok: false, error: normalized.error }
     if (normalized.migrated) await store.backupNow('before-migration')
-    reminderScheduler?.sync(normalized.data)
+    await syncReminders(normalized.data)
     return { ...result, data: normalized.data, migrated: normalized.migrated }
   })
   ipcMain.handle('workspace:save', async (_event, payload) => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
     const result = await store.save(payload)
     if (result.ok) {
-      reminderScheduler?.sync(payload)
+      await syncReminders(payload)
       notchWindow?.webContents.send('workspace:saved')
     }
     return result
@@ -313,6 +360,17 @@ function registerIpc() {
     const entry = reminderScheduler?.triggerTest()
     return { ok: true, entry }
   })
+  ipcMain.handle('reminders:snooze', async (_event, entry) => {
+    if (!reminderStateStore || !entry || typeof entry.key !== 'string') {
+      return { ok: false, error: 'invalid_reminder' }
+    }
+    const until = new Date(Date.now() + 10 * 60 * 1000)
+    await reminderStateStore.load()
+    reminderStateStore.snooze(entry.key, until)
+    await reminderStateStore.save()
+    if (lastWorkspace) await syncReminders(lastWorkspace)
+    return { ok: true, until: until.toISOString() }
+  })
   ipcMain.handle('app:version', () => app.getVersion())
 }
 
@@ -348,7 +406,11 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
   installApplicationMenu()
-  reminderScheduler = new ReminderScheduler({ onDue: handleReminderDue })
+  reminderStateStore = new ReminderStateStore(app.getPath('userData'))
+  reminderScheduler = new ReminderScheduler({
+    onDue: handleReminderDue,
+    now: () => (process.env.Q_PANEL_NOW ? new Date(process.env.Q_PANEL_NOW) : new Date()),
+  })
   registerIpc()
   createWindow()
   createNotchWindow()

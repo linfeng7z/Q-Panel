@@ -309,6 +309,15 @@ export default function App() {
   }, [electronMode, notchMode])
 
   useEffect(() => {
+    if (!electronMode || notchMode) return
+    return window.qpanel?.reminders.onMissed(({ entries }) => {
+      if (!entries.length) return
+      setNativeReminder(entries[0])
+      showToast(`有 ${entries.length} 条错过的提醒`)
+    })
+  }, [electronMode, notchMode, showToast])
+
+  useEffect(() => {
     if (!electronMode || notchMode || !hydrated) return
     const timer = window.setTimeout(async () => {
       setSaveState('saving')
@@ -1007,6 +1016,7 @@ export default function App() {
           onClose={() => setNativeReminder(null)}
           onComplete={completeNativeReminder}
           onSnooze={() => {
+            void window.qpanel?.reminders.snooze({ key: nativeReminder.key })
             showToast('已稍后提醒：10 分钟后再弹一次')
             setNativeReminder(null)
           }}

@@ -175,8 +175,12 @@ test.describe('Q-Panel feature regression', () => {
       await expect(page.locator('.reminder')).toBeVisible()
       await expect(page.locator('.reminder')).toContainText('提醒链路验证')
       await expect(page.locator('.reminder')).toContainText('2026-10-31 18:00')
-      await page.locator('.reminder-close').click()
+      await page.getByRole('button', { name: '稍后 10 分钟' }).click()
       await expect(page.locator('.reminder')).toHaveCount(0)
+      await expect.poll(async () => {
+        const raw = await fs.readFile(path.join(userData, 'reminder-state.json'), 'utf8').catch(() => '{}')
+        return Boolean(JSON.parse(raw).snoozed?.['test:reminder'])
+      }).toBe(true)
       expect(errors).toEqual([])
     } finally {
       await closeApp(app, userData)

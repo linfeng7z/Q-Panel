@@ -24,10 +24,16 @@ contextBridge.exposeInMainWorld('qpanel', {
   },
   reminders: {
     test: () => ipcRenderer.invoke('reminders:test'),
+    snooze: (entry) => ipcRenderer.invoke('reminders:snooze', entry),
     onDue: (callback) => {
       const listener = (_event, entry) => callback(entry)
       ipcRenderer.on('reminders:due', listener)
       return () => ipcRenderer.removeListener('reminders:due', listener)
+    },
+    onMissed: (callback) => {
+      const listener = (_event, payload) => callback(payload)
+      ipcRenderer.on('reminders:missed', listener)
+      return () => ipcRenderer.removeListener('reminders:missed', listener)
     },
   },
   app: {

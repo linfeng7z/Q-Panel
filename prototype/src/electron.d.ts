@@ -50,7 +50,9 @@ interface QPanelBridge {
   }
   reminders: {
     test: () => Promise<{ ok: boolean; entry?: QPanelReminderEntry }>
+    snooze: (entry: { key: string }) => Promise<{ ok: boolean; until?: string; error?: string }>
     onDue: (callback: (entry: QPanelReminderEntry) => void) => () => void
+    onMissed: (callback: (payload: { entries: QPanelReminderEntry[] }) => void) => () => void
   }
 }
 
