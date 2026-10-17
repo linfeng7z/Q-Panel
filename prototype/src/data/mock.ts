@@ -5,8 +5,10 @@ import {
   calendarDay,
   monthStats as computeMonthStats,
   quarterStats as computeQuarterStats,
+  setCalendarAdjustments,
   weekStats as computeWeekStats,
 } from '../calendar'
+import type { CalendarAdjustment } from '../calendar'
 import type {
   Category,
   CategoryId,
@@ -535,3 +537,38 @@ PROJECTS.forEach((project) => {
     milestone.targetTime ??= DEFAULT_DUE_TIME
   })
 })
+
+
+/** Recompute all derived capacity figures after calendar adjustments change. */
+export function applyCalendarAdjustments(adjustments: CalendarAdjustment[]): void {
+  setCalendarAdjustments(adjustments)
+  for (const [key, entry] of Object.entries(QUARTER_STATS)) {
+    const [yearText, quarterText] = key.split('-Q')
+    const next = computeQuarterStats(Number(yearText), Number(quarterText))
+    entry.workdays = next.workdays
+    entry.leaveDays = next.leaveDays
+    if (next.estimated) entry.estimated = true
+    else delete entry.estimated
+    if (next.note) entry.note = next.note
+    else delete entry.note
+  }
+  for (const meta of Object.values(WEEKS)) {
+    const next = computeWeekStats(meta.start, meta.end)
+    meta.workdays = next.workdays
+    meta.leaveDays = next.leaveDays
+  }
+  for (const row of MONTH_STATS) {
+    const month = Number(row.month.replace(' 月', ''))
+    const next = computeMonthStats(2026, month)
+    row.workdays = next.workdays
+    row.leaveDays = next.leaveDays
+    row.available = next.available
+  }
+  for (const row of WEEK_STATS) {
+    const meta = WEEKS[`2026-${row.week}`]
+    if (!meta) continue
+    const next = computeWeekStats(meta.start, meta.end)
+    row.workdays = next.workdays
+    row.available = next.available
+  }
+}

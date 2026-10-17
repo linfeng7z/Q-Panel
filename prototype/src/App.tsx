@@ -26,6 +26,7 @@ import {
   WEEKS,
   CATEGORIES,
   addCategory,
+  applyCalendarAdjustments,
   getCategory,
   quarterKey,
   replaceCategories,
@@ -42,6 +43,8 @@ import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
 import type { WorkspaceSnapshot } from './workspace'
+import type { CalendarAdjustment } from './calendar'
+import { CALENDAR_ADJUSTMENTS } from './calendar'
 import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
 import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
@@ -110,6 +113,7 @@ export default function App() {
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [aiModel, setAiModel] = useState('deepseek-chat')
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
+  const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
   const viewTransitionRef = useRef<{ finished: Promise<void> } | null>(null)
 
   useEffect(() => {
@@ -223,6 +227,17 @@ export default function App() {
         time: data.reminderDefaults.time,
       })
     }
+    if (Array.isArray(data.calendarAdjustments)) {
+      const adjustments = data.calendarAdjustments.filter(
+        (item): item is CalendarAdjustment =>
+          isRecord(item) &&
+          typeof item.date === 'string' &&
+          item.kind === 'leave' &&
+          typeof item.days === 'number',
+      )
+      setCalendarAdjustments(adjustments)
+      applyCalendarAdjustments(adjustments)
+    }
     return true
   }, [])
 
@@ -289,6 +304,7 @@ export default function App() {
         sidebarLabels,
         aiModel,
         reminderDefaults,
+        calendarAdjustments,
       }
       try {
         const result = await window.qpanel?.workspace.save(snapshot)
@@ -303,6 +319,7 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [
     aiModel,
+    calendarAdjustments,
     categoryVersion,
     electronMode,
     hydrated,
@@ -363,6 +380,13 @@ export default function App() {
     setSidebarLabels((current) => ({ ...current, [key]: label }))
   }
   const resetSidebarLabels = () => setSidebarLabels(DEFAULT_SIDEBAR_LABELS)
+
+  const updateCalendarAdjustments = (next: CalendarAdjustment[]) => {
+    const sorted = [...next].sort((a, b) => a.date.localeCompare(b.date))
+    setCalendarAdjustments(sorted)
+    applyCalendarAdjustments(sorted)
+    showToast('日历已更新，季度容量已重新计算')
+  }
 
   const deleteCategory = (categoryId: CategoryId) => {
     const category = CATEGORIES.find((item) => item.id === categoryId)
@@ -922,6 +946,8 @@ export default function App() {
           onAiModelChange={setAiModel}
           reminderDefaults={reminderDefaults}
           onReminderDefaultsChange={setReminderDefaults}
+          calendarAdjustments={calendarAdjustments}
+          onCalendarAdjustmentsChange={updateCalendarAdjustments}
           sidebarLabels={sidebarLabels}
           onUpdateSidebarLabel={updateSidebarLabel}
           onResetSidebarLabels={resetSidebarLabels}

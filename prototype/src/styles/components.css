@@ -2284,3 +2284,42 @@
     radial-gradient(ellipse 44% 32% at 10% 0%, rgba(255, 150, 76, 0.08), transparent 72%),
     linear-gradient(180deg, rgba(255, 202, 154, 0.055), transparent 14%);
 }
+
+/* calendar adjustments in settings */
+
+.calendar-adjust-form {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  padding: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-inset);
+}
+
+.calendar-adjust-form .input {
+  height: 30px;
+  min-width: 0;
+  font-size: 9.5px;
+}
+
+.calendar-adjust-form .btn {
+  height: 30px;
+  white-space: nowrap;
+}
+
+.calendar-adjust-empty {
+  padding: 12px 10px;
+  border: 1px dashed var(--line-soft);
+  border-radius: 9px;
+  color: var(--text-4);
+  font-size: 9px;
+  text-align: center;
+}
+
+.calendar-adjust-row .icon-btn:hover {
+  color: var(--bad);
+  background: var(--bad-soft);
+}

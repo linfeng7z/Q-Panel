@@ -83,6 +83,36 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('adds and removes a leave day, recomputing Q4 capacity', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    const errors = collectPageErrors(page)
+    try {
+      await page.locator('.icon-btn[title="设置"]').click()
+      await page.locator('.settings-tab:has-text("人日与日历")').click()
+      await page.locator('input[aria-label="请假日期"]').fill('2026-11-05')
+      await page.locator('input[aria-label="请假说明"]').fill('培训')
+      await page.locator('.calendar-adjust-form .btn').click()
+      await expect(page.locator('.calendar-adjust-row').filter({ hasText: '2026-11-05' })).toHaveCount(1)
+      await page.locator('.settings-modal .modal-close').click()
+      await expect
+        .poll(async () => page.locator('.capacity-stat .stat-value').nth(0).innerText())
+        .toContain('59')
+
+      await page.locator('.icon-btn[title="设置"]').click()
+      await page.locator('.settings-tab:has-text("人日与日历")').click()
+      const leaveRow = page.locator('.calendar-adjust-row').filter({ hasText: '2026-11-05' })
+      await leaveRow.locator('.icon-btn').click()
+      await page.locator('.settings-modal .modal-close').click()
+      await expect
+        .poll(async () => page.locator('.capacity-stat .stat-value').nth(0).innerText())
+        .toContain('60')
+      expect(errors).toEqual([])
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('receives a native reminder through IPC', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

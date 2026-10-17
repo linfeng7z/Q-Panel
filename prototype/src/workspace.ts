@@ -1,3 +1,4 @@
+import type { CalendarAdjustment } from './calendar'
 import type {
   Category,
   LinkCategory,
@@ -12,7 +13,7 @@ import type {
   WeekTask,
 } from './types'
 
-export const WORKSPACE_SCHEMA_VERSION = 1
+export const WORKSPACE_SCHEMA_VERSION = 2
 
 export interface WorkspaceSnapshot {
   schemaVersion: number
@@ -32,6 +33,7 @@ export interface WorkspaceSnapshot {
   sidebarLabels: SidebarLabels
   aiModel: string
   reminderDefaults: ReminderDefaults
+  calendarAdjustments: CalendarAdjustment[]
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

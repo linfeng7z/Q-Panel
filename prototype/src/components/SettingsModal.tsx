@@ -14,6 +14,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import type { ReminderDefaults, SidebarLabels, ThemeId } from '../types'
+import type { CalendarAdjustment } from '../calendar'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
@@ -43,6 +44,8 @@ interface SettingsModalProps {
   onAiModelChange: (model: string) => void
   reminderDefaults: ReminderDefaults
   onReminderDefaultsChange: (defaults: ReminderDefaults) => void
+  calendarAdjustments: CalendarAdjustment[]
+  onCalendarAdjustmentsChange: (adjustments: CalendarAdjustment[]) => void
   sidebarLabels: SidebarLabels
   onUpdateSidebarLabel: (key: keyof SidebarLabels, label: string) => void
   onResetSidebarLabels: () => void
@@ -80,12 +83,16 @@ export function SettingsModal({
   onAiModelChange,
   reminderDefaults,
   onReminderDefaultsChange,
+  calendarAdjustments,
+  onCalendarAdjustmentsChange,
   sidebarLabels,
   onUpdateSidebarLabel,
   onResetSidebarLabels,
 }: SettingsModalProps) {
   const [tab, setTab] = useState<SettingsTab>(initialTab)
   const [categoryName, setCategoryName] = useState('')
+  const [leaveDate, setLeaveDate] = useState('')
+  const [leaveLabel, setLeaveLabel] = useState('')
   const [autoLaunch, setAutoLaunch] = useState(true)
   const [popup, setPopup] = useState(true)
   const [nativeNotif, setNativeNotif] = useState(true)
@@ -113,6 +120,33 @@ export function SettingsModal({
     setCategoryName('')
   }
 
+  const addCalendarAdjustment = () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(leaveDate)) {
+      onToast('请选择请假日期')
+      return
+    }
+    if (calendarAdjustments.some((item) => item.date === leaveDate)) {
+      onToast('这个日期已经设置过了')
+      return
+    }
+    const next = [
+      ...calendarAdjustments,
+      {
+        date: leaveDate,
+        kind: 'leave' as const,
+        days: 1,
+        label: leaveLabel.trim() || '请假',
+      },
+    ].sort((a, b) => a.date.localeCompare(b.date))
+    onCalendarAdjustmentsChange(next)
+    setLeaveDate('')
+    setLeaveLabel('')
+  }
+
+  const removeCalendarAdjustment = (date: string) => {
+    onCalendarAdjustmentsChange(calendarAdjustments.filter((item) => item.date !== date))
+  }
+
   return (
     <>
       <div className="scrim" onMouseDown={onClose} />
@@ -122,7 +156,7 @@ export function SettingsModal({
             <div className="modal-head">
               <div>
                 <div className="modal-title">设置</div>
-                <div className="modal-sub">所有配置只保存在本机 · 原型阶段仅演示交互</div>
+                <div className="modal-sub">所有配置只保存在本机 · 自动写入本地工作区</div>
               </div>
               <button type="button" className="modal-close" onClick={onClose} aria-label="关闭设置">
                 <X size={16} />
@@ -249,11 +283,63 @@ export function SettingsModal({
                     </div>
 
                     <div className="settings-section">
+                      <div className="settings-section-label">请假 / 占用</div>
+                      <div className="settings-help" style={{ margin: '0 0 4px 2px' }}>
+                        每添加 1 天，会从所在季度和对应周的可用人日中扣减 1 人日；历史与未来季度都会重新计算。
+                      </div>
+                      {calendarAdjustments.length === 0 ? (
+                        <div className="calendar-adjust-empty">还没有请假或占用记录</div>
+                      ) : (
+                        calendarAdjustments.map((item) => (
+                          <div className="settings-row calendar-adjust-row" key={item.date}>
+                            <div>
+                              <div className="settings-label num">{item.date}</div>
+                              <div className="settings-help">
+                                {item.label ?? '请假'} · 扣减 {item.days} 人日
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="icon-btn sm"
+                              title="删除这条请假记录"
+                              aria-label={`删除 ${item.date} 的请假记录`}
+                              onClick={() => removeCalendarAdjustment(item.date)}
+                            >
+                              <Trash size={13} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                      <div className="calendar-adjust-form">
+                        <input
+                          className="input"
+                          type="date"
+                          value={leaveDate}
+                          onChange={(event) => setLeaveDate(event.target.value)}
+                          aria-label="请假日期"
+                        />
+                        <input
+                          className="input"
+                          value={leaveLabel}
+                          onChange={(event) => setLeaveLabel(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') addCalendarAdjustment()
+                          }}
+                          placeholder="说明，如年假 / 培训"
+                          aria-label="请假说明"
+                        />
+                        <button type="button" className="btn sm" onClick={addCalendarAdjustment}>
+                          <Plus size={11} /> 添加
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
                       <div className="settings-section-label">日历数据</div>
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">2026 官方节假日数据</div>
-                          <div className="settings-help">来源：国务院办公厅 2025 年 11 月公告 · 已内置 39 条调休记录。</div>
+                          <div className="settings-help">已内置 2024–2026 节假日、调休和补班记录，按日期逐天计算。</div>
                         </div>
                         <span className="tag">已内置</span>
                       </div>
@@ -266,14 +352,8 @@ export function SettingsModal({
                           待发布
                         </span>
                       </div>
-                      <div className="settings-row">
-                        <div>
-                          <div className="settings-label">请假 / 占用</div>
-                          <div className="settings-help">10/20 – 10/21 年假 · 共扣减 2 人日；10/17 之后的新增会实时影响季度容量。</div>
-                        </div>
-                        <span className="tag">已应用</span>
-                      </div>
                     </div>
+
                   </>
                 ) : null}
 

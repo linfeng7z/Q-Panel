@@ -158,7 +158,19 @@ export const CALENDAR_ADJUSTMENTS: CalendarAdjustment[] = [
   { date: '2026-10-21', kind: 'leave', days: 1, label: '年假' },
 ]
 
-const adjustmentMap = new Map(CALENDAR_ADJUSTMENTS.map((item) => [item.date, item]))
+let adjustmentMap = new Map(CALENDAR_ADJUSTMENTS.map((item) => [item.date, item]))
+
+export function setCalendarAdjustments(adjustments: CalendarAdjustment[]): void {
+  adjustmentMap = new Map(
+    (Array.isArray(adjustments) ? adjustments : [])
+      .filter((item) => item && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && item.days > 0)
+      .map((item) => [item.date, item]),
+  )
+}
+
+export function getCalendarAdjustments(): CalendarAdjustment[] {
+  return [...adjustmentMap.values()].sort((a, b) => a.date.localeCompare(b.date))
+}
 
 function isoFromUtc(date: Date): string {
   return date.toISOString().slice(0, 10)

@@ -1,7 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  CALENDAR_ADJUSTMENTS,
   calendarDay,
+  setCalendarAdjustments,
   monthStats,
   periodStats,
   quarterStats,
@@ -51,4 +53,22 @@ test('2026 annual capacity and 2027 estimate are explicit', () => {
   const estimate = quarterStats(2027, 1)
   assert.equal(estimate.estimated, true)
   assert.match(estimate.note ?? '', /官方放假安排尚未发布/)
+})
+
+
+test('custom leave adjustments recompute capacity', () => {
+  const defaults = CALENDAR_ADJUSTMENTS
+  try {
+    setCalendarAdjustments([
+      ...defaults,
+      { date: '2026-11-05', kind: 'leave', days: 1, label: '培训' },
+    ])
+    const withLeave = quarterStats(2026, 4)
+    assert.equal(withLeave.workdays, 62)
+    assert.equal(withLeave.leaveDays, 3)
+    assert.equal(withLeave.available, 59)
+  } finally {
+    setCalendarAdjustments(defaults)
+  }
+  assert.equal(quarterStats(2026, 4).available, 60)
 })
