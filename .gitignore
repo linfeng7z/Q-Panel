@@ -4,3 +4,8 @@ node_modules/
 prototype/node_modules/
 prototype/dist/
 prototype/screenshots/
+electron/node_modules/
+electron/screenshots/
+electron/test-results/
+electron/release/
+electron/playwright-report/

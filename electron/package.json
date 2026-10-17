@@ -1,0 +1,63 @@
+{
+  "name": "q-panel",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Q-Panel personal daily workbench \u2014 quarterly capacity, weekly plan, projects and links.",
+  "author": "Q-Panel",
+  "type": "module",
+  "main": "main.mjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "Q_PANEL_DEV_URL=http://127.0.0.1:5178 electron .",
+    "build:renderer": "npm --prefix ../prototype run build",
+    "build": "npm run build:renderer",
+    "pack": "npm run build:renderer && electron-builder --mac --arm64",
+    "test": "npm run build:renderer && playwright test --config test/playwright.config.mjs"
+  },
+  "devDependencies": {
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3",
+    "playwright": "^1.64.1",
+    "@playwright/test": "^1.64.1"
+  },
+  "build": {
+    "appId": "app.qpanel.panel",
+    "productName": "Q-Panel",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.mjs",
+      "preload.cjs",
+      "lib/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../prototype/dist",
+        "to": "renderer"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "icon": "assets/icon.icns"
+    }
+  }
+}

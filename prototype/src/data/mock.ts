@@ -76,6 +76,11 @@ export function addCategory(name: string, colorVar: string): Category {
   return category
 }
 
+export function replaceCategories(next: Category[]): void {
+  if (!Array.isArray(next) || next.length === 0) return
+  CATEGORIES.splice(0, CATEGORIES.length, ...next.map((category) => ({ ...category })))
+}
+
 export const YEARS = [2025, 2026, 2027, 2028]
 
 export function quarterKey(year: number, quarter: number): string {

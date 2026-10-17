@@ -28,8 +28,9 @@ import {
   addCategory,
   getCategory,
   quarterKey,
+  replaceCategories,
 } from './data/mock'
-import { dateISO, daysOf, formatReminder, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
+import { cn, dateISO, daysOf, formatReminder, isOverdue, projectWorkItemDays, projectWorkItemsForWeek } from './utils'
 import { MenuBar } from './components/MenuBar'
 import { TopBar } from './components/TopBar'
 import { Sidebar } from './components/Sidebar'
@@ -40,6 +41,8 @@ import type { SettingsTab } from './components/SettingsModal'
 import { CreateModal } from './components/CreateModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
+import type { WorkspaceSnapshot } from './workspace'
+import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
 import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
 import { WeekView } from './views/WeekView'
@@ -84,9 +87,16 @@ function parseInitialTheme(): ThemeId {
 
 export default function App() {
   const params = useMemo(() => new URLSearchParams(window.location.search), [])
+  const electronMode = Boolean(window.qpanel?.isElectron)
+  const notchMode = params.get('notch') === '1'
   const [theme, setTheme] = useState<ThemeId>(parseInitialTheme)
   const [view, setView] = useState<ViewId>(parseInitialView)
-  const [expanded, setExpanded] = useState(params.get('collapsed') !== '1')
+  const [expanded, setExpanded] = useState(
+    electronMode ? !notchMode : params.get('collapsed') !== '1',
+  )
+  const [hydrated, setHydrated] = useState(!electronMode)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveSequence, setSaveSequence] = useState(0)
   const [year, setYear] = useState(2026)
   const [quarter, setQuarter] = useState(4)
   const [weekKey, setWeekKey] = useState('2026-W42')
@@ -139,7 +149,7 @@ export default function App() {
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('general')
-  const [, setCategoryVersion] = useState(0)
+  const [categoryVersion, setCategoryVersion] = useState(0)
   const [reminderOpen, setReminderOpen] = useState(false)
   const [createMode, setCreateMode] = useState<CreateMode | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -175,6 +185,137 @@ export default function App() {
     if (toastTimer.current) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 3000)
   }, [])
+
+  const applyWorkspace = useCallback((value: unknown) => {
+    if (!hasWorkspaceShape(value)) return false
+    const data = value as Partial<WorkspaceSnapshot>
+    if (data.theme && THEMES.includes(data.theme)) setTheme(data.theme)
+    if (data.view && VIEWS.includes(data.view)) setView(data.view)
+    if (typeof data.year === 'number') setYear(data.year)
+    if (typeof data.quarter === 'number' && data.quarter >= 1 && data.quarter <= 4) {
+      setQuarter(data.quarter)
+    }
+    if (typeof data.weekKey === 'string' && WEEKS[data.weekKey]) setWeekKey(data.weekKey)
+    if (Array.isArray(data.tasks)) setTasks(data.tasks)
+    if (isRecord(data.objectives)) setObjectives(data.objectives as Record<string, Objective[]>)
+    if (Array.isArray(data.projects)) setProjects(data.projects)
+    if (Array.isArray(data.notes)) setNotes(data.notes)
+    if (Array.isArray(data.links)) setLinks(data.links)
+    if (Array.isArray(data.linkCategories) && data.linkCategories.length > 0) {
+      setLinkCategories(data.linkCategories)
+    }
+    if (Array.isArray(data.categories) && data.categories.length > 0) {
+      replaceCategories(data.categories)
+      setCategoryVersion((value) => value + 1)
+    }
+    if (isRecord(data.sidebarLabels)) {
+      setSidebarLabels({ ...DEFAULT_SIDEBAR_LABELS, ...data.sidebarLabels })
+    }
+    if (typeof data.aiModel === 'string') setAiModel(data.aiModel)
+    if (
+      isRecord(data.reminderDefaults) &&
+      typeof data.reminderDefaults.offsetDays === 'number' &&
+      typeof data.reminderDefaults.time === 'string'
+    ) {
+      setReminderDefaults({
+        offsetDays: data.reminderDefaults.offsetDays,
+        time: data.reminderDefaults.time,
+      })
+    }
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (!electronMode) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        const result = await window.qpanel?.workspace.load()
+        if (cancelled) return
+        if (!result?.ok) {
+          showToast(result?.error === 'invalid_workspace' ? '工作区文件损坏，已载入示例数据' : '工作区读取失败，使用示例数据')
+        } else if (result.data) {
+          if (!applyWorkspace(result.data)) {
+            showToast('工作区格式不兼容，已载入示例数据')
+          }
+        }
+      } catch {
+        if (!cancelled) showToast('工作区读取失败，使用示例数据')
+      } finally {
+        if (!cancelled) setHydrated(true)
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [applyWorkspace, electronMode, showToast])
+
+  useEffect(() => {
+    if (!electronMode || !notchMode) return
+    const unsubscribe = window.qpanel?.notch.onWorkspaceSaved(() => {
+      void window.qpanel?.workspace.load().then((result) => {
+        if (result?.ok && result.data) applyWorkspace(result.data)
+      })
+    })
+    return unsubscribe
+  }, [applyWorkspace, electronMode, notchMode])
+
+  useEffect(() => {
+    if (!electronMode || notchMode || !hydrated) return
+    const timer = window.setTimeout(async () => {
+      setSaveState('saving')
+      const snapshot: WorkspaceSnapshot = {
+        schemaVersion: WORKSPACE_SCHEMA_VERSION,
+        savedAt: new Date().toISOString(),
+        theme,
+        view,
+        year,
+        quarter,
+        weekKey,
+        tasks,
+        objectives,
+        projects,
+        notes,
+        links,
+        linkCategories,
+        categories: CATEGORIES.map((category) => ({ ...category })),
+        sidebarLabels,
+        aiModel,
+        reminderDefaults,
+      }
+      try {
+        const result = await window.qpanel?.workspace.save(snapshot)
+        setSaveState(result?.ok ? 'saved' : 'error')
+        if (result?.ok) setSaveSequence((value) => value + 1)
+        if (result && !result.ok) showToast('工作区保存失败')
+      } catch {
+        setSaveState('error')
+        showToast('工作区保存失败')
+      }
+    }, 320)
+    return () => window.clearTimeout(timer)
+  }, [
+    aiModel,
+    categoryVersion,
+    electronMode,
+    hydrated,
+    linkCategories,
+    links,
+    notchMode,
+    notes,
+    objectives,
+    projects,
+    quarter,
+    reminderDefaults,
+    showToast,
+    sidebarLabels,
+    tasks,
+    theme,
+    view,
+    weekKey,
+    year,
+  ])
 
   const openSettings = (tab: SettingsTab = 'general') => {
     setSettingsInitialTab(tab)
@@ -271,13 +412,14 @@ export default function App() {
         } else if (reminderOpen) {
           setReminderOpen(false)
         } else if (expanded) {
-          setExpanded(false)
+          if (electronMode) window.qpanel?.window.hide()
+          else setExpanded(false)
         }
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [createMode, settingsOpen, commandOpen, aiOpen, reminderOpen, expanded])
+  }, [aiOpen, commandOpen, createMode, electronMode, expanded, reminderOpen, settingsOpen])
 
   useEffect(() => {
     if (params.get('collapsed') === '1' || params.get('noreminder') === '1') return
@@ -563,15 +705,27 @@ export default function App() {
   }
 
   return (
-    <div className="qp-root" data-theme={theme}>
-      <div
-        className="wallpaper"
-        onClick={() => {
-          if (expanded) setExpanded(false)
-        }}
-      />
-      <div className="noise" />
-      <MenuBar />
+    <div
+      className={cn('qp-root', electronMode && 'electron-mode', notchMode && 'notch-mode')}
+      data-theme={theme}
+      data-electron={electronMode ? 'true' : undefined}
+      data-notch={notchMode ? 'true' : undefined}
+      data-hydrated={hydrated ? 'true' : 'false'}
+      data-save-state={saveState}
+      data-save-seq={saveSequence}
+    >
+      {!electronMode ? (
+        <>
+          <div
+            className="wallpaper"
+            onClick={() => {
+              if (expanded) setExpanded(false)
+            }}
+          />
+          <div className="noise" />
+          <MenuBar />
+        </>
+      ) : null}
 
       {expanded ? (
         <>
@@ -600,7 +754,10 @@ export default function App() {
                   onOpenAI={() => setAiOpen(true)}
                   onOpenSettings={() => openSettings('general')}
                   onOpenReminder={() => setReminderOpen(true)}
-                  onCollapse={() => setExpanded(false)}
+                  onCollapse={() => {
+                    if (electronMode) void window.qpanel?.window.hide()
+                    else setExpanded(false)
+                  }}
                   aiOpen={aiOpen}
                   bellCount={bellCount}
                 />
@@ -633,26 +790,31 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="expanded-hint">
-            <span>
-              点击桌面空白或按 <span className="kbd">esc</span> 收起
-            </span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span>
-              <span className="kbd">⌘K</span> 跳转
-            </span>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span>
-              <span className="kbd">⌘J</span> AI
-            </span>
-          </div>
+          {!electronMode ? (
+            <div className="expanded-hint">
+              <span>
+                点击桌面空白或按 <span className="kbd">esc</span> 收起
+              </span>
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span>
+                <span className="kbd">⌘K</span> 跳转
+              </span>
+              <span style={{ opacity: 0.5 }}>·</span>
+              <span>
+                <span className="kbd">⌘J</span> AI
+              </span>
+            </div>
+          ) : null}
         </>
       ) : (
         <>
           <button
             type="button"
             className="notch"
-            onClick={() => setExpanded(true)}
+            onClick={() => {
+              if (electronMode) void window.qpanel?.notch.expand()
+              else setExpanded(true)
+            }}
             aria-label="展开 Q-Panel"
           >
             <span className="notch-mark">

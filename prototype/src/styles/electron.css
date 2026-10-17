@@ -1,0 +1,83 @@
+/* Native Electron window: the approved panel becomes the whole app window. */
+
+html.electron-runtime,
+html.electron-runtime body,
+html.electron-runtime #root {
+  background: transparent;
+}
+
+.qp-root.electron-mode {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+.qp-root.electron-mode .panel-wrap {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.qp-root.electron-mode .panel-shell {
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+  border-radius: 18px;
+  animation: none;
+  box-shadow:
+    0 34px 110px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.qp-root.electron-mode .panel {
+  border-radius: 17px;
+}
+
+.qp-root.electron-mode .topbar {
+  -webkit-app-region: drag;
+}
+
+.qp-root.electron-mode .topbar button,
+.qp-root.electron-mode .topbar input,
+.qp-root.electron-mode .topbar select,
+.qp-root.electron-mode .topbar a,
+.qp-root.electron-mode .topbar [role='button'] {
+  -webkit-app-region: no-drag;
+}
+
+.qp-root.electron-mode .expanded-hint {
+  display: none;
+}
+
+/* Collapsed menu-bar notch window. */
+
+.qp-root.electron-mode.notch-mode {
+  overflow: hidden;
+}
+
+.qp-root.electron-mode.notch-mode .notch {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 0;
+  border-radius: 0 0 17px 17px;
+  background: #050506;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+.qp-root.electron-mode.notch-mode .notch:hover {
+  transform: translateY(1px);
+}
+
+.qp-root.electron-mode.notch-mode .notch:active {
+  transform: scale(0.985);
+}
+
+.qp-root.electron-mode.notch-mode .notch-hint {
+  display: none;
+}

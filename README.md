@@ -62,14 +62,20 @@ npm run dev
 
 ```text
 q-panel/
-├── prototype/                 # 可点击原型（React 19 + TS + Vite + Playwright）
+├── electron/                  # 正式桌面版（Electron 44）
+│   ├── main.mjs               # 原生面板 / 刘海窗口 / 托盘 / IPC
+│   ├── preload.cjs            # contextBridge 白名单
+│   ├── lib/store.mjs          # 原子写入、每日备份、保留 14 天
+│   ├── assets/                # App 图标与菜单栏 template icon
+│   └── test/                  # Electron Playwright E2E
+├── prototype/                 # 可点击原型与视觉试验场（React 19 + TS + Vite）
 │   ├── src/
 │   │   ├── styles/
 │   │   ├── components/
 │   │   ├── views/             # 季度规划 / 本周安排 / 全局项目 / 容量与复盘 / 临时笔记 / 收藏链接
 │   │   └── data/mock.ts       # 人日、项目工作项、周任务
 │   ├── scripts/shot.mjs       # 16 张页面截图
-│   ├── scripts/interact.mjs   # 关键交互回归（含项目编辑→本周安排同步）
+│   ├── scripts/interact.mjs   # 关键交互回归
 │   └── screenshots/
 └── docs/PRODUCT-PLAN.md
 ```
@@ -77,20 +83,22 @@ q-panel/
 ## 验证
 
 ```bash
-cd prototype
+# Electron 原生壳 / 持久化 / 刘海 E2E
+cd electron
+npm test
+
+# 原型完整交互回归 + 视觉截图
+cd ../prototype
 npm run build
 npm run lint
 npm run shot
 npm run interact
 ```
 
-当前：TypeScript 构建通过；关键交互回归全部通过、0 console error。
+当前：Electron 原生壳 E2E 通过；原型关键交互回归通过、0 console error；DMG 打包通过。
 
-## 下一步（等视觉确认）
+## 下一步
 
-1. 确认人日口径、季度规划「季度任务 + 项目本季排期」的合计方式；
-2. 确认项目全局 / 本季度排期的区隔，以及跨季度项目是否都应标「有风险」；
-3. 确认项目概览行密度、分类新增入口和侧边栏分组；
-4. 之后进入 Electron P0：真实刘海窗口、菜单栏常驻、本地工作区存储、真实通知，再接提醒调度和 AI。
+P0 骨架已完成；后续按产品计划推进 P1 日历容量/季度规划真实数据、P2 提醒与通知、P3 项目排期与工具页、P4 AI、P5 打磨与正式签名。
 
-完整产品/技术方案见 [docs/PRODUCT-PLAN.md](docs/PRODUCT-PLAN.md)。
+完整产品/技术方案见 [docs/PRODUCT-PLAN.md](docs/PRODUCT-PLAN.md)；Electron 实现说明见 [electron/README.md](electron/README.md)。

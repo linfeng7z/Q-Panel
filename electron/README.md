@@ -1,0 +1,78 @@
+# Q-Panel · Electron P0
+
+正式桌面版外壳。渲染层复用 `prototype/` 中已确认的 React UI，Electron 负责原生窗口、刘海折叠、菜单栏常驻、本地工作区存储和安全边界。
+
+## 运行
+
+```bash
+cd electron
+npm install
+npm run build
+npm start
+```
+
+开发模式（先启动 `prototype` 的 Vite）：
+
+```bash
+# terminal 1
+cd prototype && npm run dev
+
+# terminal 2
+cd electron && npm run dev
+```
+
+## 当前能力
+
+- **原生面板窗口**：1280×760，无边框、透明背景、圆角、整窗拖拽；
+- **刘海折叠**：点收起或 `Escape` 收进屏幕顶部，点刘海展开；
+- **菜单栏常驻**：Tray 显示/隐藏/退出，`⌘⇧Space` 全局切换；
+- **本地工作区**：首次启动从示例数据初始化，之后原子写入 `workspace.json`；
+- **每日备份**：`backups/workspace-YYYY-MM-DD.json`，保留最近 14 天；
+- **完整 UI**：四套皮肤、季度/周/项目/统计/笔记/链接/设置/AI 抽屉/⌘K 都能在原生壳内使用；
+- **安全默认**：`contextIsolation` + `sandbox` + `nodeIntegration: false`，preload 只暴露工作区、窗口和刘海白名单；外部 http(s) 链接交给系统浏览器。
+
+数据目录默认是 `~/Library/Application Support/Q-Panel/`。测试可用 `Q_PANEL_USER_DATA` 指向临时目录；测试模式不会碰到真实工作区。
+
+## 测试
+
+```bash
+npm test
+```
+
+Playwright Electron E2E 覆盖：
+
+- 原生面板启动，模拟桌面/MenuBar 不存在；
+- App 标题、Hydration、自动保存；
+- 新增收藏链接 → 关闭 → 重启后仍然存在；
+- `Escape` 收起 → 刘海窗口出现 → 点击刘海重新展开。
+
+## 打包
+
+```bash
+npm run pack
+```
+
+产物：
+
+```text
+release/Q-Panel-0.5.0-arm64.dmg
+release/mac-arm64/Q-Panel.app
+```
+
+当前为 ad-hoc/未签名构建，供本机安装测试；Developer ID 签名与公证在 P5 接。
+
+## 目录
+
+```text
+electron/
+├── main.mjs           # 窗口、刘海、托盘、IPC
+├── preload.cjs        # contextBridge 白名单
+├── lib/store.mjs      # 原子存储 / 每日备份
+├── assets/            # App 图标、Tray template icon
+├── test/              # Playwright Electron E2E
+└── release/           # npm run pack 产物（gitignored）
+```
+
+## 下一阶段
+
+P1 会把当前冻结示例数据替换为真实中国日历/容量计算与本地工作区数据迁移；P2 接提醒调度和 macOS 通知，随后是项目排期工具页、真实 AI 和最终签名打包。
