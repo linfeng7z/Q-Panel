@@ -146,6 +146,19 @@ export interface WeekMeta {
 
 export type CreateMode = 'objective' | 'task' | 'project'
 
+export interface AiConfigPublic {
+  baseUrl: string
+  model: string
+  hasKey: boolean
+}
+
+export interface AiGenerateResult {
+  ok: boolean
+  message?: string
+  tasks?: AiProposalTask[]
+  error?: string
+}
+
 export interface AiProposalTask {
   title: string
   categoryId: CategoryId

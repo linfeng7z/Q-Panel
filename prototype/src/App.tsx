@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type {
+  AiConfigPublic,
+  AiGenerateResult,
   AiProposalTask,
   CategoryId,
   CreateMode,
@@ -115,6 +117,11 @@ export default function App() {
   const [filter, setFilter] = useState<CategoryId | 'all'>('all')
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [aiModel, setAiModel] = useState('deepseek-chat')
+  const [aiConfig, setAiConfig] = useState<AiConfigPublic>({
+    baseUrl: 'https://api.deepseek.com/v1',
+    model: 'deepseek-chat',
+    hasKey: false,
+  })
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
   const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
   const viewTransitionRef = useRef<{ finished: Promise<void> } | null>(null)
@@ -334,6 +341,19 @@ export default function App() {
   }, [electronMode, notchMode, showToast])
 
   useEffect(() => {
+    if (!electronMode) return
+    let cancelled = false
+    void window.qpanel?.ai.getConfig().then((result) => {
+      if (cancelled || !result?.ok || !result.config) return
+      setAiConfig(result.config)
+      setAiModel(result.config.model)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [electronMode])
+
+  useEffect(() => {
     if (!electronMode || notchMode || !hydrated) return
     const timer = window.setTimeout(async () => {
       setSaveState('saving')
@@ -423,6 +443,75 @@ export default function App() {
     }
     showToast(result.migrated ? '旧版工作区已迁移并导入' : '工作区已导入')
   }
+  const saveAiConfig = async (payload: { baseUrl: string; model: string; apiKey?: string }) => {
+    if (!electronMode) {
+      setAiModel(payload.model)
+      showToast('原型模式仅保存模型名称')
+      return { ok: true }
+    }
+    const result = await window.qpanel?.ai.saveConfig(payload)
+    if (result?.ok && result.config) {
+      setAiConfig(result.config)
+      setAiModel(result.config.model)
+      showToast('AI 配置已保存')
+    } else {
+      showToast(result?.error === 'keychain_unavailable' ? '无法访问钥匙串，API Key 未保存' : 'AI 配置保存失败')
+    }
+    return result ?? { ok: false, error: 'bridge_missing' }
+  }
+
+  const testAiConfig = async () => {
+    if (!electronMode) return { ok: false, error: 'electron_only' }
+    return (await window.qpanel?.ai.testConfig()) ?? { ok: false, error: 'bridge_missing' }
+  }
+
+  const generateAi = async (prompt: string): Promise<AiGenerateResult> => {
+    if (!electronMode) return { ok: false, error: 'electron_only' }
+    const currentKey = quarterKey(year, quarter)
+    const week = WEEKS[weekKey]
+    const context = {
+      today: TODAY,
+      period: `${year} Q${quarter}`,
+      weekKey,
+      weekLabel: week ? `第 ${week.num} 周` : '',
+      categories: CATEGORIES.map((category) => ({ id: category.id, name: category.name })),
+      quarterObjectives: (objectives[currentKey] ?? []).map((objective) => ({
+        id: objective.id,
+        title: objective.title,
+        categoryId: objective.categoryId,
+        plannedDays: objective.plannedDays,
+        status: objective.status,
+        dueDate: objective.dueDate,
+      })),
+      projects: projects.map((project) => ({
+        id: project.id,
+        title: project.title,
+        categoryId: project.categoryId,
+        status: project.status,
+        startDate: project.startDate,
+        endDate: project.endDate,
+      })),
+      weekTasks: tasks
+        .filter((task) => task.weekKey === weekKey)
+        .map((task) => ({
+          id: task.id,
+          title: task.title,
+          categoryId: task.categoryId,
+          dueDate: task.dueDate,
+          dueTime: task.dueTime,
+          done: task.done,
+          estimateDays: task.estimateDays,
+        })),
+    }
+    const result = await window.qpanel?.ai.propose({ prompt, context })
+    if (!result?.ok) return { ok: false, error: result?.error ?? 'unknown' }
+    return {
+      ok: true,
+      message: result.message,
+      tasks: (result.tasks ?? []) as AiProposalTask[],
+    }
+  }
+
   const updateSidebarLabel = (key: keyof SidebarLabels, label: string) => {
     setSidebarLabels((current) => ({ ...current, [key]: label }))
   }
@@ -915,7 +1004,10 @@ export default function App() {
                     onClose={() => setAiOpen(false)}
                     onCreateTasks={createAiTasks}
                     onToast={showToast}
-                    model={aiModel}
+                    model={aiConfig.model || aiModel}
+                    hasAiKey={aiConfig.hasKey}
+                    contextLabel={`${year} Q${quarter}`}
+                    onGenerate={generateAi}
                   />
                 ) : null}
               </div>
@@ -992,6 +1084,9 @@ export default function App() {
           onDeleteCategory={deleteCategory}
           aiModel={aiModel}
           onAiModelChange={setAiModel}
+          aiConfig={aiConfig}
+          onAiConfigSave={saveAiConfig}
+          onAiTest={testAiConfig}
           reminderDefaults={reminderDefaults}
           onReminderDefaultsChange={setReminderDefaults}
           calendarAdjustments={calendarAdjustments}

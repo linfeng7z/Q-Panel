@@ -48,6 +48,22 @@ interface QPanelBridge {
   app: {
     version: () => Promise<string>
   }
+  ai: {
+    getConfig: () => Promise<{ ok: boolean; config?: { baseUrl: string; model: string; hasKey: boolean }; error?: string }>
+    saveConfig: (payload: { baseUrl: string; model: string; apiKey?: string }) => Promise<{
+      ok: boolean
+      config?: { baseUrl: string; model: string; hasKey: boolean }
+      error?: string
+    }>
+    testConfig: () => Promise<{ ok: boolean; error?: string; status?: number; model?: string }>
+    propose: (payload: { prompt: string; context: unknown }) => Promise<{
+      ok: boolean
+      message?: string
+      tasks?: unknown[]
+      error?: string
+      status?: number
+    }>
+  }
   metadata: {
     fetch: (url: string) => Promise<{
       ok: boolean

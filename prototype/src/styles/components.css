@@ -2337,3 +2337,21 @@
 .link-meta-status.muted {
   color: var(--text-4);
 }
+
+/* AI configuration */
+
+.settings-ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 10px;
+}
+
+.settings-ai-status {
+  font-size: 9px;
+  color: var(--text-4);
+}
+
+.settings-ai-status.ok {
+  color: var(--good);
+}

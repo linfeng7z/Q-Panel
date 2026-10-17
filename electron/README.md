@@ -35,6 +35,8 @@ cd electron && npm run dev
 - **提醒调度**：解析工作区里的周事项/季度任务/项目提醒，主进程定时器到点发 macOS 通知，同时把提醒条目推给渲染层弹窗；
 - **提醒补发/稍后**：记录 `reminder-state.json`；启动时补发上次运行以来错过的提醒并聚合通知；稍后 10 分钟会重排并持久化；
 - **链接元数据**：粘贴网址后主进程安全抓取 `<title>` / description，自动填进收藏卡片；阻止私网、凭据 URL 和危险重定向；
+- **真实 AI**：设置里配置 OpenAI 兼容 Base URL / 模型 / API Key；Key 经 `safeStorage` 加密写入 `ai-config.json`，渲染层永远拿不到明文；AI 生成事项先预览再落库；
+- **AI 降级**：没配置 Key 时保留本地演示提案，配置后自动切到真实模型；
 - **提醒动作**：完成会写回任务/季度任务/项目状态；稍后入口保留；设置里的「测试」可走完整 IPC 链路；
 - **安全默认**：`contextIsolation` + `sandbox` + `nodeIntegration: false`，preload 只暴露工作区、窗口和刘海白名单；外部 http(s) 链接交给系统浏览器。
 
@@ -48,7 +50,7 @@ npm test
 
 测试分两层（当前 Electron E2E 10/10）：
 
-- `npm run test:unit`：提醒规则解析、错过/稍后调度、旧 schema 迁移、导入导出文件校验、链接元数据解析与 SSRF 防护；
+- `npm run test:unit`：提醒规则解析、错过/稍后调度、旧 schema 迁移、导入导出文件校验、链接元数据解析与 SSRF 防护、AI 输出解析与 OpenAI 兼容调用；
 - `npm test`：先跑单测，再跑 Playwright Electron E2E。
 
 Electron E2E 覆盖：
@@ -60,7 +62,8 @@ Electron E2E 覆盖：
 - 六页面导航、四皮肤、⌘K；
 - 新建周事项、项目详情、设置、笔记；
 - 原生提醒 IPC → 应用内提醒弹窗 → 稍后 10 分钟写入 reminder-state；
-- 本地 HTML fixture → 原生元数据桥 → 收藏标题/描述自动填充。
+- 本地 HTML fixture → 原生元数据桥 → 收藏标题/描述自动填充；
+- 本地 OpenAI 兼容 fixture → 保存加密 Key → 测试连接 → AI 生成提案 → 确认写入。
 - 原生导出 JSON → 新工作区导入恢复；
 - schema v1 旧工作区加载后自动迁移到 v2；
 - 新增/删除请假 → Q4 可用人日 60 → 59 → 60 实时重算；

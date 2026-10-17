@@ -1,6 +1,7 @@
-import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, ipcMain, nativeImage, screen, shell } from 'electron'
+import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, ipcMain, nativeImage, safeStorage, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { callAiGeneration, createAiConfigStore, testAiConnection } from './lib/ai.mjs'
 import { fetchPageMetadata } from './lib/metadata.mjs'
 import { ReminderScheduler } from './lib/reminders.mjs'
 import { ReminderStateStore } from './lib/reminder-state.mjs'
@@ -27,6 +28,7 @@ let store = null
 let reminderScheduler = null
 let reminderStateStore = null
 let lastWorkspace = null
+let aiConfigStore = null
 
 const NOTCH_WIDTH = 210
 const NOTCH_HEIGHT = 38
@@ -357,6 +359,32 @@ function registerIpc() {
     showWindow()
     return { ok: true }
   })
+  ipcMain.handle('ai:config:get', async () => {
+    if (!aiConfigStore) return { ok: false, error: 'not_ready' }
+    return { ok: true, config: (await aiConfigStore.load()).config }
+  })
+  ipcMain.handle('ai:config:save', async (_event, payload) => {
+    if (!aiConfigStore) return { ok: false, error: 'not_ready' }
+    const result = await aiConfigStore.save(payload ?? {})
+    if (!result.ok) return result
+    return { ok: true, config: result.config }
+  })
+  ipcMain.handle('ai:config:test', async () => {
+    if (!aiConfigStore) return { ok: false, error: 'not_ready' }
+    const { config } = await aiConfigStore.load()
+    const apiKey = await aiConfigStore.getApiKey()
+    return testAiConnection({ config, apiKey })
+  })
+  ipcMain.handle('ai:propose', async (_event, payload) => {
+    if (!aiConfigStore) return { ok: false, error: 'not_ready' }
+    const prompt = typeof payload?.prompt === 'string' ? payload.prompt.trim().slice(0, 2000) : ''
+    if (!prompt) return { ok: false, error: 'empty_prompt' }
+    const context = payload?.context && typeof payload.context === 'object' ? payload.context : {}
+    const { config } = await aiConfigStore.load()
+    const apiKey = await aiConfigStore.getApiKey()
+    return callAiGeneration({ config, apiKey, prompt, context })
+  })
+
   ipcMain.handle('metadata:fetch', async (_event, url) => {
     if (typeof url !== 'string' || url.length > 2048) return { ok: false, error: 'invalid_url' }
     return fetchPageMetadata(url, {
@@ -414,6 +442,7 @@ app.whenReady().then(() => {
     app.dock?.hide()
   }
   installApplicationMenu()
+  aiConfigStore = createAiConfigStore(path.join(app.getPath('userData'), 'ai-config.json'), safeStorage)
   reminderStateStore = new ReminderStateStore(app.getPath('userData'))
   reminderScheduler = new ReminderScheduler({
     onDue: handleReminderDue,

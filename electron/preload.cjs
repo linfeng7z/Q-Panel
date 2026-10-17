@@ -22,6 +22,12 @@ contextBridge.exposeInMainWorld('qpanel', {
       return () => ipcRenderer.removeListener('workspace:saved', listener)
     },
   },
+  ai: {
+    getConfig: () => ipcRenderer.invoke('ai:config:get'),
+    saveConfig: (payload) => ipcRenderer.invoke('ai:config:save', payload),
+    testConfig: () => ipcRenderer.invoke('ai:config:test'),
+    propose: (payload) => ipcRenderer.invoke('ai:propose', payload),
+  },
   metadata: {
     fetch: (url) => ipcRenderer.invoke('metadata:fetch', url),
   },

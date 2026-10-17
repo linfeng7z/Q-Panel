@@ -188,6 +188,62 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('configures an OpenAI-compatible endpoint and generates a real proposal', async () => {
+    const server = http.createServer((request, response) => {
+      if (request.method === 'POST' && request.url === '/v1/chat/completions') {
+        response.writeHead(200, { 'content-type': 'application/json' })
+        response.end(JSON.stringify({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                message: '已根据当前季度生成一条建议。',
+                tasks: [{
+                  title: 'AI 真实生成事项',
+                  categoryId: 'appsec',
+                  dueDate: '2026-10-20',
+                  dueTime: '18:00',
+                  estimateDays: 0.5,
+                }],
+              }),
+            },
+          }],
+        }))
+        return
+      }
+      response.writeHead(404)
+      response.end()
+    })
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const port = server.address().port
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    const errors = collectPageErrors(page)
+    try {
+      await page.locator('.icon-btn[title="设置"]').click()
+      await page.locator('.settings-tab:has-text("AI 助手")').click()
+      await page.locator('input[aria-label="AI Base URL"]').fill(`http://127.0.0.1:${port}/v1`)
+      await page.locator('input[aria-label="API Key"]').fill('sk-local-test-key')
+      await page.getByRole('button', { name: '保存配置' }).click()
+      await expect(page.locator('.settings-ai-status')).toHaveText('已保存')
+      await page.getByRole('button', { name: '测试连接' }).click()
+      await expect(page.locator('.settings-ai-status')).toHaveText('连接成功', { timeout: 10000 })
+      const saved = await fs.readFile(path.join(userData, 'ai-config.json'), 'utf8')
+      expect(saved).not.toContain('sk-local-test-key')
+      await page.locator('.settings-modal .modal-close').click()
+
+      await page.locator('.ai-pill').click()
+      await page.locator('.ai-suggest').filter({ hasText: '拆成本周' }).click()
+      await expect(page.locator('.ai-proposal-item')).toContainText('AI 真实生成事项', { timeout: 10000 })
+      await expect(page.locator('.ai-msg.bot').filter({ has: page.locator('.ai-proposal') }).last()).toContainText('已根据当前季度生成一条建议')
+      await page.getByRole('button', { name: '确认写入' }).click()
+      await expect(page.locator('.ai-proposal')).toContainText('已处理')
+      expect(errors).toEqual([])
+    } finally {
+      await closeApp(app, userData)
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
+
   test('receives a native reminder through IPC', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

@@ -13,7 +13,7 @@
     "build": "npm run build:renderer",
     "pack": "npm run build:renderer && electron-builder --mac --arm64",
     "test": "npm run build:renderer && npm run test:unit && playwright test --config test/playwright.config.mjs",
-    "test:unit": "node --test test/reminders.test.mjs test/workspace-io.test.mjs test/metadata.test.mjs"
+    "test:unit": "node --test test/reminders.test.mjs test/workspace-io.test.mjs test/metadata.test.mjs test/ai.test.mjs"
   },
   "devDependencies": {
     "electron": "^44.9.0",

@@ -13,7 +13,7 @@ import {
   Trash,
   X,
 } from '@phosphor-icons/react'
-import type { ReminderDefaults, SidebarLabels, ThemeId } from '../types'
+import type { AiConfigPublic, ReminderDefaults, SidebarLabels, ThemeId } from '../types'
 import type { CalendarAdjustment } from '../calendar'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
@@ -43,6 +43,9 @@ interface SettingsModalProps {
   onDeleteCategory: (categoryId: string) => void
   aiModel: string
   onAiModelChange: (model: string) => void
+  aiConfig: AiConfigPublic
+  onAiConfigSave: (payload: { baseUrl: string; model: string; apiKey?: string }) => Promise<{ ok: boolean; error?: string }>
+  onAiTest: () => Promise<{ ok: boolean; error?: string; status?: number }>
   reminderDefaults: ReminderDefaults
   onReminderDefaultsChange: (defaults: ReminderDefaults) => void
   calendarAdjustments: CalendarAdjustment[]
@@ -83,6 +86,9 @@ export function SettingsModal({
   onDeleteCategory,
   aiModel,
   onAiModelChange,
+  aiConfig,
+  onAiConfigSave,
+  onAiTest,
   reminderDefaults,
   onReminderDefaultsChange,
   calendarAdjustments,
@@ -103,8 +109,10 @@ export function SettingsModal({
   const [buffer, setBuffer] = useState(0)
   const [defaultView, setDefaultView] = useState('季度规划')
   const [provider, setProvider] = useState('OpenAI 兼容')
-  const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
-  const [apiKey, setApiKey] = useState('sk-••••••••••••••••')
+  const [baseUrl, setBaseUrl] = useState(aiConfig.baseUrl)
+  const [apiKey, setApiKey] = useState('')
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiStatus, setAiStatus] = useState('')
   const [scope, setScope] = useState('摘要（推荐）')
 
   const addCategoryFromInput = () => {
@@ -596,7 +604,7 @@ export function SettingsModal({
                       </div>
                       <div className="field" style={{ marginTop: 12 }}>
                         <label>BASE URL</label>
-                        <input className="input" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
+                        <input className="input" aria-label="AI Base URL" value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} />
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>模型</label>
@@ -614,7 +622,14 @@ export function SettingsModal({
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>API KEY</label>
-                        <input className="input" value={apiKey} onChange={(event) => setApiKey(event.target.value)} />
+                        <input
+                          className="input"
+                          aria-label="API Key"
+                          type="password"
+                          value={apiKey}
+                          onChange={(event) => setApiKey(event.target.value)}
+                          placeholder={aiConfig.hasKey ? '已保存，留空则不修改' : 'sk-...'}
+                        />
                       </div>
                     </div>
 
@@ -641,9 +656,46 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">连接测试</div>
-                          <div className="settings-help">发送一条最小请求，验证 Base URL、模型与 Key。</div>
+                          <div className="settings-help">先保存配置，再发送一条最小请求验证 Base URL、模型与 Key。</div>
                         </div>
-                        <span className="card-meta">功能版接入后测试</span>
+                        <button
+                          type="button"
+                          className="btn sm"
+                          disabled={aiSaving}
+                          onClick={async () => {
+                            setAiSaving(true)
+                            setAiStatus('测试中…')
+                            const result = await onAiTest()
+                            setAiSaving(false)
+                            setAiStatus(result.ok ? '连接成功' : `失败：${result.error ?? 'unknown'}`)
+                          }}
+                        >
+                          测试连接
+                        </button>
+                      </div>
+                      <div className="settings-ai-actions">
+                        <button
+                          type="button"
+                          className="btn primary sm"
+                          disabled={aiSaving}
+                          onClick={async () => {
+                            setAiSaving(true)
+                            setAiStatus('保存中…')
+                            const result = await onAiConfigSave({
+                              baseUrl,
+                              model: aiModel,
+                              ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+                            })
+                            setAiSaving(false)
+                            setAiStatus(result.ok ? '已保存' : `失败：${result.error ?? 'unknown'}`)
+                            if (result.ok) setApiKey('')
+                          }}
+                        >
+                          保存配置
+                        </button>
+                        <span className={cn('settings-ai-status', aiStatus.startsWith('连接成功') || aiStatus === '已保存' ? 'ok' : '')}>
+                          {aiStatus}
+                        </span>
                       </div>
                     </div>
                   </>

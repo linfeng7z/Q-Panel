@@ -6,7 +6,7 @@ import {
   Sparkle,
   X,
 } from '@phosphor-icons/react'
-import type { AiProposalTask, CategoryId } from '../types'
+import type { AiGenerateResult, AiProposalTask, CategoryId } from '../types'
 import { TODAY, getCategory } from '../data/mock'
 import { fmtDue } from '../utils'
 import { catStyle } from './ui'
@@ -16,6 +16,9 @@ interface AIDrawerProps {
   onCreateTasks: (tasks: AiProposalTask[]) => void
   onToast: (message: string) => void
   model: string
+  hasAiKey: boolean
+  contextLabel: string
+  onGenerate: (prompt: string) => Promise<AiGenerateResult>
 }
 
 interface Message {
@@ -51,7 +54,7 @@ function proposalTask(
   return { title, categoryId, dueDate, dueTime: dueTime ?? '18:00', estimateDays, objectiveId, projectId }
 }
 
-export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerProps) {
+export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, contextLabel, onGenerate }: AIDrawerProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'hello',
@@ -75,55 +78,81 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
     return id
   }
 
-  const send = (raw: string) => {
+  const runDemo = (text: string) => {
+    setThinking(false)
+    if (text.includes('拆') || text.includes('本周')) {
+      const id = newId()
+      setMessages((value) => [
+        ...value,
+        {
+          id,
+          role: 'bot',
+          text:
+            '尚未配置 AI Key，先用本地示例演示。配置后会由模型根据当前季度和项目上下文生成建议。\n建议把「等保 2.0 差距分析闭环」拆成 3 条本周事项，并关联到项目「等保 2.0 整改」。',
+          proposal: {
+            title: '变更提案 · 创建 3 条周事项',
+            tasks: [
+              proposalTask('输出等保差距分析初稿', 'appsec', TODAY, '23:30', 0.75, 'o1', 'p1'),
+              proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
+              proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
+            ],
+          },
+        },
+      ])
+      return
+    }
+    if (text.includes('周报') || text.includes('汇总')) {
+      pushBot({
+        text:
+          '本周进展摘要：\n• 等保：系统边界梳理完成，差距分析初稿进行中\n• SOC：降噪规则 v2 已评审，等待灰度\n• 红蓝：攻击面初筛进行中\n• 风险：制度修订尚未启动，建议下周排入\n需要我把它整理成可直接发给领导的周报吗？',
+      })
+      return
+    }
+    if (text.includes('项目') || text.includes('治理')) {
+      pushBot({
+        text:
+          '创建长期项目会走同一套确认流程：项目名、分类、目标日期，以及 3 个里程碑。\n配置 AI 后我会生成项目 + 里程碑的提案卡，你确认后一次性写入。',
+      })
+      return
+    }
+    pushBot({
+      text:
+        '尚未配置 AI Key，当前是本地演示模式。\n可在「设置 → AI 助手」填写 Base URL、模型和 API Key，然后让我从当前季度、项目和本周事项生成真实建议。',
+    })
+  }
+
+  const send = async (raw: string) => {
     const text = raw.trim()
     if (!text || thinking) return
     setMessages((value) => [...value, { id: newId(), role: 'user', text }])
     setInput('')
     setThinking(true)
 
-    window.setTimeout(() => {
-      setThinking(false)
-      if (text.includes('拆') || text.includes('本周')) {
-        const id = newId()
-        setMessages((value) => [
-          ...value,
-          {
-            id,
-            role: 'bot',
-            text:
-              '我建议把「等保 2.0 差距分析闭环」拆成 3 条本周事项，都关联到项目「等保 2.0 整改」，并设置提前 2 天提醒。确认后我会写入第 42 周。',
-            proposal: {
-              title: '变更提案 · 创建 3 条周事项',
-              tasks: [
-                proposalTask('输出等保差距分析初稿', 'appsec', TODAY, '23:30', 0.75, 'o1', 'p1'),
-                proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
-                proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
-              ],
-            },
-          },
-        ])
-        return
-      }
-      if (text.includes('周报') || text.includes('汇总')) {
-        pushBot({
-          text:
-            '本周（第 42 周）进展摘要：\n• 等保：系统边界梳理完成，差距分析初稿进行中\n• SOC：降噪规则 v2 已评审，等待灰度\n• 红蓝：攻击面初筛进行中\n• 风险：制度修订尚未启动，建议下周排入\n需要我把它整理成可直接发给领导的周报吗？',
-        })
-        return
-      }
-      if (text.includes('项目') || text.includes('治理')) {
-        pushBot({
-          text:
-            '创建长期项目会走同一套确认流程：项目名、分类、目标日期，以及 3 个里程碑。\n原型阶段先演示事项创建；功能版里我会生成项目 + 里程碑的提案卡，你确认后一次性写入。',
-        })
-        return
-      }
+    if (!hasAiKey) {
+      window.setTimeout(() => runDemo(text), 700)
+      return
+    }
+
+    const result = await onGenerate(text)
+    setThinking(false)
+    if (!result.ok) {
       pushBot({
-        text:
-          '收到。接入模型后，我会把你的话解析成事项/项目/里程碑，并附上字段预览。\n现在可以试试上面的快捷指令，或直接说「这周还差什么」。',
+        text: `AI 请求失败：${result.error ?? 'unknown'}。\n请检查设置中的 Base URL、模型和 API Key，或稍后重试。`,
       })
-    }, 900)
+      return
+    }
+    const tasks = result.tasks ?? []
+    if (tasks.length === 0) {
+      pushBot({ text: result.message || '已收到，但这次没有生成可写入的事项。' })
+      return
+    }
+    pushBot({
+      text: result.message || `我生成了 ${tasks.length} 条建议，确认后会写入当前周。`,
+      proposal: {
+        title: `变更提案 · 创建 ${tasks.length} 条周事项`,
+        tasks,
+      },
+    })
   }
 
   const confirmProposal = (message: Message) => {
@@ -169,8 +198,8 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
             </button>
           </div>
           <div className="ai-context">
-            <span className="tag">2026 Q4</span>
-            <span className="tag">第 42 周</span>
+            <span className="tag">{contextLabel}</span>
+            <span className="tag">{hasAiKey ? '已连接模型' : '本地演示'}</span>
             <span className="tag">上下文：摘要</span>
           </div>
         </div>
@@ -239,7 +268,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
           {messages.length === 1 && !thinking ? (
             <div className="ai-suggests">
               {SUGGESTS.map((suggest) => (
-                <button key={suggest} type="button" className="ai-suggest" onClick={() => send(suggest)}>
+                <button key={suggest} type="button" className="ai-suggest" onClick={() => { void send(suggest) }}>
                   {suggest}
                 </button>
               ))}
@@ -272,7 +301,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
-                  send(input)
+                  void send(input)
                 }
               }}
               placeholder="让 AI 帮你建事项、拆解任务…"
@@ -281,7 +310,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model }: AIDrawerPro
               type="button"
               className="ai-send"
               disabled={!input.trim() || thinking}
-              onClick={() => send(input)}
+              onClick={() => { void send(input) }}
               aria-label="发送"
             >
               {input.trim() ? <ArrowUp size={14} weight="bold" /> : <PaperPlaneTilt size={13} />}
