@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   ArrowRight,
   CalendarBlank,
+  ChartLineUp,
   Clock,
   FolderSimple,
   Plus,
@@ -48,6 +49,7 @@ interface QuarterViewProps {
   onOpenCreate: (mode: CreateMode) => void
   onSelectPeriod: (year: number, quarter: number) => void
   onToast: (message: string) => void
+  onOpenStats: () => void
 }
 
 function monthName(month: number): string {
@@ -64,6 +66,7 @@ export function QuarterView({
   onOpenCreate,
   onSelectPeriod,
   onToast,
+  onOpenStats,
 }: QuarterViewProps) {
   const [yearOverview, setYearOverview] = useState(false)
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null)
@@ -123,7 +126,7 @@ export function QuarterView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            {yearOverview ? `Year overview · ${year}` : `Quarter plan · ${year}`}
+            {yearOverview ? `Year overview · ${year}` : `Home · Quarter tasks · ${year}`}
           </div>
           <h1 className="page-title">
             {yearOverview ? (
@@ -133,7 +136,7 @@ export function QuarterView({
             ) : (
               <>
                 <span className="q-num">Q{quarter}</span>
-                <span className="light">季度主线</span>
+                <span className="light">季度任务</span>
               </>
             )}
           </h1>
@@ -144,6 +147,10 @@ export function QuarterView({
           </p>
         </div>
         <div className="head-actions">
+          <button type="button" className="btn ghost" onClick={onOpenStats}>
+            <ChartLineUp size={14} />
+            统计
+          </button>
           <button
             type="button"
             className="btn ghost"
@@ -156,7 +163,7 @@ export function QuarterView({
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
             </span>
-            新建主线
+            新建任务
           </button>
         </div>
       </div>
@@ -205,7 +212,7 @@ export function QuarterView({
                   <Progress value={item.available ? (item.allocated / item.available) * 100 : 0} />
                 </div>
                 <div className="year-foot">
-                  <span>{item.count} 条主线</span>
+                  <span>{item.count} 项任务</span>
                   <span>{item.available ? pct((item.allocated / item.available) * 100) : '—'} 容量占用</span>
                 </div>
               </Card>
@@ -219,10 +226,10 @@ export function QuarterView({
               <EmptyState
                 icon={<CalendarBlank size={20} />}
                 title={`${year} Q${quarter} 还没有规划`}
-                sub="先建一条季度主线，或者切换到其他季度看看。"
+                sub="先建一项季度任务，或者切换到其他季度看看。"
                 action={
                   <button type="button" className="btn primary sm" onClick={() => onOpenCreate('objective')}>
-                    <Plus size={12} /> 新建主线
+                    <Plus size={12} /> 新建任务
                   </button>
                 }
               />
@@ -256,7 +263,7 @@ export function QuarterView({
                       {allocated}
                       <small>h</small>
                     </span>
-                    <span className="stat-foot">{objectivesOfPeriod.length} 条主线</span>
+                    <span className="stat-foot">{objectivesOfPeriod.length} 项任务</span>
                   </div>
                   <div className="capacity-stat stat">
                     <span className="stat-label">剩余</span>
@@ -321,7 +328,7 @@ export function QuarterView({
                 <Card>
                   <div className="list-head">
                     <div className="list-title">
-                      季度主线
+                      季度任务
                       <span className="list-count num">{filteredObjectives.length}</span>
                     </div>
                     <div className="list-actions">
@@ -423,13 +430,13 @@ export function QuarterView({
                       })}
                     </div>
                     {filteredObjectives.length === 0 ? (
-                      <div className="task-empty">这个分类下还没有主线任务。</div>
+                      <div className="task-empty">这个分类下还没有季度任务。</div>
                     ) : null}
                   </div>
                   <div className="list-foot">
                     <button type="button" className="add-row" onClick={() => onOpenCreate('objective')}>
                       <Plus size={13} />
-                      添加季度主线
+                      添加季度任务
                     </button>
                   </div>
                 </Card>
@@ -490,7 +497,7 @@ export function QuarterView({
                           <Target size={13} />
                           分类分配
                         </div>
-                        <button type="button" className="card-link" onClick={() => onToast('按分类的工时明细将在统计页展开')}>
+                        <button type="button" className="card-link" onClick={() => onOpenStats()}>
                           明细 <ArrowRight size={10} />
                         </button>
                       </div>
@@ -533,7 +540,7 @@ export function QuarterView({
                   <div>
                     <div className="eyebrow" style={{ marginBottom: 6 }}>
                       <span className="tick" />
-                      Quarter objective
+                      Quarter task
                     </div>
                     <div className="modal-title">{selectedObjective.title}</div>
                     <div className="modal-sub">

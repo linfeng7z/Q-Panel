@@ -1,47 +1,25 @@
-import {
-  CalendarCheck,
-  CalendarDots,
-  ChartLineUp,
-  DotsThree,
-  FolderSimple,
-  House,
-  LinkSimple,
-  NotePencil,
-} from '@phosphor-icons/react'
+import { CalendarDots, DotsThree, FolderSimple, House } from '@phosphor-icons/react'
 import type { ViewId } from '../types'
 import { catStyle } from './ui'
 
 interface SidebarProps {
   view: ViewId
   onView: (view: ViewId) => void
-  todayCount: number
   weekCount: number
   weekPlanned: number
   weekAvailable: number
+  weekLabel: string
 }
 
-const mainNav: Array<{ id: ViewId; label: string; icon: typeof House; badge?: 'today' | 'week' }> = [
-  { id: 'today', label: '今日', icon: House, badge: 'today' },
-  { id: 'quarter', label: '季度', icon: CalendarCheck },
-  { id: 'week', label: '周', icon: CalendarDots, badge: 'week' },
+const mainNav: Array<{ id: ViewId; label: string; icon: typeof House; badge?: 'week' }> = [
+  { id: 'quarter', label: '首页', icon: House },
+  { id: 'week', label: '周计划', icon: CalendarDots, badge: 'week' },
   { id: 'projects', label: '项目', icon: FolderSimple },
-  { id: 'stats', label: '统计', icon: ChartLineUp },
 ]
 
-const toolNav: Array<{ id: ViewId; label: string; icon: typeof House }> = [
-  { id: 'notes', label: '笔记', icon: NotePencil },
-  { id: 'links', label: '链接', icon: LinkSimple },
-]
-
-export function Sidebar({
-  view,
-  onView,
-  todayCount,
-  weekCount,
-  weekPlanned,
-  weekAvailable,
-}: SidebarProps) {
+export function Sidebar({ view, onView, weekCount, weekPlanned, weekAvailable, weekLabel }: SidebarProps) {
   const ratio = weekAvailable > 0 ? Math.min(100, Math.round((weekPlanned / weekAvailable) * 100)) : 0
+  const over = weekPlanned > weekAvailable
 
   return (
     <aside className="sidebar">
@@ -49,7 +27,7 @@ export function Sidebar({
       <div className="side-group">
         {mainNav.map((item) => {
           const Icon = item.icon
-          const badge = item.badge === 'today' ? todayCount : item.badge === 'week' ? weekCount : null
+          const badge = item.badge === 'week' ? weekCount : null
           return (
             <button
               key={item.id}
@@ -67,31 +45,11 @@ export function Sidebar({
         })}
       </div>
 
-      <div className="side-label">工具</div>
-      <div className="side-group">
-        {toolNav.map((item) => {
-          const Icon = item.icon
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`nav-item${view === item.id ? ' active' : ''}`}
-              onClick={() => onView(item.id)}
-            >
-              <span className="nav-icon">
-                <Icon size={17} />
-              </span>
-              {item.label}
-            </button>
-          )
-        })}
-      </div>
-
       <div className="sidebar-bottom">
         <div className="side-cap" style={catStyle('appsec')}>
           <div className="side-cap-top">
-            <span>本周容量</span>
-            <b>
+            <span>{weekLabel}</span>
+            <b className={over ? 'over' : undefined}>
               {weekPlanned}
               <span className="faint"> / {weekAvailable}h</span>
             </b>
@@ -102,7 +60,9 @@ export function Sidebar({
             </div>
           </div>
           <div className="side-cap-foot">
-            剩余 {Math.max(0, weekAvailable - weekPlanned)}h · 5 个工作日
+            {over
+              ? `超出 ${weekPlanned - weekAvailable}h · 建议挪出`
+              : `剩余 ${weekAvailable - weekPlanned}h · 5 个工作日`}
           </div>
         </div>
 

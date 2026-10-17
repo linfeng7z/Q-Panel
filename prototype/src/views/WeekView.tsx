@@ -11,14 +11,7 @@ import {
   X,
 } from '@phosphor-icons/react'
 import type { CategoryId, CreateMode, Objective, Project, WeekTask } from '../types'
-import {
-  CATEGORIES,
-  TODAY,
-  WEEKDAY_CN,
-  WEEK_ORDER,
-  WEEKS,
-  dayInfo,
-} from '../data/mock'
+import { CATEGORIES, TODAY, WEEKDAY_CN, WEEK_ORDER, WEEKS, dayInfo, getCategory } from '../data/mock'
 import {
   cn,
   doneHoursOf,
@@ -27,9 +20,11 @@ import {
   isOverdue,
   projectNext,
   projectProgress,
+  projectWorkItemHours,
+  projectWorkItemsForWeek,
 } from '../utils'
 import { TaskRow } from '../components/TaskRow'
-import { Card, Progress, catStyle } from '../components/ui'
+import { Card, CheckBox, Progress, catStyle } from '../components/ui'
 
 interface WeekViewProps {
   weekKey: string
@@ -43,6 +38,7 @@ interface WeekViewProps {
   onOpenCreate: (mode: CreateMode) => void
   onMoveOverdue: (ids: string[]) => void
   onToast: (message: string) => void
+  onToggleWorkItem: (projectId: string, itemId: string) => void
 }
 
 function addDays(iso: string, amount: number): string {
@@ -66,24 +62,36 @@ export function WeekView({
   onOpenCreate,
   onMoveOverdue,
   onToast,
+  onToggleWorkItem,
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
   const weekTasks = tasks.filter((task) => task.weekKey === weekKey)
+  const autoItems = projectWorkItemsForWeek(projects, weekKey)
   const filteredTasks =
     filter === 'all' ? weekTasks : weekTasks.filter((task) => task.categoryId === filter)
+  const visibleAutoItems =
+    filter === 'all'
+      ? autoItems
+      : autoItems.filter((item) => item.project.categoryId === filter)
   const visibleTasks = activeDay
     ? filteredTasks.filter((task) => task.dueDate === activeDay)
     : filteredTasks
   const undone = visibleTasks.filter((task) => !task.done)
   const done = visibleTasks.filter((task) => task.done)
-  const planned = hoursOf(weekTasks)
-  const doneHours = doneHoursOf(weekTasks)
+  const autoPlanned = projectWorkItemHours(autoItems)
+  const autoDone = autoItems
+    .filter((item) => item.status === 'done')
+    .reduce((sum, item) => sum + item.plannedHours, 0)
+  const planned = hoursOf(weekTasks) + autoPlanned
+  const doneHours = doneHoursOf(weekTasks) + autoDone
   const available = meta.workdays * 8 - meta.leaveHours
   const remaining = available - planned
   const overdue = tasks.filter(isOverdue)
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
   const weekIndex = WEEK_ORDER.indexOf(weekKey)
+  const prevWeek = weekIndex > 0 ? WEEKS[WEEK_ORDER[weekIndex - 1]] : null
+  const nextWeek = weekIndex < WEEK_ORDER.length - 1 ? WEEKS[WEEK_ORDER[weekIndex + 1]] : null
   const linkedObjectiveIds = Array.from(
     new Set(weekTasks.map((task) => task.objectiveId).filter(Boolean)),
   ) as string[]
@@ -95,7 +103,10 @@ export function WeekView({
     ? linkedObjectives
     : objectives.filter((objective) => objective.status !== 'done').slice(0, 3)
   const linkedProjectIds = Array.from(
-    new Set(weekTasks.map((task) => task.projectId).filter(Boolean)),
+    new Set([
+      ...weekTasks.map((task) => task.projectId).filter(Boolean),
+      ...autoItems.map((item) => item.project.id),
+    ]),
   ) as string[]
   const sideProjects = linkedProjectIds
     .map((id) => projects.find((project) => project.id === id))
@@ -103,8 +114,16 @@ export function WeekView({
     .slice(0, 3)
   const segments = CATEGORIES.map((category) => ({
     category,
-    hours: hoursOf(weekTasks.filter((task) => task.categoryId === category.id)),
+    hours:
+      hoursOf(weekTasks.filter((task) => task.categoryId === category.id)) +
+      autoItems
+        .filter((item) => item.project.categoryId === category.id)
+        .reduce((sum, item) => sum + item.plannedHours, 0),
   })).filter((segment) => segment.hours > 0)
+  const totalItems = weekTasks.length + autoItems.length
+  const totalDone =
+    weekTasks.filter((task) => task.done).length +
+    autoItems.filter((item) => item.status === 'done').length
 
   const goPrev = () => {
     if (weekIndex > 0) onWeekChange(WEEK_ORDER[weekIndex - 1])
@@ -119,10 +138,10 @@ export function WeekView({
         <div>
           <div className="eyebrow">
             <span className="tick" />
-            Week {meta.num} · 2026
+            Week {meta.num} · 2026 · 周计划
           </div>
           <h1 className="page-title">
-            第 {meta.num} 周 <span className="light">本周必做</span>
+            第 {meta.num} 周 <span className="light">周计划</span>
           </h1>
           <p className="page-sub">
             {meta.range} · {meta.workdays} 个工作日 · 可用 {available}h
@@ -130,29 +149,6 @@ export function WeekView({
           </p>
         </div>
         <div className="head-actions">
-          <div className="week-nav">
-            <button
-              type="button"
-              className="icon-btn"
-              style={{ width: 25, height: 25 }}
-              onClick={goPrev}
-              disabled={weekIndex <= 0}
-              aria-label="上一周"
-            >
-              <CaretLeft size={13} />
-            </button>
-            <span className="week-nav-label">第 {meta.num} 周</span>
-            <button
-              type="button"
-              className="icon-btn"
-              style={{ width: 25, height: 25 }}
-              onClick={goNext}
-              disabled={weekIndex >= WEEK_ORDER.length - 1}
-              aria-label="下一周"
-            >
-              <CaretRight size={13} />
-            </button>
-          </div>
           <button type="button" className="btn primary" onClick={() => onOpenCreate('task')}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
@@ -160,6 +156,44 @@ export function WeekView({
             新建事项
           </button>
         </div>
+      </div>
+
+      <div className="week-switch-bar">
+        <button
+          type="button"
+          className="btn ghost sm"
+          onClick={goPrev}
+          disabled={weekIndex <= 0}
+          title={prevWeek ? `第 ${prevWeek.num} 周 · ${prevWeek.range}` : '没有上一周'}
+        >
+          <CaretLeft size={13} />
+          上一周
+        </button>
+        <div className="week-switch-center">
+          <b>
+            第 {meta.num} 周 <span className="faint">/ {meta.range}</span>
+          </b>
+          <span>
+            {meta.workdays} 个工作日 · 可用 {available}h
+          </span>
+        </div>
+        <button
+          type="button"
+          className="btn ghost sm"
+          onClick={goNext}
+          disabled={weekIndex >= WEEK_ORDER.length - 1}
+          title={nextWeek ? `第 ${nextWeek.num} 周 · ${nextWeek.range}` : '没有下一周'}
+        >
+          下一周
+          <CaretRight size={13} />
+        </button>
+        <button
+          type="button"
+          className={cn('chip', weekKey === '2026-W42' && 'active')}
+          onClick={() => onWeekChange('2026-W42')}
+        >
+          回到本周
+        </button>
       </div>
 
       <Card className="week-cap" innerClassName="week-cap-inner">
@@ -177,8 +211,10 @@ export function WeekView({
             <span>已完成</span>
           </div>
           <div className="week-cap-stat">
-            <b className="num">{Math.max(0, remaining)}h</b>
-            <span>剩余</span>
+            <b className={cn('num', remaining < 0 && 'negative')}>
+              {remaining < 0 ? `-${Math.abs(remaining)}` : remaining}h
+            </b>
+            <span>{remaining < 0 ? '超载' : '剩余'}</span>
           </div>
         </div>
         <div className="week-cap-viz">
@@ -201,8 +237,13 @@ export function WeekView({
                 {segment.category.name} {segment.hours}h
               </span>
             ))}
+            {autoPlanned > 0 ? (
+              <span className="auto-cap-note">
+                <FolderSimple size={9} /> 项目排期 {autoPlanned}h
+              </span>
+            ) : null}
             <span style={{ marginLeft: 'auto' }}>
-              {weekTasks.filter((task) => task.done).length}/{weekTasks.length} 项完成
+              {totalDone}/{totalItems} 项完成
             </span>
           </div>
         </div>
@@ -225,7 +266,9 @@ export function WeekView({
               onClick={() => setActiveDay((value) => (value === iso ? null : iso))}
             >
               {isToday ? <span className="today-pill">TODAY</span> : null}
-              <span className="day-name">周{WEEKDAY_CN[new Date(`${iso}T12:00:00+08:00`).getDay()]}</span>
+              <span className="day-name">
+                周{WEEKDAY_CN[new Date(`${iso}T12:00:00+08:00`).getDay()]}
+              </span>
               <span className="day-num">{Number(iso.slice(-2))}</span>
               <span
                 className={cn(
@@ -251,8 +294,11 @@ export function WeekView({
         <Card>
           <div className="list-head">
             <div className="list-title">
-              本周必做
-              <span className="list-count num">{visibleTasks.length}</span>
+              本周安排
+              <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
+              {visibleAutoItems.length > 0 ? (
+                <span className="auto-head-tag">项目自动排期 {visibleAutoItems.length} 项</span>
+              ) : null}
             </div>
             <div className="list-actions">
               <button
@@ -263,7 +309,9 @@ export function WeekView({
                 全部
               </button>
               {CATEGORIES.map((category) => {
-                const count = weekTasks.filter((task) => task.categoryId === category.id).length
+                const count =
+                  weekTasks.filter((task) => task.categoryId === category.id).length +
+                  autoItems.filter((item) => item.project.categoryId === category.id).length
                 if (!count) return null
                 return (
                   <button
@@ -285,7 +333,11 @@ export function WeekView({
               <div className="overdue-strip">
                 <WarningCircle size={12} />
                 上期有 <b>{overdue.length}</b> 项逾期未完成
-                <button type="button" className="btn sm" onClick={() => onMoveOverdue(overdue.map((task) => task.id))}>
+                <button
+                  type="button"
+                  className="btn sm"
+                  onClick={() => onMoveOverdue(overdue.map((task) => task.id))}
+                >
                   移入本周
                 </button>
               </div>
@@ -306,6 +358,12 @@ export function WeekView({
                 <span className="faint" style={{ fontSize: 9 }}>
                   点击日期再次取消筛选
                 </span>
+              </div>
+            ) : null}
+
+            {undone.length > 0 ? (
+              <div className="section-label">
+                <CheckCircle size={10} /> 本周必做 · {undone.length}
               </div>
             ) : null}
             <div className="task-rows">
@@ -346,7 +404,56 @@ export function WeekView({
                 </div>
               </>
             ) : null}
-            {visibleTasks.length === 0 ? (
+            {!activeDay && visibleAutoItems.length > 0 ? (
+              <>
+                <div className="section-label auto-section-label">
+                  <FolderSimple size={10} />
+                  项目自动排期 · {visibleAutoItems.length} 项 ·{' '}
+                  {visibleAutoItems.reduce((sum, item) => sum + item.plannedHours, 0)}h
+                  <span className="auto-section-hint">来自项目工作规划</span>
+                </div>
+                <div className="task-rows">
+                  {visibleAutoItems.map((item) => {
+                    const category = getCategory(item.project.categoryId)
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn('task-row auto-row', item.status === 'done' && 'done')}
+                        style={catStyle(item.project.categoryId)}
+                      >
+                        <CheckBox
+                          on={item.status === 'done'}
+                          onToggle={() => onToggleWorkItem(item.project.id, item.id)}
+                          label={item.title}
+                        />
+                        <div className="task-main">
+                          <div className="task-title">{item.title}</div>
+                          <div className="task-meta">
+                            <span className="meta-item">
+                              <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
+                              {category.name}
+                            </span>
+                            <span className="project-chip">
+                              <Target size={9} />
+                              {item.project.title}
+                            </span>
+                            <span className="auto-tag">自动排期</span>
+                            <span className="meta-item">第 {meta.num} 周</span>
+                          </div>
+                        </div>
+                        <div className={cn('task-hours', item.status === 'done' && 'done')}>
+                          <b>{item.plannedHours}</b>
+                          <span>h</span>
+                        </div>
+                        <span className="auto-row-pad" />
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            ) : null}
+
+            {visibleTasks.length === 0 && (activeDay || visibleAutoItems.length === 0) ? (
               <div className="task-empty">这一周还没有事项。先建一件最想推进的事。</div>
             ) : null}
           </div>
@@ -364,17 +471,21 @@ export function WeekView({
               <div className="card-head">
                 <div className="card-title">
                   <Target size={13} />
-                  关联主线
+                  关联季度任务
                 </div>
-                <button type="button" className="card-link" onClick={() => onToast('季度主线详情在季度页查看')}>
-                  Q4 <ArrowRight size={10} />
+                <button
+                  type="button"
+                  className="card-link"
+                  onClick={() => onToast('季度任务详情在首页查看')}
+                >
+                  首页 <ArrowRight size={10} />
                 </button>
               </div>
               {sideObjectives.map((objective) => (
                 <div
                   className="objective-mini"
                   key={objective.id}
-                  onClick={() => onToast(`主线：${objective.title} · ${objective.progress}%`)}
+                  onClick={() => onToast(`季度任务：${objective.title} · ${objective.progress}%`)}
                 >
                   <div className="objective-mini-top" style={catStyle(objective.categoryId)}>
                     <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
@@ -384,7 +495,9 @@ export function WeekView({
                   <Progress value={objective.progress} catId={objective.categoryId} />
                 </div>
               ))}
-              {sideObjectives.length === 0 ? <div className="task-empty">本周还没有关联主线。</div> : null}
+              {sideObjectives.length === 0 ? (
+                <div className="task-empty">本周还没有关联季度任务。</div>
+              ) : null}
             </div>
           </Card>
 
@@ -395,7 +508,11 @@ export function WeekView({
                   <FolderSimple size={13} />
                   项目推进
                 </div>
-                <button type="button" className="card-link" onClick={() => onToast('去项目页查看全部里程碑')}>
+                <button
+                  type="button"
+                  className="card-link"
+                  onClick={() => onToast('去项目页查看全部里程碑')}
+                >
                   全部 <ArrowRight size={10} />
                 </button>
               </div>
@@ -421,7 +538,6 @@ export function WeekView({
               ) : null}
             </div>
           </Card>
-
         </div>
       </div>
     </div>

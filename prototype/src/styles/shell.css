@@ -863,3 +863,7 @@
   font-family: var(--font-ui);
   letter-spacing: 0;
 }
+
+.side-cap-top b.over {
+  color: var(--bad);
+}

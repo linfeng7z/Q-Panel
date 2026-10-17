@@ -1,4 +1,4 @@
-import type { Objective, Project, WeekTask } from './types'
+import type { Objective, Project, ProjectWorkItem, WeekTask } from './types'
 import { NOW } from './data/mock'
 
 export function cn(...xs: Array<string | false | null | undefined>): string {
@@ -42,6 +42,32 @@ export function projectDoneCount(project: Project): number {
 
 export function projectNext(project: Project): Project['milestones'][number] | undefined {
   return project.milestones.find((m) => m.status !== 'done')
+}
+
+export interface ProjectWeekItem extends ProjectWorkItem {
+  project: Project
+}
+
+export function projectDecomposedHours(project: Project): number {
+  return project.workItems.reduce((sum, item) => sum + item.plannedHours, 0)
+}
+
+export function projectScheduledHours(project: Project): number {
+  return project.workItems
+    .filter((item) => Boolean(item.weekKey))
+    .reduce((sum, item) => sum + item.plannedHours, 0)
+}
+
+export function projectWorkItemsForWeek(projects: Project[], weekKey: string): ProjectWeekItem[] {
+  return projects.flatMap((project) =>
+    project.workItems
+      .filter((item) => item.weekKey === weekKey)
+      .map((item) => ({ ...item, project })),
+  )
+}
+
+export function projectWorkItemHours(items: ProjectWeekItem[]): number {
+  return items.reduce((sum, item) => sum + item.plannedHours, 0)
 }
 
 export function weightedCompletion(objectives: Objective[]): number {

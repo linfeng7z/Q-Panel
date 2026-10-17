@@ -1,14 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ArrowRight,
+  CalendarDots,
+  CaretLeft,
+  Check,
   FolderSimple,
   Plus,
   Target,
-  X,
+  Trash,
 } from '@phosphor-icons/react'
-import type { CategoryId, CreateMode, Project } from '../types'
-import { CATEGORIES, getCategory } from '../data/mock'
-import { cn, fmtDate, projectDoneCount, projectNext, projectProgress } from '../utils'
+import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
+import { CATEGORIES, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
+import {
+  cn,
+  fmtDate,
+  projectDecomposedHours,
+  projectDoneCount,
+  projectNext,
+  projectProgress,
+  projectScheduledHours,
+} from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
 
 interface ProjectsViewProps {
@@ -17,6 +28,8 @@ interface ProjectsViewProps {
   onFilter: (filter: CategoryId | 'all') => void
   onOpenCreate: (mode: CreateMode) => void
   onToast: (message: string) => void
+  onChangeProjects: (projects: Project[]) => void
+  onOpenWeek: (weekKey: string) => void
 }
 
 function projectStatus(project: Project) {
@@ -25,8 +38,25 @@ function projectStatus(project: Project) {
   return { cls: 'in_progress', label: '进行中' }
 }
 
-export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast }: ProjectsViewProps) {
-  const [selected, setSelected] = useState<Project | null>(null)
+function weekLabel(key: string): string {
+  return `第 ${WEEKS[key]?.num ?? '?'} 周`
+}
+
+export function ProjectsView({
+  projects,
+  filter,
+  onFilter,
+  onOpenCreate,
+  onToast,
+  onChangeProjects,
+  onOpenWeek,
+}: ProjectsViewProps) {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = selectedId ? projects.find((project) => project.id === selectedId) : null
+
+  useEffect(() => {
+    document.querySelector('.view-scroll')?.scrollTo({ top: 0 })
+  }, [selectedId])
   const visibleProjects =
     filter === 'all' ? projects : projects.filter((project) => project.categoryId === filter)
   const showFeatured = filter === 'all' && visibleProjects.length > 0
@@ -34,6 +64,20 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
   const rest = showFeatured ? visibleProjects.slice(1) : visibleProjects
   const featuredProgress = featured ? projectProgress(featured) : 0
   const featuredNext = featured ? projectNext(featured) : undefined
+
+  if (selected) {
+    return (
+      <ProjectDetail
+        project={selected}
+        onBack={() => setSelectedId(null)}
+        onChange={(next) =>
+          onChangeProjects(projects.map((project) => (project.id === next.id ? next : project)))
+        }
+        onOpenWeek={onOpenWeek}
+        onToast={onToast}
+      />
+    )
+  }
 
   return (
     <div className="view projects-view">
@@ -44,11 +88,12 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
             Long-running projects · 2026
           </div>
           <h1 className="page-title">
-            长期项目 <span className="light">与里程碑</span>
+            长期项目 <span className="light">与工作规划</span>
           </h1>
           <p className="page-sub">
             {projects.length} 个项目进行中 · 共{' '}
-            {projects.reduce((sum, project) => sum + project.milestones.length, 0)} 个里程碑 · 可跨季度推进
+            {projects.reduce((sum, project) => sum + project.workItems.length, 0)} 个工作项 ·
+            按安排周自动进入周计划 · 点击项目进入工作规划
           </p>
         </div>
         <div className="head-actions">
@@ -110,12 +155,14 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
         <div className="proj-grid">
           {featured ? (
             <Card className="proj-featured">
-              <div className="proj-card proj-card-featured" onClick={() => setSelected(featured)}>
+              <div className="proj-card proj-card-featured" onClick={() => setSelectedId(featured.id)}>
                 <div className="proj-top">
                   <div className="proj-cat" style={catStyle(featured.categoryId)}>
                     <span className="dot" />
                     {getCategory(featured.categoryId).name}
-                    <span className="tag" style={{ marginLeft: 4 }}>Q4 主线</span>
+                    <span className="tag" style={{ marginLeft: 4 }}>
+                      季度任务
+                    </span>
                   </div>
                   <span className={cn('status', projectStatus(featured).cls)}>
                     <span className="mini-dot" />
@@ -132,6 +179,16 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
                   <span className="sep" />
                   下一里程碑 {featuredNext ? fmtDate(featuredNext.targetDate) : '—'}
                 </div>
+                <div className="proj-plan-line">
+                  <span>
+                    总规划 <b>{featured.plannedHours}h</b>
+                  </span>
+                  <span>
+                    已拆解 <b>{projectDecomposedHours(featured)}h</b>
+                  </span>
+                  <span>{featured.workItems.length} 个工作项</span>
+                  <span className="auto-label">自动排入周计划</span>
+                </div>
                 <div className="featured-body">
                   <div>
                     <div
@@ -142,7 +199,13 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
                       {featured.milestones.map((milestone) => (
                         <i
                           key={milestone.id}
-                          className={milestone.status === 'done' ? 'done' : milestone.status === 'doing' ? 'doing' : ''}
+                          className={
+                            milestone.status === 'done'
+                              ? 'done'
+                              : milestone.status === 'doing'
+                                ? 'doing'
+                                : ''
+                          }
                         />
                       ))}
                     </div>
@@ -184,7 +247,7 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
                       </span>
                     </div>
                     <button type="button" className="btn sm" style={{ marginTop: 'auto' }}>
-                      查看项目详情
+                      编辑项目规划
                       <ArrowRight size={11} />
                     </button>
                   </div>
@@ -198,7 +261,7 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
             const next = projectNext(project)
             return (
               <Card key={project.id}>
-                <div className="proj-card" onClick={() => setSelected(project)}>
+                <div className="proj-card" onClick={() => setSelectedId(project.id)}>
                   <div className="proj-top">
                     <div className="proj-cat" style={catStyle(project.categoryId)}>
                       <span className="dot" />
@@ -217,11 +280,26 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
                     <span className="sep" />
                     {projectDoneCount(project)}/{project.milestones.length} 里程碑
                   </div>
+                  <div className="proj-plan-line">
+                    <span>
+                      规划 <b>{project.plannedHours}h</b>
+                    </span>
+                    <span>
+                      已拆 <b>{projectDecomposedHours(project)}h</b>
+                    </span>
+                    <span>{project.workItems.length} 个工作项</span>
+                  </div>
                   <div className="milestone-bar">
                     {project.milestones.map((milestone) => (
                       <i
                         key={milestone.id}
-                        className={milestone.status === 'done' ? 'done' : milestone.status === 'doing' ? 'doing' : ''}
+                        className={
+                          milestone.status === 'done'
+                            ? 'done'
+                            : milestone.status === 'doing'
+                              ? 'doing'
+                              : ''
+                        }
                       />
                     ))}
                   </div>
@@ -237,87 +315,307 @@ export function ProjectsView({ projects, filter, onFilter, onOpenCreate, onToast
           })}
         </div>
       )}
+    </div>
+  )
+}
 
-      {selected ? (
-        <>
-          <div className="scrim" onMouseDown={() => setSelected(null)} />
-          <div className="modal-layer">
-            <div className="modal-card" style={{ width: 720 }}>
-              <div className="modal-inner">
-                <div className="modal-head">
-                  <div>
-                    <div className="eyebrow" style={{ marginBottom: 6 }}>
-                      <span className="tick" />
-                      Project detail
-                    </div>
-                    <div className="modal-title">{selected.title}</div>
-                    <div className="modal-sub">
-                      {getCategory(selected.categoryId).name} · {selected.span} ·{' '}
-                      {projectDoneCount(selected)}/{selected.milestones.length} 里程碑
-                    </div>
-                  </div>
-                  <button type="button" className="modal-close" onClick={() => setSelected(null)}>
-                    <X size={16} />
-                  </button>
+function ProjectDetail({
+  project,
+  onBack,
+  onChange,
+  onOpenWeek,
+  onToast,
+}: {
+  project: Project
+  onBack: () => void
+  onChange: (project: Project) => void
+  onOpenWeek: (weekKey: string) => void
+  onToast: (message: string) => void
+}) {
+  const decomposed = projectDecomposedHours(project)
+  const scheduled = projectScheduledHours(project)
+  const doneItems = project.workItems.filter((item) => item.status === 'done')
+  const doneHours = doneItems.reduce((sum, item) => sum + item.plannedHours, 0)
+  const over = decomposed > project.plannedHours
+  const weekGroups = WEEK_ORDER.map((key) => ({
+    key,
+    meta: WEEKS[key],
+    items: project.workItems.filter((item) => item.weekKey === key),
+  })).filter((group) => group.items.length > 0)
+
+  const updateItem = (id: string, patch: Partial<ProjectWorkItem>) => {
+    onChange({
+      ...project,
+      workItems: project.workItems.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    })
+  }
+
+  const addItem = () => {
+    const item: ProjectWorkItem = {
+      id: `wi-${Date.now()}`,
+      title: '新工作项',
+      plannedHours: 4,
+      weekKey: '2026-W42',
+      status: 'todo',
+    }
+    onChange({ ...project, workItems: [...project.workItems, item] })
+    onToast('已添加工作项，按安排周自动进入周计划')
+  }
+
+  const removeItem = (id: string) => {
+    onChange({ ...project, workItems: project.workItems.filter((item) => item.id !== id) })
+    onToast('已删除工作项，周计划已同步')
+  }
+
+  return (
+    <div className="view project-detail-view">
+      <button type="button" className="back-link" onClick={onBack}>
+        <CaretLeft size={13} />
+        全部项目
+      </button>
+
+      <div className="page-head project-detail-head">
+        <div>
+          <div className="eyebrow">
+            <span className="tick" />
+            Project planning · {getCategory(project.categoryId).name}
+          </div>
+          <h1 className="page-title">{project.title}</h1>
+          <p className="page-sub">
+            {project.span} · {project.status === 'risk' ? '有风险' : '进行中'} ·{' '}
+            {projectDoneCount(project)}/{project.milestones.length} 里程碑 ·{' '}
+            {project.workItems.length} 个工作项
+          </p>
+        </div>
+        <div className="head-actions">
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => onOpenWeek(project.workItems[0]?.weekKey ?? '2026-W42')}
+          >
+            <CalendarDots size={14} />
+            打开周计划
+          </button>
+        </div>
+      </div>
+
+      <div className="project-summary">
+        <Card>
+          <div className="project-summary-card">
+            <span className="stat-label">总规划工时</span>
+            <div className="hours-edit">
+              <input
+                className="hours-input num"
+                type="number"
+                min={0}
+                value={project.plannedHours}
+                onChange={(event) =>
+                  onChange({ ...project, plannedHours: Math.max(0, Number(event.target.value) || 0) })
+                }
+              />
+              <span>h</span>
+            </div>
+            <span className="stat-foot">项目跨季度总投入，可随时调整</span>
+          </div>
+        </Card>
+        <Card>
+          <div className="project-summary-card">
+            <span className="stat-label">已拆解</span>
+            <div className="project-summary-value">
+              <b className="num">{decomposed}</b>
+              <span>h</span>
+            </div>
+            <span className={cn('stat-foot', over && 'bad-text')}>
+              {over
+                ? `超出总规划 ${decomposed - project.plannedHours}h`
+                : `剩余 ${Math.max(0, project.plannedHours - decomposed)}h 待拆解`}
+            </span>
+          </div>
+        </Card>
+        <Card>
+          <div className="project-summary-card">
+            <span className="stat-label">已排入周计划</span>
+            <div className="project-summary-value">
+              <b className="num">{scheduled}</b>
+              <span>h</span>
+            </div>
+            <span className="stat-foot">覆盖 {weekGroups.length} 个周次，自动同步</span>
+          </div>
+        </Card>
+        <Card>
+          <div className="project-summary-card">
+            <span className="stat-label">工作项完成</span>
+            <div className="project-summary-value">
+              <b className="num">{doneItems.length}</b>
+              <span>/ {project.workItems.length}</span>
+            </div>
+            <span className="stat-foot">已完成 {doneHours}h / {decomposed}h</span>
+          </div>
+        </Card>
+      </div>
+
+      <div className="project-detail-grid">
+        <Card>
+          <div className="list-head">
+            <div className="list-title">
+              工作规划
+              <span className="list-count num">{project.workItems.length}</span>
+            </div>
+            <span className="auto-label">设置安排周 → 自动进入周计划</span>
+          </div>
+          <div className="workplan-note">
+            工作项会按「安排周」自动出现在对应周的「项目自动排期」中，并计入当周已排工时；
+            修改工时或周次会实时同步。
+          </div>
+          <div className="workplan-table">
+            <div className="workplan-row workplan-head">
+              <span>工作项</span>
+              <span>规划工时</span>
+              <span>安排周</span>
+              <span>状态</span>
+              <span />
+            </div>
+            {project.workItems.map((item) => (
+              <div className="workplan-row" key={item.id}>
+                <input
+                  className="workitem-title"
+                  value={item.title}
+                  onChange={(event) => updateItem(item.id, { title: event.target.value })}
+                />
+                <div className="hours-edit compact">
+                  <input
+                    className="hours-input num"
+                    type="number"
+                    min={0}
+                    value={item.plannedHours}
+                    onChange={(event) =>
+                      updateItem(item.id, {
+                        plannedHours: Math.max(0, Number(event.target.value) || 0),
+                      })
+                    }
+                  />
+                  <span>h</span>
                 </div>
-                <div className="modal-body">
-                  <p className="stat-foot" style={{ fontSize: 10.5, lineHeight: 1.7, color: 'var(--text-2)' }}>
-                    {selected.description}
-                  </p>
-                  <div className="row" style={{ marginTop: 14, gap: 13 }}>
-                    <div style={{ flex: 1 }}>
-                      <div className="meter-row">
-                        <Progress value={projectProgress(selected)} catId={selected.categoryId} className="lg" />
-                        <span className="meter-pct">{projectProgress(selected)}%</span>
-                      </div>
-                    </div>
-                    <span className={cn('status', projectStatus(selected).cls)}>
-                      <span className="mini-dot" />
-                      {projectStatus(selected).label}
-                    </span>
-                  </div>
-                  <div className="settings-section">
-                    <div className="settings-section-label">里程碑</div>
-                    {selected.milestones.map((milestone) => (
-                      <div
-                        key={milestone.id}
-                        className={cn(
-                          'timeline-item',
-                          milestone.status === 'done' && 'done',
-                          milestone.status === 'doing' && 'doing',
-                        )}
-                        style={{ height: 32, borderBottom: '1px solid var(--line-soft)' }}
-                      >
-                        <span className="timeline-dot" />
-                        <span className="tl-title">{milestone.title}</span>
-                        <span className="tag">
-                          {milestone.status === 'done' ? '已完成' : milestone.status === 'doing' ? '进行中' : '未开始'}
-                        </span>
-                        <span className="tl-date">{fmtDate(milestone.targetDate)}</span>
-                      </div>
-                    ))}
-                  </div>
+                <select
+                  className="workitem-week"
+                  value={item.weekKey}
+                  onChange={(event) => updateItem(item.id, { weekKey: event.target.value })}
+                >
+                  {WEEK_ORDER.map((key) => (
+                    <option value={key} key={key}>
+                      {weekLabel(key)} · {WEEKS[key].range}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className={cn('workitem-status', item.status === 'done' && 'done')}
+                  onClick={() =>
+                    updateItem(item.id, {
+                      status: item.status === 'done' ? 'todo' : 'done',
+                    })
+                  }
+                >
+                  {item.status === 'done' ? <Check size={10} weight="bold" /> : null}
+                  {item.status === 'done' ? '已完成' : '待办'}
+                </button>
+                <button
+                  type="button"
+                  className="workitem-del"
+                  onClick={() => removeItem(item.id)}
+                  aria-label={`删除 ${item.title}`}
+                >
+                  <Trash size={13} />
+                </button>
+              </div>
+            ))}
+            {project.workItems.length === 0 ? (
+              <div className="task-empty" style={{ padding: '18px 10px' }}>
+                还没有工作项。先把项目拆成可排进周计划的小块。
+              </div>
+            ) : null}
+          </div>
+          <div className="list-foot">
+            <button type="button" className="add-row" onClick={addItem}>
+              <Plus size={13} />
+              添加工作项
+            </button>
+          </div>
+        </Card>
+
+        <div className="project-detail-side">
+          <Card>
+            <div className="card-pad-sm">
+              <div className="card-head">
+                <div className="card-title">
+                  <CalendarDots size={13} />
+                  周排期
                 </div>
-                <div className="modal-foot">
-                  <button type="button" className="btn ghost" onClick={() => setSelected(null)}>
-                    关闭
-                  </button>
-                  <button
-                    type="button"
-                    className="btn primary"
-                    onClick={() => {
-                      onToast('项目编辑与里程碑管理将在功能版接入')
-                      setSelected(null)
-                    }}
-                  >
-                    编辑项目
-                  </button>
+                <span className="card-meta">自动同步</span>
+              </div>
+              {weekGroups.map((group) => (
+                <button
+                  key={group.key}
+                  type="button"
+                  className="week-plan-row"
+                  onClick={() => onOpenWeek(group.key)}
+                >
+                  <span className="week-plan-copy">
+                    <b>{weekLabel(group.key)}</b>
+                    <span>{group.meta.range}</span>
+                  </span>
+                  <span className="week-plan-meta">
+                    {group.items.length} 项 · {group.items.reduce((sum, item) => sum + item.plannedHours, 0)}h
+                  </span>
+                  <ArrowRight size={10} />
+                </button>
+              ))}
+              {weekGroups.length === 0 ? (
+                <div className="task-empty" style={{ padding: '12px 4px' }}>
+                  还没有安排到具体周。
                 </div>
+              ) : null}
+              <div className="auto-note">
+                修改安排周后，对应周计划会自动更新，不需要手动搬事项。
               </div>
             </div>
-          </div>
-        </>
-      ) : null}
+          </Card>
+
+          <Card>
+            <div className="card-pad-sm">
+              <div className="card-head">
+                <div className="card-title">
+                  <Target size={13} />
+                  里程碑
+                </div>
+                <span className="card-meta">
+                  {projectDoneCount(project)}/{project.milestones.length}
+                </span>
+              </div>
+              <div className="project-progress-row">
+                <Progress value={projectProgress(project)} catId={project.categoryId} className="lg" />
+                <span className="meter-pct">{projectProgress(project)}%</span>
+              </div>
+              <div className="timeline" style={{ marginTop: 12 }}>
+                {project.milestones.map((milestone) => (
+                  <div
+                    key={milestone.id}
+                    className={cn(
+                      'timeline-item',
+                      milestone.status === 'done' && 'done',
+                      milestone.status === 'doing' && 'doing',
+                    )}
+                  >
+                    <span className="timeline-dot" />
+                    <span className="tl-title">{milestone.title}</span>
+                    <span className="tl-date">{fmtDate(milestone.targetDate)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

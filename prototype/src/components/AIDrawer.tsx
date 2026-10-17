@@ -29,7 +29,7 @@ interface Message {
 }
 
 const SUGGESTS = [
-  '把 Q4 应用安全主线拆成本周 3 件事',
+  '把 Q4 应用安全任务拆成本周 3 件事',
   '汇总本周进展，生成周报',
   '新建长期项目：AI 安全治理',
 ]
@@ -56,7 +56,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
       id: 'hello',
       role: 'bot',
       text:
-        '晚上好，Huihui。我可以帮你把季度主线拆成本周事项、创建长期项目、调整提醒。\n所有写入都会先给你预览，你确认后才会落库。',
+        '晚上好，Huihui。我可以帮你把季度任务拆成本周事项、创建长期项目、调整提醒。\n所有写入都会先给你预览，你确认后才会落库。',
     },
   ])
   const [input, setInput] = useState('')
@@ -274,7 +274,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast }: AIDrawerProps) {
                   send(input)
                 }
               }}
-              placeholder="让 AI 帮你建事项、拆解主线…"
+              placeholder="让 AI 帮你建事项、拆解任务…"
             />
             <button
               type="button"

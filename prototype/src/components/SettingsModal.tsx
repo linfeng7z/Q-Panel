@@ -50,7 +50,7 @@ export function SettingsModal({
   const [buffer, setBuffer] = useState(0)
   const [defaultOffset, setDefaultOffset] = useState('提前 2 天')
   const [defaultTime, setDefaultTime] = useState('09:30')
-  const [defaultView, setDefaultView] = useState('季度')
+  const [defaultView, setDefaultView] = useState('首页')
   const [provider, setProvider] = useState('OpenAI 兼容')
   const [baseUrl, setBaseUrl] = useState('https://api.deepseek.com/v1')
   const [model, setModel] = useState('deepseek-chat')
@@ -155,9 +155,9 @@ export function SettingsModal({
                           <div className="settings-help">点击刘海展开时先看到的页面。</div>
                         </div>
                         <select className="select" style={{ width: 120 }} value={defaultView} onChange={(event) => setDefaultView(event.target.value)}>
-                          <option>季度</option>
-                          <option>今日</option>
-                          <option>周</option>
+                          <option>首页</option>
+                          <option>周计划</option>
+                          <option>项目</option>
                         </select>
                       </div>
                     </div>
@@ -189,7 +189,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">计划缓冲</div>
-                          <div className="settings-help">预留不可用于主线任务的会议 / 杂事时间，默认 0%。</div>
+                          <div className="settings-help">预留不可用于季度任务的会议 / 杂事时间，默认 0%。</div>
                         </div>
                         <div className="stepper">
                           <button type="button" onClick={() => setBuffer((value) => Math.max(0, value - 5))}>
@@ -349,7 +349,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">发送给 AI 的上下文</div>
-                          <div className="settings-help">摘要包含当前周期、主线、项目与本周事项的标题/状态/工时；笔记与链接默认不发送。</div>
+                          <div className="settings-help">摘要包含当前周期、季度任务、项目与本周事项的标题/状态/工时；笔记与链接默认不发送。</div>
                         </div>
                         <select className="select" style={{ width: 150 }} value={scope} onChange={(event) => setScope(event.target.value)}>
                           <option>最小</option>
@@ -408,7 +408,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">导出工作区</div>
-                          <div className="settings-help">导出 JSON（包含设置、主线、周事项、项目、笔记、链接）。</div>
+                          <div className="settings-help">导出 JSON（包含设置、季度任务、周事项、项目、笔记、链接）。</div>
                         </div>
                         <button type="button" className="btn sm" onClick={() => onToast('已导出 q-panel-workspace.json（原型模拟）')}>
                           导出

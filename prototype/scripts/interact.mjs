@@ -15,6 +15,8 @@ const shot = async (name) => { await page.screenshot({ path: `${outDir}${name}.p
 
 await page.goto('http://127.0.0.1:5178/?view=quarter&theme=noir&noreminder=1', { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
+check('sidebar reduced to 3 items', await page.locator('.sidebar .nav-item').count() === 3)
+check('home is quarter tasks', (await page.locator('.page-title').innerText()).includes('季度任务'))
 
 // period popover + 2027 warning
 await page.click('.period-btn')
@@ -39,6 +41,20 @@ check('year overview visible', await page.locator('.year-overview').isVisible())
 await shot('15-year-overview')
 await page.getByRole('button', { name: '返回季度' }).click()
 
+// project planning + auto schedule
+await page.locator('.nav-item:has-text("项目")').click()
+await page.waitForTimeout(300)
+await page.locator('.proj-featured .proj-card').click()
+await page.waitForTimeout(300)
+check('project detail visible', await page.locator('.project-detail-view').isVisible())
+await page.locator('.project-summary .hours-input').first().fill('140')
+await page.locator('.workitem-week').first().selectOption('2026-W44')
+await page.getByRole('button', { name: /打开周计划/ }).click()
+await page.waitForTimeout(400)
+check('project week sync', (await page.locator('.page-title').innerText()).includes('第 44 周'))
+check('auto schedule items visible', (await page.locator('.auto-row').count()) > 0)
+await shot('15b-project-week-sync')
+
 // AI flow
 await page.click('.ai-pill')
 await page.waitForTimeout(300)
@@ -54,7 +70,7 @@ await shot('17-ai-confirmed')
 await page.locator('.ai-close').click()
 
 // create task
-await page.locator('.nav-item:has-text("周")').click()
+await page.locator('.nav-item:has-text("周计划")').click()
 await page.waitForTimeout(300)
 await page.getByRole('button', { name: '新建事项' }).click()
 await page.waitForTimeout(300)

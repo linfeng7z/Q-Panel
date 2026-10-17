@@ -21,7 +21,7 @@ import {
   WEEKS,
   quarterKey,
 } from './data/mock'
-import { dateISO, hoursOf, isOverdue } from './utils'
+import { dateISO, hoursOf, isOverdue, projectWorkItemHours, projectWorkItemsForWeek } from './utils'
 import { MenuBar } from './components/MenuBar'
 import { TopBar } from './components/TopBar'
 import { Sidebar } from './components/Sidebar'
@@ -86,13 +86,15 @@ export default function App() {
   const toastTimer = useRef<number | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const currentWeekTasks = tasks.filter((task) => task.weekKey === '2026-W42')
-  const weekAvailable = 40
-  const weekPlanned = hoursOf(currentWeekTasks)
-  const todayCount = tasks.filter(
-    (task) => !task.done && (task.dueDate === TODAY || isOverdue(task)),
-  ).length
-  const weekCount = currentWeekTasks.filter((task) => !task.done).length
+  const sideWeekKey = view === 'week' ? weekKey : '2026-W42'
+  const sideWeekMeta = WEEKS[sideWeekKey] ?? WEEKS['2026-W42']
+  const sideWeekTasks = tasks.filter((task) => task.weekKey === sideWeekKey)
+  const sideWeekProjectItems = projectWorkItemsForWeek(projects, sideWeekKey)
+  const weekAvailable = sideWeekMeta.workdays * 8 - sideWeekMeta.leaveHours
+  const weekPlanned = hoursOf(sideWeekTasks) + projectWorkItemHours(sideWeekProjectItems)
+  const weekCount =
+    sideWeekTasks.filter((task) => !task.done).length +
+    sideWeekProjectItems.filter((item) => item.status !== 'done').length
   const bellCount = tasks.filter(
     (task) => !task.done && (task.dueDate === TODAY || isOverdue(task)),
   ).length
@@ -173,6 +175,23 @@ export default function App() {
     )
   }
 
+  const toggleProjectWorkItem = (projectId: string, itemId: string) => {
+    setProjects((value) =>
+      value.map((project) =>
+        project.id !== projectId
+          ? project
+          : {
+              ...project,
+              workItems: project.workItems.map((item) =>
+                item.id === itemId
+                  ? { ...item, status: item.status === 'done' ? 'todo' : 'done' }
+                  : item,
+              ),
+            },
+      ),
+    )
+  }
+
   const quickAdd = (title: string) => {
     const task: WeekTask = {
       id: `t-${Date.now()}`,
@@ -228,7 +247,7 @@ export default function App() {
       reminder: '提前 2 天 · 09:30',
     }
     setObjectives((value) => ({ ...value, [key]: [...(value[key] ?? []), objective] }))
-    showToast('已创建季度主线，容量已重新计算')
+    showToast('已创建季度任务，容量已重新计算')
   }
 
   const createProject = (data: {
@@ -246,6 +265,8 @@ export default function App() {
       description: data.description || '新建长期项目。',
       span: `2026.10 – ${targetYear}.${String(targetMonth).padStart(2, '0')}`,
       status: 'active',
+      plannedHours: 0,
+      workItems: [],
       milestones: [
         {
           id: `m-${Date.now()}`,
@@ -337,6 +358,7 @@ export default function App() {
               setQuarter(nextQuarter)
             }}
             onToast={showToast}
+            onOpenStats={() => setView('stats')}
           />
         )
       case 'week':
@@ -353,6 +375,7 @@ export default function App() {
             onOpenCreate={setCreateMode}
             onMoveOverdue={moveOverdue}
             onToast={showToast}
+            onToggleWorkItem={toggleProjectWorkItem}
           />
         )
       case 'projects':
@@ -363,10 +386,22 @@ export default function App() {
             onFilter={setFilter}
             onOpenCreate={setCreateMode}
             onToast={showToast}
+            onChangeProjects={setProjects}
+            onOpenWeek={(key) => {
+              setWeekKey(key)
+              setView('week')
+            }}
           />
         )
       case 'stats':
-        return <StatsView year={year} quarter={quarter} onToast={showToast} />
+        return (
+          <StatsView
+            year={year}
+            quarter={quarter}
+            onToast={showToast}
+            onBack={() => setView('quarter')}
+          />
+        )
       case 'notes':
         return <NotesView notes={notes} onChange={setNotes} onToast={showToast} />
       case 'links':
@@ -393,6 +428,8 @@ export default function App() {
             <div className="panel-shell">
               <div className="panel" data-theme={theme}>
                 <TopBar
+                  view={view}
+                  onView={navigate}
                   onToggleTheme={() =>
                     setTheme((value) => (value === 'noir' ? 'ops' : 'noir'))
                   }
@@ -414,10 +451,10 @@ export default function App() {
                   <Sidebar
                     view={view}
                     onView={navigate}
-                    todayCount={todayCount}
                     weekCount={weekCount}
                     weekPlanned={weekPlanned}
                     weekAvailable={weekAvailable}
+                    weekLabel={view === 'week' ? `第 ${sideWeekMeta.num} 周容量` : '本周容量'}
                   />
                   <div className="content">
                     <div className="view-scroll scroll" ref={scrollRef}>

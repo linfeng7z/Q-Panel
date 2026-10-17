@@ -1753,3 +1753,84 @@
 .empty .btn {
   margin-top: 6px;
 }
+
+/* ---- Topbar tool menu ---- */
+.icon-btn.active {
+  background: var(--surface-2);
+  border-color: var(--line-soft);
+  color: var(--text-1);
+}
+
+.tools-pop {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  width: 224px;
+  padding: 7px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(30px) saturate(1.2);
+  z-index: 36;
+  animation: popIn 0.18s var(--ease);
+}
+
+.tools-pop-head {
+  padding: 5px 8px 7px;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+.tools-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--text-2);
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+
+.tools-item:hover,
+.tools-item.active {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+.tools-item-icon {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--surface-inset);
+  color: var(--text-2);
+}
+
+.tools-item-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tools-item-copy b {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.tools-item-copy span {
+  font-size: 8.5px;
+  color: var(--text-3);
+}
+
+.bad-text {
+  color: var(--bad) !important;
+}

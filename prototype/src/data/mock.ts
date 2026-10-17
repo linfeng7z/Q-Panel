@@ -99,6 +99,15 @@ export const PROJECTS: Project[] = [
     span: '2026.09 – 2027.01',
     status: 'active',
     objectiveId: 'o1',
+    plannedHours: 120,
+    workItems: [
+      { id: 'wi-p1-1', title: '差距分析证据清单', plannedHours: 4, weekKey: '2026-W42', status: 'todo' },
+      { id: 'wi-p1-2', title: '差距分析初稿评审', plannedHours: 4, weekKey: '2026-W43', status: 'todo' },
+      { id: 'wi-p1-3', title: '制度修订清单', plannedHours: 4, weekKey: '2026-W44', status: 'todo' },
+      { id: 'wi-p1-4', title: '控制项整改方案', plannedHours: 6, weekKey: '2026-W45', status: 'todo' },
+      { id: 'wi-p1-5', title: '整改实施跟踪', plannedHours: 8, weekKey: '2026-W46', status: 'todo' },
+      { id: 'wi-p1-6', title: '复测与报告', plannedHours: 4, weekKey: '2026-W47', status: 'todo' },
+    ],
     milestones: [
       { id: 'p1-m1', title: '资产盘点与边界梳理', targetDate: '2026-09-30', status: 'done' },
       { id: 'p1-m2', title: '差距分析报告', targetDate: '2026-10-31', status: 'doing' },
@@ -114,6 +123,13 @@ export const PROJECTS: Project[] = [
     span: '2026.10 – 2027.01',
     status: 'active',
     objectiveId: 'o2',
+    plannedHours: 80,
+    workItems: [
+      { id: 'wi-p2-1', title: '降噪规则灰度准备', plannedHours: 3, weekKey: '2026-W42', status: 'todo' },
+      { id: 'wi-p2-2', title: '灰度观察与误报复盘', plannedHours: 4, weekKey: '2026-W43', status: 'todo' },
+      { id: 'wi-p2-3', title: '运营看板需求', plannedHours: 3, weekKey: '2026-W44', status: 'todo' },
+      { id: 'wi-p2-4', title: '值班机制草案', plannedHours: 3, weekKey: '2026-W45', status: 'todo' },
+    ],
     milestones: [
       { id: 'p2-m1', title: '告警基线与误报盘点', targetDate: '2026-10-08', status: 'done' },
       { id: 'p2-m2', title: '降噪规则 v2 灰度', targetDate: '2026-11-15', status: 'doing' },
@@ -128,6 +144,13 @@ export const PROJECTS: Project[] = [
     span: '2026.10 – 2026.12',
     status: 'risk',
     objectiveId: 'o3',
+    plannedHours: 96,
+    workItems: [
+      { id: 'wi-p3-1', title: '攻击面梳理', plannedHours: 4, weekKey: '2026-W42', status: 'todo' },
+      { id: 'wi-p3-2', title: '演练方案定稿', plannedHours: 3, weekKey: '2026-W43', status: 'todo' },
+      { id: 'wi-p3-3', title: '演练环境与规则', plannedHours: 5, weekKey: '2026-W44', status: 'todo' },
+      { id: 'wi-p3-4', title: '实战演练', plannedHours: 10, weekKey: '2026-W47', status: 'todo' },
+    ],
     milestones: [
       { id: 'p3-m1', title: '演练方案评审', targetDate: '2026-10-12', status: 'done' },
       { id: 'p3-m2', title: '攻击面梳理与目标圈定', targetDate: '2026-10-28', status: 'doing' },
@@ -143,6 +166,12 @@ export const PROJECTS: Project[] = [
     span: '2026.10 – 2027.03',
     status: 'active',
     objectiveId: 'o4',
+    plannedHours: 64,
+    workItems: [
+      { id: 'wi-p4-1', title: '治理范围与资产清单', plannedHours: 4, weekKey: '2026-W43', status: 'todo' },
+      { id: 'wi-p4-2', title: '风险基线调研', plannedHours: 4, weekKey: '2026-W44', status: 'todo' },
+      { id: 'wi-p4-3', title: '控制要求草案', plannedHours: 4, weekKey: '2026-W45', status: 'todo' },
+    ],
     milestones: [
       { id: 'p4-m1', title: '治理范围与资产清单', targetDate: '2026-11-10', status: 'doing' },
       { id: 'p4-m2', title: '风险基线与控制要求', targetDate: '2026-12-05', status: 'todo' },
@@ -157,6 +186,11 @@ export const PROJECTS: Project[] = [
     description: '从扫描到修复闭环的流程重做，打通工具链并完成试运行。',
     span: '2026.08 – 2026.11',
     status: 'active',
+    plannedHours: 40,
+    workItems: [
+      { id: 'wi-p5-1', title: '试运行复盘', plannedHours: 2, weekKey: '2026-W42', status: 'done' },
+      { id: 'wi-p5-2', title: '正式发布宣贯', plannedHours: 2, weekKey: '2026-W43', status: 'todo' },
+    ],
     milestones: [
       { id: 'p5-m1', title: '现状调研', targetDate: '2026-08-30', status: 'done' },
       { id: 'p5-m2', title: '流程草案', targetDate: '2026-09-20', status: 'done' },
@@ -174,6 +208,8 @@ export const WEEKS: Record<string, WeekMeta> = {
   '2026-W43': { key: '2026-W43', num: 43, start: '2026-10-19', end: '2026-10-25', range: '10/19 – 10/25', workdays: 5, leaveHours: 16 },
   '2026-W44': { key: '2026-W44', num: 44, start: '2026-10-26', end: '2026-11-01', range: '10/26 – 11/01', workdays: 5, leaveHours: 0 },
   '2026-W45': { key: '2026-W45', num: 45, start: '2026-11-02', end: '2026-11-08', range: '11/02 – 11/08', workdays: 5, leaveHours: 0 },
+  '2026-W46': { key: '2026-W46', num: 46, start: '2026-11-09', end: '2026-11-15', range: '11/09 – 11/15', workdays: 5, leaveHours: 0 },
+  '2026-W47': { key: '2026-W47', num: 47, start: '2026-11-16', end: '2026-11-22', range: '11/16 – 11/22', workdays: 5, leaveHours: 0 },
 }
 
 export const WEEK_ORDER = Object.keys(WEEKS)

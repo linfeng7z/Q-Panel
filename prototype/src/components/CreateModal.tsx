@@ -31,18 +31,18 @@ interface CreateModalProps {
 
 const TITLES: Record<CreateMode, { title: string; sub: string; kicker: string }> = {
   objective: {
-    title: '新建季度主线',
-    sub: '一条主线会占用本季度的计划工时',
-    kicker: 'Quarter objective',
+    title: '新建季度任务',
+    sub: '一项季度任务会占用本季度的计划工时',
+    kicker: 'Quarter task',
   },
   task: {
     title: '新建本周必做',
-    sub: '可以关联主线或长期项目，提醒默认继承分类设置',
+    sub: '可以关联季度任务或长期项目，提醒默认继承分类设置',
     kicker: 'Weekly task',
   },
   project: {
     title: '新建长期项目',
-    sub: '项目可以跨季度推进，里程碑进度会自动计算',
+    sub: '项目可以跨季度推进，工作项按安排周自动进入周计划',
     kicker: 'Long-running project',
   },
 }

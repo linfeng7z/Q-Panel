@@ -60,9 +60,8 @@ export function CommandPalette({
 
   const items = useMemo<CommandItem[]>(() => {
     const viewItems: Array<[ViewId, string, ReactNode]> = [
-      ['today', '今日', <House size={15} key="today" />],
-      ['quarter', '季度主线', <CalendarCheck size={15} key="quarter" />],
-      ['week', '本周必做', <CalendarDots size={15} key="week" />],
+      ['quarter', '首页 · 季度任务', <House size={15} key="quarter" />],
+      ['week', '周计划', <CalendarDots size={15} key="week" />],
       ['projects', '长期项目', <FolderSimple size={15} key="projects" />],
       ['stats', '统计与容量', <ChartLineUp size={15} key="stats" />],
       ['notes', '随笔记', <NotePencil size={15} key="notes" />],
@@ -75,7 +74,7 @@ export function CommandPalette({
       .filter((item) => item.status !== 'done')
       .map((item) => ({
         id: `obj-${item.id}`,
-        group: '季度主线',
+        group: '季度任务',
         label: item.title,
         hint: `${item.plannedHours}h`,
         icon: <Target size={15} />,

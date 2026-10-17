@@ -29,7 +29,7 @@ export function ReminderPopup({ onClose, onComplete, onSnooze, onOpen }: Reminde
               </div>
               <div className="reminder-title">等保 2.0 差距分析闭环</div>
               <div className="reminder-meta">
-                <span>Q4 主线 · 应用安全</span>
+                <span>季度任务 · 应用安全</span>
                 <span className="sep" />
                 <span className="num">截止 10/31 18:00</span>
               </div>

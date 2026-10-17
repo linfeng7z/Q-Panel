@@ -41,6 +41,17 @@ export interface Milestone {
   status: MilestoneStatus
 }
 
+export type WorkItemStatus = 'todo' | 'doing' | 'done'
+
+export interface ProjectWorkItem {
+  id: string
+  title: string
+  plannedHours: number
+  weekKey: string
+  status: WorkItemStatus
+  milestoneId?: string
+}
+
 export interface Project {
   id: string
   title: string
@@ -48,6 +59,10 @@ export interface Project {
   description: string
   span: string
   status: 'active' | 'done' | 'risk'
+  /** 项目整体规划工时，可编辑 */
+  plannedHours: number
+  /** 拆解后的工作项，按安排周自动进入周计划 */
+  workItems: ProjectWorkItem[]
   milestones: Milestone[]
   objectiveId?: string
 }

@@ -5,21 +5,6 @@ const base = 'http://127.0.0.1:5178/'
 const outDir = new URL('../screenshots/', import.meta.url).pathname
 fs.mkdirSync(outDir, { recursive: true })
 
-const shots = [
-  ['01-quarter-noir', '?view=quarter&theme=noir&noreminder=1'],
-  ['02-quarter-ops', '?view=quarter&theme=ops&noreminder=1'],
-  ['03-week', '?view=week&theme=noir&noreminder=1'],
-  ['04-today', '?view=today&theme=noir&noreminder=1'],
-  ['05-projects', '?view=projects&theme=noir&noreminder=1'],
-  ['06-stats', '?view=stats&theme=noir&noreminder=1'],
-  ['07-notes', '?view=notes&theme=noir&noreminder=1'],
-  ['08-links', '?view=links&theme=noir&noreminder=1'],
-  ['09-ai', '?view=quarter&theme=noir&ai=1&noreminder=1'],
-  ['10-settings', '?view=quarter&theme=noir&settings=1&noreminder=1'],
-  ['11-reminder', '?view=quarter&theme=noir&reminder=1'],
-  ['12-collapsed', '?collapsed=1&noreminder=1'],
-]
-
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 const context = await browser.newContext({
   viewport: { width: 1728, height: 1117 },
@@ -32,12 +17,56 @@ page.on('console', (message) => {
 })
 page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`))
 
-for (const [name, query] of shots) {
-  await page.goto(base + query, { waitUntil: 'networkidle' })
-  await page.waitForTimeout(1000)
+async function shot(name) {
+  await page.waitForTimeout(650)
   await page.screenshot({ path: `${outDir}${name}.png` })
   console.log('shot', name)
 }
+
+async function goto(query) {
+  await page.goto(base + query, { waitUntil: 'networkidle' })
+  await page.waitForTimeout(450)
+}
+
+await goto('?view=quarter&theme=noir&noreminder=1')
+await shot('01-home-noir')
+
+await goto('?view=quarter&theme=ops&noreminder=1')
+await shot('02-home-ops')
+
+await goto('?view=week&theme=noir&noreminder=1')
+await shot('03-week')
+
+await goto('?view=week&theme=noir&noreminder=1')
+await page.getByRole('button', { name: '下一周' }).click()
+await shot('04-week-43')
+
+await goto('?view=projects&theme=noir&noreminder=1')
+await shot('05-projects')
+
+await goto('?view=projects&theme=noir&noreminder=1')
+await page.locator('.proj-featured .proj-card').click()
+await shot('06-project-detail')
+
+await goto('?view=quarter&theme=noir&noreminder=1')
+await page.locator('.icon-btn[title="工具"]').click()
+await shot('07-tools-menu')
+
+await goto('?view=quarter&theme=noir&ai=1&noreminder=1')
+await shot('08-ai')
+
+await goto('?view=quarter&theme=noir&settings=1&noreminder=1')
+await shot('09-settings')
+
+await goto('?view=quarter&theme=noir&reminder=1')
+await page.waitForTimeout(700)
+await shot('10-reminder')
+
+await goto('?collapsed=1&noreminder=1')
+await shot('11-collapsed')
+
+await goto('?view=stats&theme=noir&noreminder=1')
+await shot('12-stats')
 
 await browser.close()
 fs.writeFileSync(`${outDir}errors.json`, JSON.stringify(errors, null, 2))

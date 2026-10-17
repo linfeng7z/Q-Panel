@@ -1,5 +1,6 @@
 import {
   CalendarBlank,
+  CaretLeft,
   ChartLineUp,
   Export,
   Target,
@@ -29,6 +30,7 @@ interface StatsViewProps {
   year: number
   quarter: number
   onToast: (message: string) => void
+  onBack: () => void
 }
 
 function monthWorkdays(year: number, month: number): number {
@@ -40,7 +42,7 @@ function monthWorkdays(year: number, month: number): number {
   return count
 }
 
-export function StatsView({ year, quarter, onToast }: StatsViewProps) {
+export function StatsView({ year, quarter, onToast, onBack }: StatsViewProps) {
   const quarterRows = [1, 2, 3, 4].map((q) => {
     const key = quarterKey(year, q)
     const stats = QUARTER_STATS[key]
@@ -91,6 +93,10 @@ export function StatsView({ year, quarter, onToast }: StatsViewProps) {
           </p>
         </div>
         <div className="head-actions">
+          <button type="button" className="btn ghost" onClick={onBack}>
+            <CaretLeft size={14} />
+            返回首页
+          </button>
           <button
             type="button"
             className="btn ghost"
@@ -143,7 +149,7 @@ export function StatsView({ year, quarter, onToast }: StatsViewProps) {
               {currentRow.completion}
               <small>%</small>
             </span>
-            <span className="stat-foot">按计划工时加权 · {currentObjectives.length} 条主线</span>
+            <span className="stat-foot">按计划工时加权 · {currentObjectives.length} 项季度任务</span>
           </div>
         </Card>
       </div>
