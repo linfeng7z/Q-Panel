@@ -1,15 +1,21 @@
-import { useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import {
   ArrowUpRight,
+  FolderSimple,
   LinkSimple,
   LockSimple,
   MagnifyingGlass,
+  PencilSimple,
   Plus,
+  Trash,
+  WarningCircle,
+  X,
 } from '@phosphor-icons/react'
-import type { CategoryId, LinkItem } from '../types'
-import { CATEGORIES, getCategory } from '../data/mock'
+import type { LinkCategoryId, LinkItem } from '../types'
+import { LINK_CATEGORIES, getLinkCategory } from '../data/mock'
 import { cn } from '../utils'
-import { Card, EmptyState, catStyle } from '../components/ui'
+import { LinkEditorModal } from '../components/LinkEditorModal'
 
 interface LinksViewProps {
   links: LinkItem[]
@@ -17,57 +23,72 @@ interface LinksViewProps {
   onToast: (message: string) => void
 }
 
+function categoryStyle(categoryId: string): CSSProperties {
+  return { '--cat': `var(${getLinkCategory(categoryId).colorVar})` } as CSSProperties
+}
+
 export function LinksView({ links, onChange, onToast }: LinksViewProps) {
   const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState<CategoryId | 'all'>('all')
-  const [url, setUrl] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [filter, setFilter] = useState<'all' | LinkCategoryId>('all')
+  const [editor, setEditor] = useState<{ link?: LinkItem } | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<LinkItem | null>(null)
 
+  const keyword = query.trim().toLowerCase()
   const filtered = links.filter((link) => {
     const matchFilter = filter === 'all' || link.categoryId === filter
-    const keyword = query.trim().toLowerCase()
+    const categoryName = getLinkCategory(link.categoryId).name
     const matchQuery =
       !keyword ||
       link.title.toLowerCase().includes(keyword) ||
       link.domain.toLowerCase().includes(keyword) ||
-      link.description.toLowerCase().includes(keyword)
+      link.description.toLowerCase().includes(keyword) ||
+      categoryName.toLowerCase().includes(keyword)
     return matchFilter && matchQuery
   })
+  const internalCount = links.filter((link) => link.internal).length
+  const usedCollections = LINK_CATEGORIES.filter((category) =>
+    links.some((link) => link.categoryId === category.id),
+  ).length
 
-  const addLink = () => {
-    const raw = url.trim()
-    if (!raw) return
-    const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
-    try {
-      const parsed = new URL(normalized)
-      const domain = parsed.hostname.replace(/^www\./, '')
-      const link: LinkItem = {
-        id: `l-${Date.now()}`,
-        title: domain,
-        url: normalized,
-        domain,
-        categoryId: filter === 'all' ? 'other' : filter,
-        description: '刚添加的链接，稍后可以补充分组与说明。',
-        letter: domain.slice(0, 1).toUpperCase(),
-        internal: /\.internal$/.test(domain) || /\.local$/.test(domain),
-      }
-      onChange([link, ...links])
-      setUrl('')
-      onToast(`已添加链接 ${domain}`)
-    } catch {
-      onToast('URL 格式不正确，请检查后重试')
+  useEffect(() => {
+    if (!editor && !pendingDelete) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      setEditor(null)
+      setPendingDelete(null)
     }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [editor, pendingDelete])
+
+  const saveLink = (link: LinkItem) => {
+    const editing = links.some((item) => item.id === link.id)
+    onChange(editing ? links.map((item) => (item.id === link.id ? link : item)) : [link, ...links])
+    if (!editing) setFilter('all')
+    onToast(editing ? '已更新收藏' : `已收藏 ${link.domain}`)
+    setEditor(null)
+  }
+
+  const deleteLink = () => {
+    if (!pendingDelete) return
+    onChange(links.filter((link) => link.id !== pendingDelete.id))
+    onToast(`已删除 ${pendingDelete.title}`)
+    setPendingDelete(null)
   }
 
   return (
     <div className="view links-view">
-      <div className="page-head">
+      <div className="page-head links-head">
         <div>
-                    <h1 className="page-title">收藏链接</h1>
-          <p className="page-sub">{links.length} 条链接 · 自动补齐标题与图标 · 点击用系统浏览器打开</p>
+          <h1 className="page-title">收藏链接</h1>
+          <p className="page-sub">
+            {links.length} 条收藏 · {internalCount} 条内部链接 · {usedCollections} 个集合
+          </p>
         </div>
         <div className="head-actions">
-          <button type="button" className="btn primary" onClick={() => inputRef.current?.focus()}>
+          <button type="button" className="btn primary" onClick={() => setEditor({})}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
             </span>
@@ -76,101 +97,222 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
         </div>
       </div>
 
-      <div className="links-toolbar">
-        <div className="links-search">
-          <MagnifyingGlass size={12} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索标题 / 域名 / 描述…"
-          />
-        </div>
-        <button
-          type="button"
-          className={cn('chip', filter === 'all' && 'active')}
-          onClick={() => setFilter('all')}
-        >
-          全部
-        </button>
-        {CATEGORIES.map((category) => {
-          const count = links.filter((link) => link.categoryId === category.id).length
-          if (!count) return null
-          return (
-            <button
-              key={category.id}
-              type="button"
-              className={cn('chip cat', filter === category.id && 'active')}
-              style={catStyle(category.id)}
-              onClick={() => setFilter(category.id)}
-            >
-              <span className="dot" />
-              {category.name}
-              <span className="count">{count}</span>
-            </button>
-          )
-        })}
-        <div className="link-add">
-          <input
-            ref={inputRef}
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') addLink()
-            }}
-            placeholder="粘贴 URL，回车添加"
-          />
-          <button type="button" className="btn primary sm" onClick={addLink} disabled={!url.trim()}>
-            添加
+      <div className="links-library">
+        <aside className="link-collections">
+          <div className="link-collections-head">
+            <span>收藏集合</span>
+            <b>{usedCollections}</b>
+          </div>
+          <button
+            type="button"
+            className={cn('collection-item', filter === 'all' && 'active')}
+            onClick={() => setFilter('all')}
+          >
+            <FolderSimple size={13} />
+            <span>全部链接</span>
+            <b>{links.length}</b>
           </button>
-        </div>
+          <div className="collection-list">
+            {LINK_CATEGORIES.map((category) => {
+              const count = links.filter((link) => link.categoryId === category.id).length
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  className={cn(
+                    'collection-item',
+                    filter === category.id && 'active',
+                    count === 0 && 'empty',
+                  )}
+                  onClick={() => setFilter(category.id)}
+                >
+                  <span className="collection-dot" style={{ background: `var(${category.colorVar})` }} />
+                  <span>{category.name}</span>
+                  <b>{count}</b>
+                </button>
+              )
+            })}
+          </div>
+          <div className="link-collections-foot">
+            <span className="collection-foot-dot" />
+            内部链接 {internalCount} 条
+          </div>
+        </aside>
+
+        <section className="link-library-main">
+          <div className="library-toolbar">
+            <label className="library-search">
+              <MagnifyingGlass size={14} />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="搜索标题、域名、说明或集合…"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  className="library-search-clear"
+                  onClick={() => setQuery('')}
+                  aria-label="清空搜索"
+                >
+                  <X size={12} />
+                </button>
+              ) : null}
+            </label>
+            <span className="library-result">{filtered.length} 条</span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="library-empty">
+              <span className="library-empty-icon">
+                <LinkSimple size={22} />
+              </span>
+              <b>
+                {links.length === 0
+                  ? '收藏夹还是空的'
+                  : query
+                    ? '没有匹配的链接'
+                    : '这个集合还没有链接'}
+              </b>
+              <span>
+                {links.length === 0
+                  ? '把经常打开的网址收进来，从安全标准、工具平台开始。'
+                  : query
+                    ? '换个关键词，或者回到全部分类。'
+                    : '把合适的链接收藏到这个集合，列表会自动更新。'}
+              </span>
+              <button
+                type="button"
+                className="btn primary sm"
+                onClick={() => {
+                  if (query) setQuery('')
+                  else if (filter !== 'all') setFilter('all')
+                  else setEditor({})
+                }}
+              >
+                {query ? '清空搜索' : filter !== 'all' ? '查看全部链接' : <><Plus size={11} /> 添加第一条收藏</>}
+              </button>
+            </div>
+          ) : (
+            <div className="library-panel">
+              {filtered.map((link) => {
+                const category = getLinkCategory(link.categoryId)
+                return (
+                  <article className="library-row" key={link.id}>
+                    <button
+                      type="button"
+                      className="library-hit"
+                      onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
+                      title={`打开 ${link.url}`}
+                    >
+                      <span className="library-avatar" style={categoryStyle(link.categoryId)}>
+                        {link.letter}
+                      </span>
+                      <span className="library-copy">
+                        <span className="library-title">
+                          {link.title}
+                          {link.internal ? (
+                            <span className="library-internal">
+                              <LockSimple size={9} /> 内部
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="library-desc">{link.description}</span>
+                        <span className="library-meta">
+                          <span className="library-cat" style={categoryStyle(link.categoryId)}>
+                            <span className="dot" />
+                            {category.name}
+                          </span>
+                          <span className="library-domain">{link.domain}</span>
+                        </span>
+                      </span>
+                      <ArrowUpRight size={14} className="library-open" />
+                    </button>
+                    <div className="library-actions">
+                      <button
+                        type="button"
+                        className="library-action"
+                        aria-label={`编辑 ${link.title}`}
+                        title="编辑"
+                        onClick={() => setEditor({ link })}
+                      >
+                        <PencilSimple size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className="library-action danger"
+                        aria-label={`删除 ${link.title}`}
+                        title="删除"
+                        onClick={() => setPendingDelete(link)}
+                      >
+                        <Trash size={13} />
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+        </section>
       </div>
 
-      {filtered.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon={<LinkSimple size={20} />}
-            title="这个筛选下没有链接"
-            sub="粘贴一个网址，Q-Panel 会自动补标题和图标。"
-            action={
-              <button type="button" className="btn primary sm" onClick={() => inputRef.current?.focus()}>
-                <Plus size={12} /> 添加链接
-              </button>
-            }
-          />
-        </Card>
-      ) : (
-        <div className="link-grid">
-          {filtered.map((link) => (
-            <Card key={link.id}>
-              <div
-                className="link-card"
-                style={catStyle(link.categoryId)}
-                onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-              >
-                <div className="link-top">
-                  <span className="link-icon">{link.letter}</span>
-                  <span className="link-open">
-                    {link.internal ? <LockSimple size={12} /> : <ArrowUpRight size={13} />}
-                  </span>
+      {editor ? (
+        <LinkEditorModal
+          initial={editor.link}
+          existingLinks={links}
+          defaultCategory={filter === 'all' ? 'standards' : filter}
+          onClose={() => setEditor(null)}
+          onSave={saveLink}
+        />
+      ) : null}
+
+      {pendingDelete ? (
+        <>
+          <div className="scrim" onMouseDown={() => setPendingDelete(null)} />
+          <div className="modal-layer link-confirm-modal">
+            <div className="modal-card link-confirm-card">
+              <div className="modal-inner">
+                <div className="modal-head">
+                  <div>
+                    <div className="modal-title">删除这条收藏？</div>
+                    <div className="modal-sub">不会删除原网站，只从本地收藏夹移除。</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setPendingDelete(null)}
+                    aria-label="关闭"
+                  >
+                    <X size={15} />
+                  </button>
                 </div>
-                <div className="link-title">{link.title}</div>
-                <div className="link-domain">
-                  {link.internal ? <LockSimple size={9} /> : null}
-                  {link.domain}
-                </div>
-                <div className="link-desc">{link.description}</div>
-                <div className="link-foot">
-                  <span className="tag">
-                    <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
-                    {getCategory(link.categoryId).name}
+                <div className="modal-body link-confirm-body">
+                  <span className="link-confirm-icon">
+                    <WarningCircle size={18} />
                   </span>
-                  <span>{link.internal ? '内部链接' : '公开链接'}</span>
+                  <div>
+                    <b>{pendingDelete.title}</b>
+                    <span>{pendingDelete.domain}</span>
+                  </div>
+                </div>
+                <div className="modal-foot">
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={() => setPendingDelete(null)}
+                  >
+                    取消
+                  </button>
+                  <button type="button" className="btn danger" onClick={deleteLink}>
+                    <Trash size={12} />
+                    确认删除
+                  </button>
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            </div>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

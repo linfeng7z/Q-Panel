@@ -130,9 +130,8 @@ export default function App() {
       .flat()
       .forEach((objective) => count(objective.categoryId))
     projects.forEach((project) => count(project.categoryId))
-    links.forEach((link) => count(link.categoryId))
     return usage
-  }, [tasks, objectives, projects, links])
+  }, [tasks, objectives, projects])
   const [commandOpen, setCommandOpen] = useState(params.get('cmd') === '1')
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')

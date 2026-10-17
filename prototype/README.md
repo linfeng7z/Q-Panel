@@ -126,7 +126,7 @@ Project（全局维度）
 ```bash
 npm run build      # TypeScript + Vite 构建
 npm run lint       # 0 errors
-npm run shot       # 14 张页面截图
+npm run shot       # 16 张页面截图
 npm run interact   # 关键交互回归（含项目概览、分类新增、项目编辑→本周安排自动同步）
 ```
 

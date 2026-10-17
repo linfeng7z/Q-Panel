@@ -75,6 +75,12 @@ await shot('13-aurora')
 await goto('?view=quarter&theme=ember&noreminder=1')
 await shot('14-ember')
 
+await goto('?view=links&theme=noir&noreminder=1')
+await shot('15-links')
+
+await page.locator('.links-head .btn.primary').click()
+await shot('16-link-editor')
+
 await browser.close()
 fs.writeFileSync(`${outDir}errors.json`, JSON.stringify(errors, null, 2))
 console.log('errors:', errors.length)

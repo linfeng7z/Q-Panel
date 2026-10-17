@@ -106,12 +106,20 @@ export interface Note {
   pinned?: boolean
 }
 
+export type LinkCategoryId = string
+
+export interface LinkCategory {
+  id: LinkCategoryId
+  name: string
+  colorVar: string
+}
+
 export interface LinkItem {
   id: string
   title: string
   url: string
   domain: string
-  categoryId: CategoryId
+  categoryId: LinkCategoryId
   description: string
   letter: string
   internal?: boolean

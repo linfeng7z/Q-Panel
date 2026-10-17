@@ -1,6 +1,7 @@
 import type {
   Category,
   CategoryId,
+  LinkCategory,
   LinkItem,
   Note,
   Objective,
@@ -37,6 +38,17 @@ export const CATEGORY_COLORS = [
 
 export function getCategory(id: CategoryId): Category {
   return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1]
+}
+
+export const LINK_CATEGORIES: LinkCategory[] = [
+  { id: 'standards', name: '安全标准', colorVar: '--cat-appsec' },
+  { id: 'tools', name: '工具平台', colorVar: '--cat-team' },
+  { id: 'internal', name: '内部系统', colorVar: '--cat-other' },
+  { id: 'reading', name: '学习资料', colorVar: '--cat-secops' },
+]
+
+export function getLinkCategory(id: string): LinkCategory {
+  return LINK_CATEGORIES.find((category) => category.id === id) ?? LINK_CATEGORIES[LINK_CATEGORIES.length - 1]
 }
 
 export function addCategory(name: string, colorVar: string): Category {
@@ -344,7 +356,7 @@ export const LINKS: LinkItem[] = [
     title: 'OWASP Top 10',
     url: 'https://owasp.org/www-project-top-ten/',
     domain: 'owasp.org',
-    categoryId: 'appsec',
+    categoryId: 'standards',
     description: 'Web 应用安全风险基线，季度培训与代码审计引用。',
     letter: 'O',
   },
@@ -353,7 +365,7 @@ export const LINKS: LinkItem[] = [
     title: '等保 2.0 标准与测评要求',
     url: 'https://www.tc260.org.cn/',
     domain: 'tc260.org.cn',
-    categoryId: 'appsec',
+    categoryId: 'standards',
     description: 'GB/T 22239-2019 与测评要求，整改工作依据。',
     letter: '等',
   },
@@ -362,7 +374,7 @@ export const LINKS: LinkItem[] = [
     title: 'MITRE ATT&CK',
     url: 'https://attack.mitre.org/',
     domain: 'attack.mitre.org',
-    categoryId: 'secops',
+    categoryId: 'tools',
     description: '红蓝对抗与检测规则映射，ATT&CK Navigator 常用。',
     letter: 'M',
   },
@@ -371,7 +383,7 @@ export const LINKS: LinkItem[] = [
     title: 'NIST Cybersecurity Framework 2.0',
     url: 'https://www.nist.gov/cyberframework',
     domain: 'nist.gov',
-    categoryId: 'appsec',
+    categoryId: 'standards',
     description: '安全治理框架参考，用于年度路线图对标。',
     letter: 'N',
   },
@@ -380,7 +392,7 @@ export const LINKS: LinkItem[] = [
     title: '漏洞管理 SOP v3',
     url: 'https://wiki.internal.example/security/vuln-sop',
     domain: 'wiki.internal',
-    categoryId: 'other',
+    categoryId: 'internal',
     description: '内部流程文档，扫描到修复的时限与升级路径。',
     letter: '漏',
     internal: true,
@@ -390,7 +402,7 @@ export const LINKS: LinkItem[] = [
     title: 'AI 安全治理参考清单',
     url: 'https://wiki.internal.example/security/ai-governance',
     domain: 'wiki.internal',
-    categoryId: 'other',
+    categoryId: 'reading',
     description: '内部调研资料：资产清单模板、供应商评估问题集。',
     letter: 'A',
     internal: true,
