@@ -940,7 +940,46 @@
 /* ================= week ================= */
 
 .week-head {
-  margin-bottom: 14px;
+  align-items: center;
+  margin-bottom: 13px;
+}
+
+.week-head-copy {
+  min-width: 0;
+}
+
+.week-head-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 7px;
+  padding-top: 0;
+}
+
+.week-head .week-nav {
+  height: 32px;
+  padding: 2px;
+}
+
+.week-head .week-nav .btn.sm {
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+}
+
+.week-head .week-nav .btn.sm:hover {
+  background: var(--surface-1);
+}
+
+.week-head .week-nav-label {
+  min-width: 86px;
+  font-size: 9.5px;
+  color: var(--text-3);
+}
+
+.week-head .chip {
+  height: 28px;
+  padding: 0 10px;
 }
 
 .week-nav {

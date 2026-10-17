@@ -77,6 +77,8 @@ await page.locator('.workitem-week').first().selectOption('2026-W44')
 await page.getByRole('button', { name: /打开本周安排/ }).click()
 await page.waitForTimeout(400)
 check('project week sync', (await page.locator('.page-title').innerText()).includes('第 44 周'))
+check('week navigation lives in header', await page.locator('.week-head .week-nav').count() === 1)
+check('old week switch bar removed', await page.locator('.week-switch-bar').count() === 0)
 check('auto schedule items visible', (await page.locator('.auto-row').count()) > 0)
 await shot('15b-project-week-sync')
 

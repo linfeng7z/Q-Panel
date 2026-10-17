@@ -161,16 +161,46 @@ export function WeekView({
   return (
     <div className="view week-view">
       <div className="page-head week-head">
-        <div>
-                    <h1 className="page-title">
-            第 {meta.num} 周
-          </h1>
+        <div className="week-head-copy">
+          <h1 className="page-title">第 {meta.num} 周</h1>
           <p className="page-sub">
-            {meta.range} · {meta.workdays} 个工作日 · 可用 {available} 人日
+            {meta.workdays} 个工作日 · 可用 {available} 人日
             {meta.note ? ` · ${meta.note}` : ''}
           </p>
         </div>
-        <div className="head-actions">
+        <div className="head-actions week-head-actions">
+          <div className="week-nav" role="group" aria-label="周切换">
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={goPrev}
+              disabled={weekIndex <= 0}
+              title={prevWeek ? `第 ${prevWeek.num} 周 · ${prevWeek.range}` : '没有上一周'}
+              aria-label="上一周"
+            >
+              <CaretLeft size={13} />
+              <span>上一周</span>
+            </button>
+            <span className="week-nav-label">{meta.range}</span>
+            <button
+              type="button"
+              className="btn ghost sm"
+              onClick={goNext}
+              disabled={weekIndex >= WEEK_ORDER.length - 1}
+              title={nextWeek ? `第 ${nextWeek.num} 周 · ${nextWeek.range}` : '没有下一周'}
+              aria-label="下一周"
+            >
+              <span>下一周</span>
+              <CaretRight size={13} />
+            </button>
+          </div>
+          <button
+            type="button"
+            className={cn('chip', weekKey === '2026-W42' && 'active')}
+            onClick={() => onWeekChange('2026-W42')}
+          >
+            回到本周
+          </button>
           <button type="button" className="btn primary" onClick={() => onOpenCreate('task')}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
@@ -178,44 +208,6 @@ export function WeekView({
             新建事项
           </button>
         </div>
-      </div>
-
-      <div className="week-switch-bar">
-        <button
-          type="button"
-          className="btn ghost sm"
-          onClick={goPrev}
-          disabled={weekIndex <= 0}
-          title={prevWeek ? `第 ${prevWeek.num} 周 · ${prevWeek.range}` : '没有上一周'}
-        >
-          <CaretLeft size={13} />
-          上一周
-        </button>
-        <div className="week-switch-center">
-          <b>
-            第 {meta.num} 周 <span className="faint">/ {meta.range}</span>
-          </b>
-          <span>
-            {meta.workdays} 个工作日 · 可用 {available} 人日
-          </span>
-        </div>
-        <button
-          type="button"
-          className="btn ghost sm"
-          onClick={goNext}
-          disabled={weekIndex >= WEEK_ORDER.length - 1}
-          title={nextWeek ? `第 ${nextWeek.num} 周 · ${nextWeek.range}` : '没有下一周'}
-        >
-          下一周
-          <CaretRight size={13} />
-        </button>
-        <button
-          type="button"
-          className={cn('chip', weekKey === '2026-W42' && 'active')}
-          onClick={() => onWeekChange('2026-W42')}
-        >
-          回到本周
-        </button>
       </div>
 
       <Card className="week-cap" innerClassName="week-cap-inner">
