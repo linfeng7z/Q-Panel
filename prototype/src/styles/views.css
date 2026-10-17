@@ -1032,7 +1032,8 @@
 }
 
 .week-nav-today.active {
-  color: var(--text-2);
+  background: color-mix(in srgb, var(--info) 10%, transparent);
+  color: var(--text-1);
 }
 
 .week-nav {
