@@ -12,56 +12,73 @@ import {
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
-import type { LinkCategoryId, LinkItem } from '../types'
-import { LINK_CATEGORIES, getLinkCategory } from '../data/mock'
-import { cn } from '../utils'
+import type { LinkCategory, LinkCategoryId, LinkItem } from '../types'
+import { getLinkCategory } from '../data/mock'
+import { LinkCategoryModal } from '../components/LinkCategoryModal'
 import { LinkEditorModal } from '../components/LinkEditorModal'
+import { cn } from '../utils'
 
 interface LinksViewProps {
   links: LinkItem[]
   onChange: (links: LinkItem[]) => void
+  categories: LinkCategory[]
+  onCategoriesChange: (categories: LinkCategory[]) => void
   onToast: (message: string) => void
 }
 
-function categoryStyle(categoryId: string): CSSProperties {
-  return { '--cat': `var(${getLinkCategory(categoryId).colorVar})` } as CSSProperties
+function categoryStyle(category: LinkCategory): CSSProperties {
+  return { '--cat': `var(${category.colorVar})` } as CSSProperties
 }
 
-export function LinksView({ links, onChange, onToast }: LinksViewProps) {
+export function LinksView({
+  links,
+  onChange,
+  categories,
+  onCategoriesChange,
+  onToast,
+}: LinksViewProps) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | LinkCategoryId>('all')
   const [editor, setEditor] = useState<{ link?: LinkItem } | null>(null)
+  const [categoryEditor, setCategoryEditor] = useState<{ category?: LinkCategory } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<LinkItem | null>(null)
 
+  const resolveCategory = (categoryId: string) => getLinkCategory(categoryId, categories)
+  const categoryIdOf = (link: LinkItem) => resolveCategory(link.categoryId).id
+  const fallbackCategory =
+    categories.find((category) => category.id === 'unsorted') ?? categories[categories.length - 1]
   const keyword = query.trim().toLowerCase()
   const filtered = links.filter((link) => {
-    const matchFilter = filter === 'all' || link.categoryId === filter
-    const categoryName = getLinkCategory(link.categoryId).name
+    const category = resolveCategory(link.categoryId)
+    const matchFilter = filter === 'all' || category.id === filter
     const matchQuery =
       !keyword ||
       link.title.toLowerCase().includes(keyword) ||
       link.domain.toLowerCase().includes(keyword) ||
       link.description.toLowerCase().includes(keyword) ||
-      categoryName.toLowerCase().includes(keyword)
+      category.name.toLowerCase().includes(keyword)
     return matchFilter && matchQuery
   })
   const internalCount = links.filter((link) => link.internal).length
-  const usedCollections = LINK_CATEGORIES.filter((category) =>
-    links.some((link) => link.categoryId === category.id),
+  const usedCollections = categories.filter((category) =>
+    links.some((link) => categoryIdOf(link) === category.id),
   ).length
+  const countForCategory = (categoryId: string) =>
+    links.filter((link) => categoryIdOf(link) === categoryId).length
 
   useEffect(() => {
-    if (!editor && !pendingDelete) return
+    if (!editor && !pendingDelete && !categoryEditor) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       event.preventDefault()
       event.stopPropagation()
       setEditor(null)
       setPendingDelete(null)
+      setCategoryEditor(null)
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [editor, pendingDelete])
+  }, [categoryEditor, editor, pendingDelete])
 
   const saveLink = (link: LinkItem) => {
     const editing = links.some((item) => item.id === link.id)
@@ -78,13 +95,48 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
     setPendingDelete(null)
   }
 
+  const saveCategory = (data: { name: string; colorVar: string }) => {
+    if (categoryEditor?.category) {
+      onCategoriesChange(
+        categories.map((category) =>
+          category.id === categoryEditor.category?.id ? { ...category, ...data } : category,
+        ),
+      )
+      onToast('已更新收藏集合')
+    } else {
+      const category: LinkCategory = {
+        id: `link-cat-${Date.now()}`,
+        name: data.name,
+        colorVar: data.colorVar,
+      }
+      onCategoriesChange([...categories, category])
+      setFilter(category.id)
+      onToast('已创建收藏集合')
+    }
+    setCategoryEditor(null)
+  }
+
+  const deleteCategory = () => {
+    const category = categoryEditor?.category
+    if (!category || !fallbackCategory || category.id === fallbackCategory.id) return
+    onChange(
+      links.map((link) =>
+        categoryIdOf(link) === category.id ? { ...link, categoryId: fallbackCategory.id } : link,
+      ),
+    )
+    onCategoriesChange(categories.filter((item) => item.id !== category.id))
+    if (filter === category.id) setFilter(fallbackCategory.id)
+    onToast(`已删除集合，相关收藏移至 ${fallbackCategory.name}`)
+    setCategoryEditor(null)
+  }
+
   return (
     <div className="view links-view">
       <div className="page-head links-head">
         <div>
           <h1 className="page-title">收藏链接</h1>
           <p className="page-sub">
-            {links.length} 条收藏 · {internalCount} 条内部链接 · {usedCollections} 个集合
+            {links.length} 条收藏 · {internalCount} 条内部链接 · {categories.length} 个集合
           </p>
         </div>
         <div className="head-actions">
@@ -101,7 +153,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
         <aside className="link-collections">
           <div className="link-collections-head">
             <span>收藏集合</span>
-            <b>{usedCollections}</b>
+            <b>{categories.length}</b>
           </div>
           <button
             type="button"
@@ -113,29 +165,50 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
             <b>{links.length}</b>
           </button>
           <div className="collection-list">
-            {LINK_CATEGORIES.map((category) => {
-              const count = links.filter((link) => link.categoryId === category.id).length
+            {categories.map((category) => {
+              const count = countForCategory(category.id)
               return (
-                <button
-                  key={category.id}
-                  type="button"
-                  className={cn(
-                    'collection-item',
-                    filter === category.id && 'active',
-                    count === 0 && 'empty',
-                  )}
-                  onClick={() => setFilter(category.id)}
-                >
-                  <span className="collection-dot" style={{ background: `var(${category.colorVar})` }} />
-                  <span>{category.name}</span>
-                  <b>{count}</b>
-                </button>
+                <div className="collection-item-wrap" key={category.id}>
+                  <button
+                    type="button"
+                    className={cn(
+                      'collection-item',
+                      filter === category.id && 'active',
+                      count === 0 && 'is-empty',
+                    )}
+                    onClick={() => setFilter(category.id)}
+                    title={category.name}
+                  >
+                    <span
+                      className="collection-dot"
+                      style={{ background: `var(${category.colorVar})` }}
+                    />
+                    <span>{category.name}</span>
+                    <b>{count}</b>
+                  </button>
+                  <button
+                    type="button"
+                    className="collection-edit"
+                    aria-label={`编辑集合 ${category.name}`}
+                    title="编辑集合"
+                    onClick={() => setCategoryEditor({ category })}
+                  >
+                    <PencilSimple size={10} />
+                  </button>
+                </div>
               )
             })}
           </div>
+          <button
+            type="button"
+            className="collection-add"
+            onClick={() => setCategoryEditor({})}
+          >
+            <Plus size={11} /> 新建集合
+          </button>
           <div className="link-collections-foot">
             <span className="collection-foot-dot" />
-            内部链接 {internalCount} 条
+            内部链接 {internalCount} 条 · {usedCollections} 个集合有收藏
           </div>
         </aside>
 
@@ -196,7 +269,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
           ) : (
             <div className="library-panel">
               {filtered.map((link) => {
-                const category = getLinkCategory(link.categoryId)
+                const category = resolveCategory(link.categoryId)
                 return (
                   <article className="library-row" key={link.id}>
                     <button
@@ -205,7 +278,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
                       onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
                       title={`打开 ${link.url}`}
                     >
-                      <span className="library-avatar" style={categoryStyle(link.categoryId)}>
+                      <span className="library-avatar" style={categoryStyle(category)}>
                         {link.letter}
                       </span>
                       <span className="library-copy">
@@ -219,7 +292,7 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
                         </span>
                         <span className="library-desc">{link.description}</span>
                         <span className="library-meta">
-                          <span className="library-cat" style={categoryStyle(link.categoryId)}>
+                          <span className="library-cat" style={categoryStyle(category)}>
                             <span className="dot" />
                             {category.name}
                           </span>
@@ -260,9 +333,26 @@ export function LinksView({ links, onChange, onToast }: LinksViewProps) {
         <LinkEditorModal
           initial={editor.link}
           existingLinks={links}
-          defaultCategory={filter === 'all' ? 'standards' : filter}
+          categories={categories}
+          defaultCategory={
+            filter === 'all'
+              ? categories.find((category) => category.id === 'standards')?.id ??
+                fallbackCategory?.id
+              : filter
+          }
           onClose={() => setEditor(null)}
           onSave={saveLink}
+        />
+      ) : null}
+
+      {categoryEditor ? (
+        <LinkCategoryModal
+          initial={categoryEditor.category}
+          categories={categories}
+          linkCount={categoryEditor.category ? countForCategory(categoryEditor.category.id) : 0}
+          onClose={() => setCategoryEditor(null)}
+          onSave={saveCategory}
+          onDelete={deleteCategory}
         />
       ) : null}
 

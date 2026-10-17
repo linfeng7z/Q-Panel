@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react'
 import { LinkSimple, LockSimple, X } from '@phosphor-icons/react'
-import type { LinkCategoryId, LinkItem } from '../types'
+import type { LinkCategory, LinkCategoryId, LinkItem } from '../types'
 import type { CSSProperties } from 'react'
-import { LINK_CATEGORIES } from '../data/mock'
+
 import { cn } from '../utils'
 
 interface LinkEditorModalProps {
   initial?: LinkItem
   existingLinks: LinkItem[]
+  categories: LinkCategory[]
   defaultCategory?: LinkCategoryId
   onClose: () => void
   onSave: (link: LinkItem) => void
@@ -36,6 +37,7 @@ function isInternalDomain(domain: string): boolean {
 export function LinkEditorModal({
   initial,
   existingLinks,
+  categories,
   defaultCategory = 'standards',
   onClose,
   onSave,
@@ -43,8 +45,13 @@ export function LinkEditorModal({
   const [url, setUrl] = useState(initial?.url ?? '')
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
+  const resolveCategoryId = (id?: string) =>
+    categories.find((category) => category.id === id)?.id ??
+    categories.find((category) => category.id === 'unsorted')?.id ??
+    categories[0]?.id ??
+    'unsorted'
   const [categoryId, setCategoryId] = useState<LinkCategoryId>(
-    initial?.categoryId ?? defaultCategory,
+    resolveCategoryId(initial?.categoryId ?? defaultCategory),
   )
   const [internal, setInternal] = useState(initial?.internal ?? false)
   const [error, setError] = useState('')
@@ -158,7 +165,7 @@ export function LinkEditorModal({
               <div className="field">
                 <label>收藏到</label>
                 <div className="link-category-picker">
-                  {LINK_CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <button
                       key={category.id}
                       type="button"

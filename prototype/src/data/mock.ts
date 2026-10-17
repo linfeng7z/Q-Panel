@@ -45,10 +45,25 @@ export const LINK_CATEGORIES: LinkCategory[] = [
   { id: 'tools', name: '工具平台', colorVar: '--cat-team' },
   { id: 'internal', name: '内部系统', colorVar: '--cat-other' },
   { id: 'reading', name: '学习资料', colorVar: '--cat-secops' },
+  { id: 'unsorted', name: '待整理', colorVar: '--text-3' },
 ]
 
-export function getLinkCategory(id: string): LinkCategory {
-  return LINK_CATEGORIES.find((category) => category.id === id) ?? LINK_CATEGORIES[LINK_CATEGORIES.length - 1]
+export const LINK_CATEGORY_COLORS = [
+  { value: '--cat-appsec', label: '蓝' },
+  { value: '--cat-team', label: '绿' },
+  { value: '--cat-other', label: '紫' },
+  { value: '--cat-secops', label: '橙' },
+]
+
+export function getLinkCategory(
+  id: string,
+  categories: LinkCategory[] = LINK_CATEGORIES,
+): LinkCategory {
+  return (
+    categories.find((category) => category.id === id) ??
+    categories.find((category) => category.id === 'unsorted') ??
+    categories[categories.length - 1]
+  )
 }
 
 export function addCategory(name: string, colorVar: string): Category {

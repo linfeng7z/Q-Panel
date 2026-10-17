@@ -4,6 +4,7 @@ import type {
   AiProposalTask,
   CategoryId,
   CreateMode,
+  LinkCategory,
   LinkItem,
   Note,
   Objective,
@@ -16,6 +17,7 @@ import type {
 } from './types'
 import {
   INITIAL_TASKS,
+  LINK_CATEGORIES,
   LINKS,
   NOTES,
   OBJECTIVES,
@@ -93,6 +95,7 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>(PROJECTS)
   const [notes, setNotes] = useState<Note[]>(NOTES)
   const [links, setLinks] = useState<LinkItem[]>(LINKS)
+  const [linkCategories, setLinkCategories] = useState<LinkCategory[]>(LINK_CATEGORIES)
   const [filter, setFilter] = useState<CategoryId | 'all'>('all')
   const [sidebarLabels, setSidebarLabels] = useState<SidebarLabels>(DEFAULT_SIDEBAR_LABELS)
   const [aiModel, setAiModel] = useState('deepseek-chat')
@@ -545,7 +548,15 @@ export default function App() {
       case 'notes':
         return <NotesView notes={notes} onChange={setNotes} onToast={showToast} />
       case 'links':
-        return <LinksView links={links} onChange={setLinks} onToast={showToast} />
+        return (
+          <LinksView
+            links={links}
+            onChange={setLinks}
+            categories={linkCategories}
+            onCategoriesChange={setLinkCategories}
+            onToast={showToast}
+          />
+        )
       default:
         return null
     }

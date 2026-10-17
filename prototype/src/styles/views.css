@@ -3880,3 +3880,209 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* dynamic link collections */
+
+.collection-item-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  border-radius: 8px;
+}
+
+.collection-item-wrap > .collection-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.collection-item.is-empty {
+  color: var(--text-3);
+}
+
+.collection-item.is-empty .collection-dot {
+  opacity: 0.5;
+}
+
+.collection-edit {
+  width: 22px;
+  height: 25px;
+  flex: 0 0 22px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-4);
+  cursor: pointer;
+  opacity: 0.35;
+  transition:
+    opacity 0.16s var(--ease),
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.collection-item-wrap:hover .collection-edit,
+.collection-item-wrap:focus-within .collection-edit {
+  opacity: 1;
+}
+
+.collection-edit:hover {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+.collection-add {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 0 8px;
+  border: 1px dashed var(--line-soft);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 9px;
+  cursor: pointer;
+  transition:
+    border-color 0.16s var(--ease),
+    background-color 0.16s var(--ease),
+    color 0.16s var(--ease);
+}
+
+.collection-add:hover {
+  border-color: var(--line);
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+
+/* link category modal */
+
+.link-category-modal .modal-card {
+  width: min(430px, 100%);
+}
+
+.link-category-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.link-category-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid color-mix(in srgb, var(--cat) 24%, var(--line-soft));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--cat) 8%, var(--surface-inset));
+}
+
+.link-category-preview-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--cat) 14%, transparent);
+  color: color-mix(in srgb, var(--cat) 85%, var(--text-1));
+}
+
+.link-category-preview > span:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.link-category-preview b {
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-category-preview small {
+  color: var(--text-3);
+  font-size: 8.5px;
+}
+
+.link-color-picker {
+  display: flex;
+  gap: 6px;
+}
+
+.link-color-option {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--surface-inset);
+  color: var(--text-3);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.link-color-option > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cat);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--cat) 60%, transparent);
+}
+
+.link-color-option:hover {
+  border-color: var(--line);
+  color: var(--text-1);
+}
+
+.link-color-option.active {
+  border-color: color-mix(in srgb, var(--cat) 40%, var(--line));
+  background: color-mix(in srgb, var(--cat) 10%, transparent);
+  color: var(--text-1);
+}
+
+.link-category-danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--bad) 13%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bad) 3%, transparent);
+}
+
+.link-category-danger > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.link-category-danger b {
+  color: var(--text-2);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.link-category-danger span {
+  color: var(--text-3);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.link-category-danger.armed {
+  border-color: color-mix(in srgb, var(--bad) 28%, transparent);
+  background: var(--bad-soft);
+}
+
+.danger-text {
+  color: var(--bad);
+}
