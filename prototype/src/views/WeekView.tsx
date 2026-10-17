@@ -26,6 +26,7 @@ import {
   projectWorkItemsForWeek,
 } from '../utils'
 import { TaskRow } from '../components/TaskRow'
+import { RelationThreads } from '../components/RelationThreads'
 import { Card, CheckBox, Progress, catStyle } from '../components/ui'
 
 interface WeekViewProps {
@@ -72,6 +73,25 @@ export function WeekView({
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS['2026-W42']
+  const [relationTaskId, setRelationTaskId] = useState<string | null>(null)
+  const relationTask = relationTaskId ? tasks.find((task) => task.id === relationTaskId) ?? null : null
+  const relationObjectiveId = relationTask?.objectiveId
+  const relationProjectId = relationTask?.projectId
+  const isRelatedTask = (task: WeekTask) =>
+    relationTask !== null &&
+    (task.id === relationTask.id ||
+      (relationObjectiveId !== undefined && task.objectiveId === relationObjectiveId) ||
+      (relationProjectId !== undefined && task.projectId === relationProjectId))
+
+  const focusObjective = (objectiveId: string) => {
+    const linkedTask = visibleTasks.find((task) => task.objectiveId === objectiveId)
+    setRelationTaskId(linkedTask?.id ?? null)
+  }
+
+  const focusProject = (projectId: string) => {
+    const linkedTask = visibleTasks.find((task) => task.projectId === projectId)
+    setRelationTaskId(linkedTask?.id ?? null)
+  }
   const weekTasks = tasks.filter((task) => task.weekKey === weekKey)
   const autoItems = projectWorkItemsForWeek(projects, weekKey)
   const filteredTasks =
@@ -383,6 +403,9 @@ export function WeekView({
                     project={project}
                     objective={objective}
                     onToggle={onToggleTask}
+                    onHover={(next) => setRelationTaskId(next?.id ?? null)}
+                    related={isRelatedTask(task)}
+                    dimmed={relationTask !== null && !isRelatedTask(task)}
                   />
                 )
               })}
@@ -403,6 +426,9 @@ export function WeekView({
                         project={project}
                         objective={objective}
                         onToggle={onToggleTask}
+                        onHover={(next) => setRelationTaskId(next?.id ?? null)}
+                        related={isRelatedTask(task)}
+                        dimmed={relationTask !== null && !isRelatedTask(task)}
                       />
                     )
                   })}
@@ -423,7 +449,7 @@ export function WeekView({
                     return (
                       <div
                         key={item.id}
-                        className={cn('task-row auto-row', item.status === 'done' && 'done')}
+                        className={cn('task-row auto-row', item.status === 'done' && 'done', relationProjectId === item.project.id && 'relation-related')}
                         style={catStyle(item.project.categoryId)}
                       >
                         <CheckBox
@@ -485,9 +511,12 @@ export function WeekView({
               {sideObjectives.map((objective) => (
                 <button
                   type="button"
-                  className="objective-mini"
+                  className={cn('objective-mini', relationObjectiveId === objective.id && 'relation-target')}
                   key={objective.id}
+                  data-relation-objective={objective.id}
                   onClick={onOpenQuarter}
+                  onMouseEnter={() => focusObjective(objective.id)}
+                  onMouseLeave={() => setRelationTaskId(null)}
                 >
                   <div className="objective-mini-top" style={catStyle(objective.categoryId)}>
                     <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
@@ -517,7 +546,13 @@ export function WeekView({
               {sideProjects.map((project) => {
                 const next = projectNext(project)
                 return (
-                  <div className="project-mini" key={project.id}>
+                  <div
+                    className={cn('project-mini', relationProjectId === project.id && 'relation-target')}
+                    key={project.id}
+                    data-relation-project={project.id}
+                    onMouseEnter={() => focusProject(project.id)}
+                    onMouseLeave={() => setRelationTaskId(null)}
+                  >
                     <span className="project-mini-icon" style={catStyle(project.categoryId)}>
                       <FolderSimple size={14} />
                     </span>
@@ -538,6 +573,11 @@ export function WeekView({
           </Card>
         </div>
       </div>
+      <RelationThreads
+        taskId={relationTask?.id ?? null}
+        objectiveId={relationObjectiveId}
+        projectId={relationProjectId}
+      />
     </div>
   )
 }

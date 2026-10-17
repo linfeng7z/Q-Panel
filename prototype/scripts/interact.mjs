@@ -130,6 +130,16 @@ await page.locator('.reminder-actions .btn.primary').click()
 await page.waitForTimeout(300)
 check('reminder toast', await page.locator('.toast').isVisible().catch(() => false))
 
+// relationship focus: task -> quarter objective + project
+const relationRow = page.locator('.task-row').filter({ hasText: '等保差距分析报告评审' }).first()
+await relationRow.hover()
+await page.waitForTimeout(500)
+check('relation threads visible', await page.locator('.relation-thread').count() >= 1)
+check('relation targets highlighted', await page.locator('.relation-target').count() >= 1)
+await shot('29-relation-hover')
+await page.mouse.move(700, 900)
+await page.waitForTimeout(250)
+
 // theme switch
 await page.locator('.icon-btn[title="切换皮肤"]').click()
 await page.waitForTimeout(700)

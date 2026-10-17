@@ -10,13 +10,16 @@ interface TaskRowProps {
   project?: Project
   objective?: Objective
   onToggle: (id: string) => void
+  onHover?: (task: WeekTask | null) => void
+  related?: boolean
+  dimmed?: boolean
 }
 
 function shortReminder(value?: string): string {
   return value ?? ''
 }
 
-export function TaskRow({ task, project, objective, onToggle }: TaskRowProps) {
+export function TaskRow({ task, project, objective, onToggle, onHover, related, dimmed }: TaskRowProps) {
   const category = getCategory(task.categoryId)
   const overdue = isOverdue(task)
   const today = task.dueDate === '2026-10-17'
@@ -24,8 +27,11 @@ export function TaskRow({ task, project, objective, onToggle }: TaskRowProps) {
 
   return (
     <div
-      className={cn('task-row', task.done && 'done')}
+      className={cn('task-row', task.done && 'done', related && 'relation-related', dimmed && 'relation-dimmed')}
       style={catStyle(task.categoryId)}
+      data-relation-task={task.id}
+      onMouseEnter={() => onHover?.(task)}
+      onMouseLeave={() => onHover?.(null)}
     >
       <CheckBox on={task.done} onToggle={() => onToggle(task.id)} label={task.title} />
       <div className="task-main">

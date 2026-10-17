@@ -214,3 +214,190 @@
     animation: none;
   }
 }
+
+/* ---------- relationship focus ---------- */
+
+.relation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.relation-thread {
+  fill: none;
+  stroke: var(--info);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  opacity: 0.72;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: threadDraw 0.56s var(--ease-out) forwards;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--info) 55%, transparent));
+}
+
+.relation-node {
+  fill: var(--info);
+  opacity: 0.82;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--info) 70%, transparent));
+}
+
+.relation-node.target {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: relationPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes threadDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes relationPulse {
+  0%,
+  100% {
+    transform: scale(0.75);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.task-row.relation-related {
+  border-color: color-mix(in srgb, var(--info) 32%, var(--line));
+  background: color-mix(in srgb, var(--info) 9%, var(--surface-1));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--info) 13%, transparent);
+}
+
+.task-row.relation-dimmed {
+  opacity: 0.42;
+  filter: saturate(0.55);
+}
+
+.week-side .objective-mini.relation-target,
+.week-side .project-mini.relation-target {
+  background: color-mix(in srgb, var(--info) 11%, var(--surface-1));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--info) 28%, transparent),
+    0 10px 32px color-mix(in srgb, var(--info) 10%, transparent);
+  transform: translateX(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relation-thread,
+  .relation-node.target {
+    animation: none;
+  }
+
+  .relation-thread {
+    stroke-dashoffset: 0;
+  }
+}
+
+.task-row {
+  transition:
+    opacity 0.2s var(--ease),
+    filter 0.2s var(--ease),
+    background-color 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.week-side .objective-mini,
+.week-side .project-mini {
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+
+.relation-thread-pulse {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-1) 78%, var(--info));
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-dasharray: 0.08 0.92;
+  stroke-dashoffset: 0;
+  opacity: 0.9;
+  animation: threadFlow 1.9s linear infinite;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--info) 85%, transparent));
+}
+
+@keyframes threadFlow {
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relation-thread-pulse {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.task-row.relation-related {
+  position: relative;
+}
+
+.task-row.relation-related::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 9px;
+  bottom: 9px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--info);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--info) 70%, transparent);
+  animation: relationEdge 0.35s var(--ease-out) both;
+}
+
+.week-side .relation-target {
+  position: relative;
+}
+
+.week-side .relation-target::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--info) 18%, transparent);
+  animation: relationHalo 2.2s ease-in-out infinite;
+}
+
+@keyframes relationEdge {
+  from {
+    transform: scaleY(0.12);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes relationHalo {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-row.relation-related::before,
+  .week-side .relation-target::after {
+    animation: none;
+  }
+}
