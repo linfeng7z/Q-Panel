@@ -3,14 +3,16 @@
   "private": true,
   "version": "0.4.0",
   "type": "module",
-  "description": "Q-Panel clickable UI prototype — a cross-industry daily workbench in person-days: quarterly capacity, weekly plan, global projects and AI.",
+  "description": "Q-Panel clickable UI prototype \u2014 a cross-industry daily workbench in person-days: quarterly capacity, weekly plan, global projects and AI.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "shot": "node scripts/shot.mjs",
-    "interact": "node scripts/interact.mjs"
+    "interact": "node scripts/interact.mjs",
+    "test:calendar": "node --test test/calendar.test.ts",
+    "test": "npm run test:calendar"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

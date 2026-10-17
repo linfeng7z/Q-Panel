@@ -29,6 +29,10 @@ test.describe('Q-Panel feature regression', () => {
         await expect(page.locator('.page-title')).toContainText(title)
       }
 
+      await expect(page.locator('.capacity-stat .stat-value').nth(0)).toContainText('60')
+      await expect(page.locator('.capacity-stat .stat-value').nth(1)).toContainText('58.5')
+      await expect(page.locator('.capacity-stat .stat-value').nth(2)).toContainText('1.5')
+
       await page.locator('.icon-btn[title="切换皮肤"]').click()
       await expect(page.locator('.qp-root')).toHaveAttribute('data-theme', 'ops')
       await page.locator('.icon-btn[title="切换皮肤"]').click()

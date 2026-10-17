@@ -1,3 +1,12 @@
+import {
+  CALENDAR_ADJUSTMENTS,
+  CHINA_HOLIDAYS,
+  CHINA_MAKEUP_DAYS,
+  calendarDay,
+  monthStats as computeMonthStats,
+  quarterStats as computeQuarterStats,
+  weekStats as computeWeekStats,
+} from '../calendar'
 import type {
   Category,
   CategoryId,
@@ -94,18 +103,25 @@ export function quarterRange(year: number, quarter: number): string {
   return `${startMonth}/01 – ${endMonth}/${endDay}`
 }
 
-export const QUARTER_STATS: Record<string, QuarterStats> = {
-  '2026-Q1': { workdays: 59, leaveDays: 0 },
-  '2026-Q2': { workdays: 61, leaveDays: 0 },
-  '2026-Q3': { workdays: 66, leaveDays: 0 },
-  '2026-Q4': { workdays: 62, leaveDays: 2 },
-  '2027-Q1': {
-    workdays: 64,
-    leaveDays: 0,
-    estimated: true,
-    note: '2027 年官方放假安排尚未发布，当前按周末规则估算；发布后可一键更新。',
-  },
-}
+const QUARTER_STAT_KEYS = YEARS.flatMap((year) =>
+  [1, 2, 3, 4].map((quarter) => `${year}-Q${quarter}`),
+)
+
+export const QUARTER_STATS: Record<string, QuarterStats> = Object.fromEntries(
+  QUARTER_STAT_KEYS.map((key) => {
+    const [yearText, quarterText] = key.split('-Q')
+    const stats = computeQuarterStats(Number(yearText), Number(quarterText))
+    return [
+      key,
+      {
+        workdays: stats.workdays,
+        leaveDays: stats.leaveDays,
+        ...(stats.estimated ? { estimated: true } : {}),
+        ...(stats.note ? { note: stats.note } : {}),
+      } satisfies QuarterStats,
+    ]
+  }),
+)
 
 export const OBJECTIVES: Record<string, Objective[]> = {
   '2026-Q1': [
@@ -289,6 +305,12 @@ export const WEEKS: Record<string, WeekMeta> = {
   '2027-W06': { key: '2027-W06', num: 6, start: '2027-02-01', end: '2027-02-07', range: '02/01 – 02/07', workdays: 5, leaveDays: 0 },
 }
 
+for (const meta of Object.values(WEEKS)) {
+  const stats = computeWeekStats(meta.start, meta.end)
+  meta.workdays = stats.workdays
+  meta.leaveDays = stats.leaveDays
+}
+
 export const WEEK_ORDER = Object.keys(WEEKS)
 
 export const INITIAL_TASKS: WeekTask[] = [
@@ -429,49 +451,67 @@ export const LINKS: LinkItem[] = [
   },
 ]
 
-export const MONTH_STATS = [
-  { month: '10 月', workdays: 18, leaveDays: 2, available: 16, allocated: 16, completion: 42 },
-  { month: '11 月', workdays: 21, leaveDays: 0, available: 21, allocated: 18, completion: 36 },
-  { month: '12 月', workdays: 23, leaveDays: 0, available: 23, allocated: 14, completion: 28 },
-]
-
-export const WEEK_STATS = [
-  { week: 'W40', workdays: 3, available: 3, planned: 0, done: 0 },
-  { week: 'W41', workdays: 3, available: 3, planned: 0.75, done: 0.25 },
-  { week: 'W42', workdays: 5, available: 5, planned: 5.25, done: 1.25 },
-  { week: 'W43', workdays: 5, available: 3, planned: 4.25, done: 0 },
-  { week: 'W44', workdays: 5, available: 5, planned: 3, done: 0 },
-  { week: 'W45', workdays: 5, available: 5, planned: 1.75, done: 0 },
-  { week: 'W46', workdays: 5, available: 5, planned: 1, done: 0 },
-  { week: 'W47', workdays: 5, available: 5, planned: 1.75, done: 0 },
-]
-
-/** Chinese official calendar details used by the prototype. */
-export const DAY_NOTES: Record<string, { kind: 'holiday' | 'makeup' | 'leave'; label: string }> = {
-  '2026-10-01': { kind: 'holiday', label: '国庆' },
-  '2026-10-02': { kind: 'holiday', label: '国庆' },
-  '2026-10-03': { kind: 'holiday', label: '国庆' },
-  '2026-10-04': { kind: 'holiday', label: '国庆' },
-  '2026-10-05': { kind: 'holiday', label: '国庆' },
-  '2026-10-06': { kind: 'holiday', label: '国庆' },
-  '2026-10-07': { kind: 'holiday', label: '国庆' },
-  '2026-10-10': { kind: 'makeup', label: '调休上班' },
-  '2026-10-20': { kind: 'leave', label: '年假' },
-  '2026-10-21': { kind: 'leave', label: '年假' },
+const MONTH_CAPACITY: Record<number, { allocated: number; completion: number }> = {
+  10: { allocated: 16, completion: 42 },
+  11: { allocated: 18, completion: 36 },
+  12: { allocated: 14, completion: 28 },
 }
+
+export const MONTH_STATS = [10, 11, 12].map((month) => {
+  const stats = computeMonthStats(2026, month)
+  const extra = MONTH_CAPACITY[month]
+  return {
+    month: `${month} 月`,
+    workdays: stats.workdays,
+    leaveDays: stats.leaveDays,
+    available: stats.available,
+    allocated: extra.allocated,
+    completion: extra.completion,
+  }
+})
+
+const WEEK_PLANNED: Record<number, { planned: number; done: number }> = {
+  40: { planned: 0, done: 0 },
+  41: { planned: 0.75, done: 0.25 },
+  42: { planned: 5.25, done: 1.25 },
+  43: { planned: 4.25, done: 0 },
+  44: { planned: 3, done: 0 },
+  45: { planned: 1.75, done: 0 },
+  46: { planned: 1, done: 0 },
+  47: { planned: 1.75, done: 0 },
+}
+
+export const WEEK_STATS = ['2026-W40', '2026-W41', '2026-W42', '2026-W43', '2026-W44', '2026-W45', '2026-W46', '2026-W47'].map((key) => {
+  const meta = WEEKS[key]
+  const stats = computeWeekStats(meta.start, meta.end)
+  const extra = WEEK_PLANNED[meta.num]
+  return {
+    week: `W${meta.num}`,
+    workdays: stats.workdays,
+    available: stats.available,
+    planned: extra.planned,
+    done: extra.done,
+  }
+})
+
+/** Calendar notes exposed to UI badges. */
+export const DAY_NOTES: Record<string, { kind: 'holiday' | 'makeup' | 'leave'; label: string }> =
+  Object.fromEntries([
+    ...Object.entries(CHINA_HOLIDAYS).map(([date, label]) => [date, { kind: 'holiday' as const, label }]),
+    ...Object.entries(CHINA_MAKEUP_DAYS).map(([date, label]) => [date, { kind: 'makeup' as const, label }]),
+    ...CALENDAR_ADJUSTMENTS.map((item) => [
+      item.date,
+      { kind: 'leave' as const, label: item.label ?? '请假' },
+    ]),
+  ])
 
 export function dayInfo(dateISO: string): {
   kind: 'workday' | 'weekend' | 'holiday' | 'makeup' | 'leave'
   label?: string
   isWorkday: boolean
 } {
-  const noted = DAY_NOTES[dateISO]
-  if (noted?.kind === 'leave') return { kind: 'leave', label: noted.label, isWorkday: false }
-  if (noted?.kind === 'holiday') return { kind: 'holiday', label: noted.label, isWorkday: false }
-  if (noted?.kind === 'makeup') return { kind: 'makeup', label: noted.label, isWorkday: true }
-  const day = new Date(`${dateISO}T12:00:00+08:00`).getDay()
-  if (day === 0 || day === 6) return { kind: 'weekend', isWorkday: false }
-  return { kind: 'workday', isWorkday: true }
+  const day = calendarDay(dateISO)
+  return { kind: day.kind, label: day.label, isWorkday: day.isWorkday }
 }
 
 export const WEEKDAY_CN = ['日', '一', '二', '三', '四', '五', '六']
