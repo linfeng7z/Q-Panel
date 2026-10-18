@@ -1010,7 +1010,7 @@ export default function App() {
           : task,
       ),
     )
-    showToast(`已把 ${ids.length} 项逾期事项移入当前周`)
+    showToast(`已把 ${ids.length} 项上期未完成事项移入当前周`)
   }
 
   const completeReminder = () => {

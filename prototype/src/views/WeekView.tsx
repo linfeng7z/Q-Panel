@@ -19,7 +19,6 @@ import {
   fmtDue,
   fmtRange,
   daysOf,
-  isOverdue,
   projectNext,
   projectProgress,
   projectWorkItemDays,
@@ -137,9 +136,11 @@ export function WeekView({
   const doneDays = doneDaysOf(weekTasks) + autoDoneDays
   const available = meta.workdays - meta.leaveDays
   const remaining = available - planned
+  // “上期未完成” is defined by the task's week and its checkbox, not by the
+  // due timestamp: an unchecked item from an earlier week stays in the backlog.
   const overdue =
     meta.end <= '2026-12-31'
-      ? tasks.filter((task) => !task.done && task.dueDate < meta.start && isOverdue(task))
+      ? tasks.filter((task) => !task.done && task.weekKey < weekKey)
       : []
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
   const linkedObjectiveIds = Array.from(
@@ -393,7 +394,7 @@ export function WeekView({
             {overdue.length > 0 ? (
               <div className="overdue-strip">
                 <WarningCircle size={12} />
-                上期有 <b>{overdue.length}</b> 项逾期未完成
+                上期有 <b>{overdue.length}</b> 项未完成
                 <button
                   type="button"
                   className="btn sm"
