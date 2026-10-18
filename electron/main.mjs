@@ -261,7 +261,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     hasShadow: false,
-    roundedCorners: true,
+    roundedCorners: false,
     resizable: false,
     movable: false,
     alwaysOnTop: true,

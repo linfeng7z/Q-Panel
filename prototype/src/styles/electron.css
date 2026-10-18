@@ -42,6 +42,10 @@ html.electron-runtime #root {
 .qp-root.electron-mode .panel {
   border: 0;
   border-radius: 28px;
+  isolation: isolate;
+  background-clip: padding-box;
+  clip-path: inset(0 round 28px);
+  box-shadow: inset 0 0 0 1px rgba(5, 6, 9, 0.52);
 }
 
 /* The simulated-desktop glass highlight becomes a hard white rim in the
@@ -106,4 +110,47 @@ html.electron-runtime #root {
 .qp-root.electron-mode.notch-mode .notch-badge,
 .qp-root.electron-mode.notch-mode .notch-hint {
   display: none;
+}
+
+/* Hover affordance for the otherwise invisible physical-notch hit area. */
+.qp-root.electron-mode.notch-mode .notch::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 86px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(157, 184, 255, 0.95), transparent);
+  box-shadow: 0 0 10px rgba(143, 177, 255, 0.35);
+  opacity: 0;
+  transform: translateX(-50%) scaleX(0.4);
+  transform-origin: center;
+  transition: opacity 160ms ease, transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.qp-root.electron-mode.notch-mode .notch:hover::after,
+.qp-root.electron-mode.notch-mode .notch:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) scaleX(1);
+  animation: notch-signal 1.7s ease-in-out infinite;
+}
+
+@keyframes notch-signal {
+  0%, 100% {
+    opacity: 0.55;
+    box-shadow: 0 0 7px rgba(143, 177, 255, 0.25);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(143, 177, 255, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qp-root.electron-mode.notch-mode .notch:hover::after,
+  .qp-root.electron-mode.notch-mode .notch:focus-visible::after {
+    animation: none;
+  }
 }

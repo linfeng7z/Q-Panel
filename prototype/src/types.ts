@@ -159,7 +159,6 @@ export interface UserPreferences {
   aiScope: 'minimal' | 'summary' | 'all'
   backupDays: number
   blurStrength: number
-  panelTint: number
 }
 
 export interface AiConfigPublic {

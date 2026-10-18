@@ -552,7 +552,12 @@ export function QuarterView({
       {selectedObjective ? (
         <>
           <div className="scrim" onMouseDown={() => setSelectedObjective(null)} />
-          <div className="modal-layer">
+          <div
+            className="modal-layer"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setSelectedObjective(null)
+            }}
+          >
             <div className="modal-card" style={{ width: 540 }}>
               <div className="modal-inner">
                 <div className="modal-head">

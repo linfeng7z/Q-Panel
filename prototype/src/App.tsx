@@ -978,7 +978,6 @@ export default function App() {
       data-save-seq={saveSequence}
       style={{
         '--panel-blur': `${preferences.blurStrength}px`,
-        '--panel-tint': String(preferences.panelTint / 100),
       } as CSSProperties}
     >
       {!electronMode ? (

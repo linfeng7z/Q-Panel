@@ -51,7 +51,12 @@ export function LinkCategoryModal({
   return (
     <>
       <div className="scrim" onMouseDown={onClose} />
-      <div className="modal-layer link-category-modal">
+      <div
+        className="modal-layer link-category-modal"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
         <div className="modal-card">
           <div className="modal-inner">
             <div className="modal-head">

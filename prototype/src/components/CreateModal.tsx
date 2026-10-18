@@ -128,7 +128,12 @@ export function CreateModal({
   return (
     <>
       <div className="scrim" onMouseDown={onClose} />
-      <div className="modal-layer create-modal">
+      <div
+        className="modal-layer create-modal"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
         <div className="modal-card">
           <div className="modal-inner">
             <div className="modal-head">

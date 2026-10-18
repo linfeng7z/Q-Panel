@@ -359,7 +359,12 @@ export function LinksView({
       {pendingDelete ? (
         <>
           <div className="scrim" onMouseDown={() => setPendingDelete(null)} />
-          <div className="modal-layer link-confirm-modal">
+          <div
+          className="modal-layer link-confirm-modal"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPendingDelete(null)
+          }}
+        >
             <div className="modal-card link-confirm-card">
               <div className="modal-inner">
                 <div className="modal-head">

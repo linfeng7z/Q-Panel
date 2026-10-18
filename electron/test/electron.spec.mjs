@@ -141,8 +141,10 @@ test('persists user preferences across an app restart', async () => {
     await expect(autoLaunch).toHaveAttribute('aria-checked', 'false')
     await page.locator('.settings-row', { hasText: '默认展开页' }).locator('select').selectOption('week')
     await page.locator('input[aria-label="背景模糊度"]').fill('72')
-    await page.locator('input[aria-label="背景遮罩"]').fill('34')
-    await page.locator('.settings-modal .modal-close').click()
+    await expect(page.locator('.settings-modal .modal-foot')).toHaveCount(0)
+    await expect(page.locator('input[aria-label="背景遮罩"]')).toHaveCount(0)
+    await page.mouse.click(20, 20)
+    await expect(page.locator('.settings-modal')).toHaveCount(0)
     await expect.poll(async () => Number(await page.locator('.qp-root').getAttribute('data-save-seq'))).toBeGreaterThan(startSeq)
     await expect.poll(async () => {
       const raw = await fs.readFile(path.join(userData, 'workspace.json'), 'utf8')
@@ -159,7 +161,6 @@ test('persists user preferences across an app restart', async () => {
     await expect(secondPage.locator('.settings-row', { hasText: '开机自动启动' }).locator('.toggle')).toHaveAttribute('aria-checked', 'false')
     await expect(secondPage.locator('.settings-row', { hasText: '默认展开页' }).locator('select')).toHaveValue('week')
     await expect(secondPage.locator('input[aria-label="背景模糊度"]')).toHaveValue('72')
-    await expect(secondPage.locator('input[aria-label="背景遮罩"]')).toHaveValue('34')
     await expect(secondPage.locator('.qp-root')).toHaveAttribute('style', /--panel-blur: 72px/)
   } finally {
     if (app) await closeApp(app, userData)
@@ -192,6 +193,10 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
 
     const notchPage = app.windows().find((page) => page.url().includes('notch=1'))
     expect(notchPage).toBeTruthy()
+    await notchPage.locator('.notch').hover()
+    await expect
+      .poll(async () => Number(await notchPage.locator('.notch').evaluate((node) => getComputedStyle(node, '::after').opacity)))
+      .toBeGreaterThan(0.2)
     await notchPage.locator('.notch').click()
     await expect.poll(async () => {
       return app.evaluate(({ BrowserWindow }) => {
@@ -233,6 +238,20 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
         return { mainVisible: Boolean(main?.isVisible()), notchVisible: Boolean(notch?.isVisible()) }
       })
     }).toMatchObject({ mainVisible: false, notchVisible: true })
+  } finally {
+    await closeApp(app, userData)
+  }
+})
+
+test('dismisses a create modal when clicking outside it', async () => {
+  const userData = await createUserData()
+  const { app, page } = await launchApp(userData)
+  try {
+    await page.locator('.nav-item:has-text("本周安排")').click()
+    await page.getByRole('button', { name: '新建事项' }).click()
+    await expect(page.locator('.create-modal')).toBeVisible()
+    await page.mouse.click(20, 20)
+    await expect(page.locator('.create-modal')).toHaveCount(0)
   } finally {
     await closeApp(app, userData)
   }

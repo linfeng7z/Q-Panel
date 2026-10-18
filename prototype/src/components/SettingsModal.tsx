@@ -160,7 +160,12 @@ export function SettingsModal({
   return (
     <>
       <div className="scrim" onMouseDown={onClose} />
-      <div className="modal-layer settings-modal">
+      <div
+        className="modal-layer settings-modal"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
         <div className="modal-card">
           <div className="modal-inner">
             <div className="modal-head">
@@ -240,25 +245,6 @@ export function SettingsModal({
                             aria-label="背景模糊度"
                           />
                           <span className="settings-range-value">{preferences.blurStrength}px</span>
-                        </div>
-                      </div>
-                      <div className="settings-range-row">
-                        <div>
-                          <div className="settings-label">背景遮罩</div>
-                          <div className="settings-help">给面板叠加一层深色遮罩，降低背后内容对文字的干扰。</div>
-                        </div>
-                        <div className="settings-range-control">
-                          <input
-                            className="settings-range"
-                            type="range"
-                            min="0"
-                            max="60"
-                            step="2"
-                            value={preferences.panelTint}
-                            onChange={(event) => updatePreferences({ panelTint: Number(event.target.value) })}
-                            aria-label="背景遮罩"
-                          />
-                          <span className="settings-range-value">{preferences.panelTint}%</span>
                         </div>
                       </div>
                     </div>
@@ -810,14 +796,6 @@ export function SettingsModal({
               </div>
             </div>
 
-            <div className="modal-foot">
-              <button type="button" className="btn primary" onClick={onClose}>
-                <span className="icon-circle">
-                  <Check size={11} weight="bold" />
-                </span>
-                完成
-              </button>
-            </div>
           </div>
         </div>
       </div>

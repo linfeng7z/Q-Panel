@@ -148,7 +148,12 @@ export function LinkEditorModal({
   return (
     <>
       <div className="scrim" onMouseDown={onClose} />
-      <div className="modal-layer link-editor-modal">
+      <div
+        className="modal-layer link-editor-modal"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
         <div className="modal-card">
           <form
             className="modal-inner"
