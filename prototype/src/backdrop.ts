@@ -3,17 +3,15 @@
 export function backdropMaterial(value: number) {
   const strength = Number.isFinite(value) ? Math.min(80, Math.max(0, value)) : 56
   const progress = strength / 80
-  const response = Math.sqrt(progress)
   return {
     strength,
-    radius: 160 * response,
-    // Keep the desktop visible through most of the travel, then close the
-    // material completely at 100%. This keeps the slider perceptible while the
-    // reading surfaces themselves stay opaque.
-    // One tint veil for the whole glass skin. It begins at the original dark
-    // glass level and closes completely at max, so text never sits on a live
-    // or sharp desktop while the UI remains a single surface.
-    tint: strength === 80 ? 1 : 0.34 + 0.66 * Math.pow(progress, 1.25),
+    // Linear in perceived travel: 1% is a tiny change, 50% is clearly midway.
+    // The old sqrt curve jumped to ~18px at 1%, so the middle collapsed into
+    // one blurred bucket.
+    radius: progress * 64,
+    // Continuous all the way to 100%. The old special case at exactly 80 made
+    // the slider jump from "visible" to "solid"; this ramps into the solid end.
+    tint: 0.3 + 0.7 * progress,
     percent: Math.round(progress * 100),
   }
 }

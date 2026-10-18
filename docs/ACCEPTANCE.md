@@ -1,8 +1,8 @@
-# Q-Panel v1.1.10 验收记录
+# Q-Panel v1.1.11 验收记录
 
 验收日期：2026-10-18  
 环境：macOS Apple Silicon，Electron 44.9.0，Playwright Electron，Chrome（原型回归）  
-交付：`electron/release/Q-Panel-1.1.10-arm64.dmg`（ad-hoc 签名，arm64）
+交付：`electron/release/Q-Panel-1.1.11-arm64.dmg`（ad-hoc 签名，arm64）
 
 ## 自动化结果
 
@@ -13,7 +13,7 @@
 | Electron E2E | `cd electron && npm test` | 18/18（含高对比背景像素/逐帧滑块回归） |
 | 原型构建 | `cd prototype && npm run build` | 通过 |
 | 原型 lint | `cd prototype && npm run lint` | 0 error（2 条既有 warning：fast-refresh / yearOptions effect） |
-| 打包版原生画面 | `cd electron && npm run verify:material`（指定打包可执行文件） | 1.1.10 高对比背景、轮廓截图、41 次滑块采样通过 |
+| 打包版原生画面 | `cd electron && npm run verify:material`（指定打包可执行文件） | 1.1.11 高对比背景、轮廓截图、41 次滑块采样通过 |
 | 打包 | `cd electron && npm run pack` | 通过 |
 
 ## 功能验收
@@ -66,7 +66,7 @@
 - [x] 偏好、主题、分类、日历调整、AI 配置（独立文件）持久化；
 - [x] 导出文件不包含 API Key 明文。
 
-## v1.1.10 背景专项实测
+## v1.1.11 背景专项实测
 
 - 打包版设置 0 / 25 / 50 / 75 / 100%，后方使用密集黑白大字与高饱和彩条，不使用用户桌面内容作验收素材。
 - 100% 时反转后方原生测试窗口，面板内部截屏（排除原生圆角边缘）的平均通道差为 **0**；同时自动化比较不同截图背景，最高档像素差 <0.1，最低/最高档差 >1。
