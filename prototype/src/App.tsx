@@ -1082,7 +1082,7 @@ export default function App() {
             type="button"
             className="notch"
             onClick={() => {
-              if (electronMode) void window.qpanel?.notch.expand()
+              if (electronMode) void window.qpanel?.notch.toggle()
               else setExpanded(true)
             }}
             aria-label="展开 Q-Panel"

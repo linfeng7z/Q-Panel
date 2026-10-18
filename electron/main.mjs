@@ -33,11 +33,14 @@ let aiConfigStore = null
 // Matches the physical MacBook notch / menu-bar height; the collapsed window
 // is a transparent click target so it does not add a second visible pill.
 const NOTCH_WIDTH = 200
-const NOTCH_HEIGHT = 38
+// The physical notch is exactly the menu-bar strip; fall back to 38pt on
+// displays where the work area does not expose a menu bar.
+const NOTCH_HEIGHT_FALLBACK = 38
 const PANEL_WIDTH = 1280
 const PANEL_HEIGHT = 760
 let activeNativeDialogs = 0
 let blurHideTimer = null
+
 
 function rendererUrl() {
   if (isDev) {
@@ -57,9 +60,38 @@ function rendererFile() {
   return path.resolve(__dirname, '..', 'prototype', 'dist', 'index.html')
 }
 
+function notchBounds() {
+  const display = screen.getPrimaryDisplay()
+  const menuBarHeight = Math.max(0, display.workArea.y - display.bounds.y)
+  if (menuBarHeight === 0) {
+    return {
+      x: Math.round(display.bounds.x + (display.bounds.width - NOTCH_WIDTH) / 2),
+      y: display.bounds.y,
+      width: NOTCH_WIDTH,
+      height: NOTCH_HEIGHT_FALLBACK,
+    }
+  }
+  // macOS constrains visible windows below the menu bar. With
+  // enableLargerThanScreen we can start the transparent window one menu-bar
+  // height above the screen: its lower half then covers the physical notch and
+  // receives clicks even though macOS would otherwise route them to the menu
+  // bar. Nothing is painted, so the user only sees the notch itself.
+  return {
+    x: Math.round(display.bounds.x + (display.bounds.width - NOTCH_WIDTH) / 2),
+    y: display.bounds.y - menuBarHeight,
+    width: NOTCH_WIDTH,
+    height: menuBarHeight * 2,
+  }
+}
+
 function showNotch() {
   if (!notchWindow) return
-  notchWindow.showInactive()
+  notchWindow.setBounds(notchBounds())
+  if (!notchWindow.isVisible()) notchWindow.showInactive()
+  setTimeout(() => {
+    if (!notchWindow || notchWindow.isDestroyed()) return
+    notchWindow.setBounds(notchBounds())
+  }, 30)
 }
 
 function hideNotch() {
@@ -67,7 +99,6 @@ function hideNotch() {
 }
 
 function showWindow() {
-  hideNotch()
   if (!mainWindow) {
     createWindow()
     mainWindow?.once('ready-to-show', showWindow)
@@ -78,6 +109,7 @@ function showWindow() {
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
   mainWindow.show()
   mainWindow.focus()
+  showNotch()
 }
 
 function hideWindow() {
@@ -228,14 +260,14 @@ function createWindow() {
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
-    hasShadow: true,
-    resizable: true,
+    hasShadow: false,
+    roundedCorners: true,
+    resizable: false,
     movable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     hiddenInMissionControl: true,
     acceptFirstMouse: true,
-    roundedCorners: true,
     fullscreenable: false,
     title: 'Q-Panel',
     webPreferences: {
@@ -267,7 +299,7 @@ function createWindow() {
       ) {
         hideWindow()
       }
-    }, 120)
+    }, 180)
   })
 
   mainWindow.on('focus', () => {
@@ -316,13 +348,12 @@ function createWindow() {
 }
 
 function createNotchWindow() {
-  const display = screen.getPrimaryDisplay()
-  const { x, y, width } = display.bounds
+  const bounds = notchBounds()
   notchWindow = new BrowserWindow({
-    x: Math.round(x + (width - NOTCH_WIDTH) / 2),
-    y,
-    width: NOTCH_WIDTH,
-    height: NOTCH_HEIGHT,
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
     show: false,
     frame: false,
     transparent: true,
@@ -337,7 +368,8 @@ function createNotchWindow() {
     alwaysOnTop: true,
     acceptFirstMouse: true,
     roundedCorners: true,
-    focusable: true,
+    focusable: false,
+    enableLargerThanScreen: true,
     title: 'Q-Panel',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -348,7 +380,7 @@ function createNotchWindow() {
     },
   })
 
-  notchWindow.setAlwaysOnTop(true, 'screen-saver')
+  notchWindow.setAlwaysOnTop(true, 'screen-saver', 1)
   notchWindow.setIgnoreMouseEvents(false)
   notchWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
   notchWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -473,7 +505,11 @@ function registerIpc() {
   })
   ipcMain.handle('notch:expand', () => {
     showWindow()
-    return { ok: true }
+    return { ok: true, visible: true }
+  })
+  ipcMain.handle('notch:toggle', () => {
+    toggleWindow()
+    return { ok: true, visible: Boolean(mainWindow?.isVisible()) }
   })
   ipcMain.handle('ai:config:get', async () => {
     if (!aiConfigStore) return { ok: false, error: 'not_ready' }
@@ -571,8 +607,11 @@ function installApplicationMenu() {
 }
 
 app.whenReady().then(() => {
-  if (process.platform === 'darwin' && process.env.Q_PANEL_HIDE_DOCK !== '0') {
-    app.dock?.hide()
+  if (process.platform === 'darwin') {
+    // Accessory apps live in the menu bar only: no Dock icon and no Cmd-Tab
+    // entry. The LSUIElement Info.plist entry is the packaged equivalent.
+    app.setActivationPolicy('accessory')
+    if (process.env.Q_PANEL_HIDE_DOCK !== '0') app.dock?.hide()
   }
   installApplicationMenu()
   aiConfigStore = createAiConfigStore(path.join(app.getPath('userData'), 'ai-config.json'), safeStorage)

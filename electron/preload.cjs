@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('qpanel', {
   },
   notch: {
     expand: () => ipcRenderer.invoke('notch:expand'),
+    toggle: () => ipcRenderer.invoke('notch:toggle'),
     onWorkspaceSaved: (callback) => {
       const listener = () => callback()
       ipcRenderer.on('workspace:saved', listener)

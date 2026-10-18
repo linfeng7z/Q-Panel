@@ -186,7 +186,7 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
     }).toMatchObject({
       mainVisible: false,
       notchVisible: true,
-      notchBounds: { width: 200, height: 38 },
+      notchBounds: { y: -33, width: 200, height: 66 },
       notchTop: true,
     })
 
@@ -200,6 +200,27 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
       })
     }).toMatchObject({ visible: true, top: true })
 
+    // Clicking the notch while expanded must collapse the panel again.
+    await notchPage.locator('.notch').click()
+    await expect.poll(async () => {
+      return app.evaluate(({ BrowserWindow }) => {
+        const windows = BrowserWindow.getAllWindows()
+        const main = windows.find((window) => !window.webContents.getURL().includes('notch=1'))
+        const notch = windows.find((window) => window.webContents.getURL().includes('notch=1'))
+        return { mainVisible: Boolean(main?.isVisible()), notchVisible: Boolean(notch?.isVisible()) }
+      })
+    }).toMatchObject({ mainVisible: false, notchVisible: true })
+
+    // ...and clicking it again re-opens the panel.
+    await notchPage.locator('.notch').click()
+    await expect.poll(async () => {
+      return app.evaluate(({ BrowserWindow }) => {
+        const main = BrowserWindow.getAllWindows().find((window) => !window.webContents.getURL().includes('notch=1'))
+        return Boolean(main?.isVisible())
+      })
+    }).toBe(true)
+
+    // Clicking outside (blur) also collapses the panel.
     await app.evaluate(({ BrowserWindow }) => {
       const main = BrowserWindow.getAllWindows().find((window) => !window.webContents.getURL().includes('notch=1'))
       main?.blur()

@@ -12,6 +12,14 @@ html.electron-runtime #root {
   background: transparent;
 }
 
+/* The native window itself stays transparent; the rounded silhouette comes
+   from a clipped root so no square native edge can leak through at the corners. */
+.qp-root.electron-mode:not(.notch-mode) {
+  overflow: hidden;
+  border-radius: 28px;
+  clip-path: inset(0 round 28px);
+}
+
 .qp-root.electron-mode .panel-wrap {
   position: fixed;
   inset: 0;
@@ -24,16 +32,16 @@ html.electron-runtime #root {
   width: 100%;
   height: 100%;
   padding: 0;
-  border-radius: 24px;
+  border-radius: 28px;
   overflow: hidden;
   background: transparent;
   animation: none;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.62);
+  box-shadow: none;
 }
 
 .qp-root.electron-mode .panel {
   border: 0;
-  border-radius: 24px;
+  border-radius: 28px;
 }
 
 /* The simulated-desktop glass highlight becomes a hard white rim in the

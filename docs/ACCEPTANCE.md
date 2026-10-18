@@ -1,8 +1,8 @@
-# Q-Panel v1.1.1 验收记录
+# Q-Panel v1.1.2 验收记录
 
 验收日期：2026-10-18  
 环境：macOS Apple Silicon，Electron 44.9.0，Playwright Electron，Chrome（原型回归）  
-交付：`electron/release/Q-Panel-1.1.1-arm64.dmg`（ad-hoc 签名，arm64）
+交付：`electron/release/Q-Panel-1.1.2-arm64.dmg`（ad-hoc 签名，arm64）
 
 ## 自动化结果
 

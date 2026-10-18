@@ -43,6 +43,7 @@ interface QPanelBridge {
   }
   notch: {
     expand: () => Promise<{ ok: boolean }>
+    toggle: () => Promise<{ ok: boolean; visible?: boolean }>
     onWorkspaceSaved: (callback: () => void) => () => void
   }
   app: {
