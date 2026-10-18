@@ -19,6 +19,7 @@ import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
 import { TimeSelect } from './TimeSelect'
+import { BlurStrengthControl } from './BlurStrengthControl'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
@@ -231,21 +232,12 @@ export function SettingsModal({
                       <div className="settings-range-row">
                         <div>
                           <div className="settings-label">背景模糊度</div>
-                          <div className="settings-help">数值越大，后方窗口越模糊；文字更容易聚焦。</div>
+                          <div className="settings-help">拖动立即预览，从轻磨砂到完全隔离桌面；最高值不透出后方文字。</div>
                         </div>
-                        <div className="settings-range-control">
-                          <input
-                            className="settings-range"
-                            type="range"
-                            min="0"
-                            max="80"
-                            step="2"
-                            value={preferences.blurStrength}
-                            onChange={(event) => updatePreferences({ blurStrength: Number(event.target.value) })}
-                            aria-label="背景模糊度"
-                          />
-                          <span className="settings-range-value">{preferences.blurStrength}px</span>
-                        </div>
+                        <BlurStrengthControl
+                          value={preferences.blurStrength}
+                          onCommit={(blurStrength) => updatePreferences({ blurStrength })}
+                        />
                       </div>
                     </div>
 

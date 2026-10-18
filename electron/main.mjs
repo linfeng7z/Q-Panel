@@ -110,17 +110,20 @@ async function captureBackdrop() {
     const sources = await desktopCapturer.getSources({
       types: ['screen'],
       thumbnailSize: {
-        width: Math.round(display.size.width * display.scaleFactor),
-        height: Math.round(display.size.height * display.scaleFactor),
+        // This is ambience, not screen content. A smaller capture keeps the
+        // IPC payload and slider-time GPU surface independent of Retina scale.
+        width: Math.ceil(display.size.width / 2),
+        height: Math.ceil(display.size.height / 2),
       },
     })
-    const source = sources.find((item) => item.display_id === String(display.id)) ?? sources[0]
+    const source = sources.find((item) => item.display_id === String(display.id))
+      ?? (sources.length === 1 ? sources[0] : null)
     if (!source?.thumbnail || source.thumbnail.isEmpty()) return null
     const jpeg = source.thumbnail.toJPEG(82)
     if (!jpeg.length) return null
     return {
       image: `data:image/jpeg;base64,${jpeg.toString('base64')}`,
-      screen: { width: display.size.width, height: display.size.height },
+      screen: { x: display.bounds.x, y: display.bounds.y, width: display.size.width, height: display.size.height },
       window: bounds,
     }
   } catch {
@@ -148,19 +151,16 @@ async function showWindow() {
   const backdrop = await captureBackdrop()
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
   try {
-    // If screen capture is unavailable (TCC denied), fall back to a native
-    // material. The window has native rounded corners, so the material cannot
-    // paint white squares outside a CSS clip.
-    mainWindow.setVibrancy(backdrop ? null : 'under-window')
+    // No native material fallback: denied capture must remain a readable solid
+    // surface, not reintroduce a translucent live desktop behind the text.
+    mainWindow.setVibrancy(null)
   } catch {
-    // Vibrancy is a fallback only.
+    // The renderer has an opaque, theme-aware fallback on every platform.
   }
+  lastBackdrop = backdrop
+  if (!mainWindow.webContents.isLoading()) mainWindow.webContents.send('app:backdrop', backdrop)
   mainWindow.show()
   mainWindow.focus()
-  if (backdrop) {
-    lastBackdrop = backdrop
-    if (!mainWindow.webContents.isLoading()) mainWindow.webContents.send('app:backdrop', backdrop)
-  }
   showNotch()
 }
 

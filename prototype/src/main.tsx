@@ -7,6 +7,7 @@ import './styles/components.css'
 import './styles/views.css'
 import './styles/motion.css'
 import './styles/electron.css'
+import './styles/material.css'
 import App from './App'
 
 if (window.qpanel?.isElectron) document.documentElement.classList.add('electron-runtime')

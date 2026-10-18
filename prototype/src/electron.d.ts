@@ -51,15 +51,15 @@ interface QPanelBridge {
     setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; openAtLogin?: boolean }>
     getBackdrop: () => Promise<{
       image: string
-      screen: { width: number; height: number }
+      screen: { x?: number; y?: number; width: number; height: number }
       window: { x: number; y: number; width: number; height: number }
     } | null>
     onBackdrop: (
       callback: (backdrop: {
         image: string
-        screen: { width: number; height: number }
+        screen: { x?: number; y?: number; width: number; height: number }
         window: { x: number; y: number; width: number; height: number }
-      }) => void,
+      } | null) => void,
     ) => () => void
   }
   ai: {

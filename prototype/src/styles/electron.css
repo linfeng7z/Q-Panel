@@ -12,8 +12,8 @@ html.electron-runtime #root {
   background: transparent;
 }
 
-/* The native window itself stays transparent; the rounded silhouette comes
-   from a clipped root so no square native edge can leak through at the corners. */
+/* Native macOS rounding clips the window silhouette; the renderer's material
+   fills the interior opaquely without painting a square native vibrancy layer. */
 .qp-root.electron-mode:not(.notch-mode) {
   background: transparent;
 }
@@ -42,23 +42,6 @@ html.electron-runtime #root {
   border-radius: 0;
   isolation: isolate;
   background-clip: padding-box;
-}
-
-.qp-root.electron-mode .panel-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  opacity: 0.32;
-}
-
-.qp-root.electron-mode .panel-backdrop-shade {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: rgba(4, 5, 9, 0.34);
-  pointer-events: none;
 }
 
 .qp-root.electron-mode .panel-body {

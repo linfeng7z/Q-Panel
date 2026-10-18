@@ -54,6 +54,8 @@ import { chinaQuarter, chinaYear } from './clock'
 import type { CalendarAdjustment } from './calendar'
 import { CALENDAR_ADJUSTMENTS } from './calendar'
 import { DEFAULT_PREFERENCES } from './preferences'
+import { backdropVariables, backdropImageStyle } from './backdrop'
+import type { DesktopBackdrop } from './backdrop'
 import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
 import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
@@ -95,12 +97,6 @@ function parseInitialView(): ViewId {
 function parseInitialTheme(): ThemeId {
   const value = new URLSearchParams(window.location.search).get('theme') as ThemeId | null
   return value && THEMES.includes(value) ? value : 'noir'
-}
-
-type DesktopBackdrop = {
-  image: string
-  screen: { width: number; height: number }
-  window: { x: number; y: number; width: number; height: number }
 }
 
 export default function App() {
@@ -1041,10 +1037,7 @@ export default function App() {
       data-hydrated={hydrated ? 'true' : 'false'}
       data-save-state={saveState}
       data-save-seq={saveSequence}
-      style={{
-        '--panel-blur': `${preferences.blurStrength}px`,
-        '--panel-shade': String(Math.min(0.2, (preferences.blurStrength / 80) * 0.2)),
-      } as CSSProperties}
+      style={backdropVariables(preferences.blurStrength) as CSSProperties}
     >
       {!electronMode ? (
         <>
@@ -1069,12 +1062,7 @@ export default function App() {
                     <div
                       className="panel-backdrop"
                       aria-hidden="true"
-                      style={{
-                        backgroundImage: `url("${backdrop.image}")`,
-                        backgroundSize: `${backdrop.screen.width}px ${backdrop.screen.height}px`,
-                        backgroundPosition: `-${backdrop.window.x}px -${backdrop.window.y}px`,
-                        filter: `blur(${preferences.blurStrength}px) saturate(1.08)`,
-                      }}
+                      style={backdropImageStyle(backdrop)}
                     />
                     <div className="panel-backdrop-shade" aria-hidden="true" />
                   </>
