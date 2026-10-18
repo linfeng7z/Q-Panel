@@ -235,7 +235,7 @@ function createWindow() {
     skipTaskbar: true,
     hiddenInMissionControl: true,
     acceptFirstMouse: true,
-    roundedCorners: false,
+    roundedCorners: true,
     fullscreenable: false,
     title: 'Q-Panel',
     webPreferences: {
@@ -336,7 +336,7 @@ function createNotchWindow() {
     skipTaskbar: true,
     alwaysOnTop: true,
     acceptFirstMouse: true,
-    roundedCorners: false,
+    roundedCorners: true,
     focusable: true,
     title: 'Q-Panel',
     webPreferences: {

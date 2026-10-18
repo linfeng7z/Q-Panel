@@ -23,16 +23,27 @@ html.electron-runtime #root {
 .qp-root.electron-mode .panel-shell {
   width: 100%;
   height: 100%;
-  padding: 1px;
-  border-radius: 18px;
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: transparent;
   animation: none;
-  box-shadow:
-    0 34px 110px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.62);
 }
 
 .qp-root.electron-mode .panel {
-  border-radius: 17px;
+  border: 0;
+  border-radius: 24px;
+}
+
+/* The simulated-desktop glass highlight becomes a hard white rim in the
+   native transparent window; keep only the pointer glow here. */
+.qp-root.electron-mode .panel::before {
+  background: radial-gradient(
+    520px circle at var(--pointer-x, 50%) var(--pointer-y, 32%),
+    var(--pointer-glow),
+    transparent 72%
+  );
 }
 
 .qp-root.electron-mode .topbar {

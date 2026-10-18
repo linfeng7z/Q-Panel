@@ -32,7 +32,9 @@ import type {
 export const NOW = APP_NOW
 export const TODAY = APP_TODAY
 export const CURRENT_WEEK_KEY = isoWeekKey(TODAY)
-export const CURRENT_QUARTER_KEY = `${chinaYear(NOW)}-Q${chinaQuarter(NOW)}`
+export const CURRENT_YEAR = chinaYear(NOW)
+export const CURRENT_QUARTER = chinaQuarter(NOW)
+export const CURRENT_QUARTER_KEY = `${CURRENT_YEAR}-Q${CURRENT_QUARTER}`
 
 export const CATEGORIES: Category[] = [
   { id: 'appsec', name: '应用安全', colorVar: '--cat-appsec' },
@@ -100,7 +102,8 @@ export function replaceCategories(next: Category[]): void {
   CATEGORIES.splice(0, CATEGORIES.length, ...next.map((category) => ({ ...category })))
 }
 
-export const YEARS = [2025, 2026, 2027, 2028]
+// Start at the current year and keep the next three prepared automatically.
+export const YEARS = Array.from({ length: 4 }, (_, index) => CURRENT_YEAR + index)
 
 export function quarterKey(year: number, quarter: number): string {
   return `${year}-Q${quarter}`
@@ -294,7 +297,7 @@ export const PROJECTS: Project[] = [
 ]
 
 export const WEEKS: Record<string, WeekMeta> = Object.fromEntries(
-  generateWeeks('2025-01-01', '2028-12-31').map((info) => [
+  generateWeeks(`${CURRENT_YEAR - 1}-01-01`, `${CURRENT_YEAR + 5}-12-31`).map((info) => [
     info.key,
     {
       key: info.key,

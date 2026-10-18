@@ -11,7 +11,9 @@ import {
   Sparkle,
 } from '@phosphor-icons/react'
 import {
+  CURRENT_QUARTER,
   CURRENT_WEEK_KEY,
+  CURRENT_YEAR,
   OBJECTIVES,
   QUARTER_STATS,
   WEEK_ORDER,
@@ -137,11 +139,11 @@ export function TopBar({
                   type="button"
                   className="period-pop-today"
                   onClick={() => {
-                    onPeriodChange(2026, 4)
+                    onPeriodChange(CURRENT_YEAR, CURRENT_QUARTER)
                     setOpen(false)
                   }}
                 >
-                  回到当前 Q4
+                  回到当前 Q{CURRENT_QUARTER}
                 </button>
               </div>
               <div className="year-strip">
@@ -156,6 +158,7 @@ export function TopBar({
                   </button>
                 ))}
               </div>
+              <div className="period-years-note">当前年份起自动准备未来三年，可左右滑动</div>
               <div className="q-card-grid">
                 {[1, 2, 3, 4].map((q) => {
                   const key = quarterKey(year, q)
@@ -199,21 +202,6 @@ export function TopBar({
               </div>
             </div>
           ) : null}
-        </div>
-
-        <div className="q-tabs" role="tablist" aria-label="季度">
-          {[1, 2, 3, 4].map((q) => (
-            <button
-              key={q}
-              type="button"
-              role="tab"
-              aria-selected={quarter === q}
-              className={cn('q-tab', quarter === q && 'active')}
-              onClick={() => onPeriodChange(year, q)}
-            >
-              Q{q}
-            </button>
-          ))}
         </div>
 
         {view === 'week' ? (

@@ -479,6 +479,19 @@
   border-radius: 11px;
   background: var(--surface-inset);
   border: 1px solid var(--line-soft);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.year-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.period-years-note {
+  margin: 7px 2px 0;
+  color: var(--text-4);
+  font-size: 8.5px;
+  letter-spacing: 0.02em;
 }
 
 .year-btn {
