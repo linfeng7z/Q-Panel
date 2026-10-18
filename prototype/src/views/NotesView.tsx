@@ -105,13 +105,15 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
 
   const updateTitle = (title: string) => {
     if (!selected) return
-    const nextTitle = title || '未命名笔记'
+    const nextTitle = title
     let content = selected.content
-    // The default note template starts with "# title"; keep that heading in
-    // sync when renaming so the list title and first heading never disagree.
-    if (content.startsWith('# ')) {
+    // Keep the generated first heading in sync for non-empty renames. An empty
+    // title is a valid editing state; it is displayed as placeholder text, not
+    // silently rewritten into the note data.
+    const previousTitle = selected.title || '未命名笔记'
+    if (nextTitle.trim() && content.startsWith('# ')) {
       const [first, ...rest] = content.split('\n')
-      if (first.slice(2).trim() === selected.title) {
+      if (first.slice(2).trim() === previousTitle) {
         content = `# ${nextTitle}${rest.length ? `\n${rest.join('\n')}` : ''}`
       }
     }
@@ -190,7 +192,9 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
                       <PushPin size={9} weight="fill" />
                     </span>
                   ) : null}
-                  <span className="note-item-title">{note.title}</span>
+                  <span className={cn('note-item-title', !note.title.trim() && 'placeholder')}>
+                    {note.title.trim() || '未命名笔记'}
+                  </span>
                   <span className="note-item-date">{note.updatedAt}</span>
                 </div>
                 <div className="note-item-preview">
@@ -209,10 +213,8 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
                 <input
                   className="note-editor-title-input"
                   value={selected.title}
+                  placeholder="未命名笔记"
                   onChange={(event) => updateTitle(event.target.value)}
-                  onBlur={() => {
-                    if (!selected.title.trim()) updateTitle('未命名笔记')
-                  }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') event.currentTarget.blur()
                   }}

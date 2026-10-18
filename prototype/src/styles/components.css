@@ -3371,3 +3371,13 @@
   border-color: var(--line-soft);
   background: var(--surface-inset);
 }
+
+.note-item-title.placeholder {
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.note-editor-title-input::placeholder {
+  color: var(--text-3);
+  font-weight: 500;
+}

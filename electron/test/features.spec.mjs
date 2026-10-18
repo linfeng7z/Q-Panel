@@ -452,6 +452,23 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('keeps an empty note title as placeholder instead of rewriting it', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("临时笔记")').click()
+      await page.getByRole('button', { name: '新建笔记' }).click()
+      const title = page.locator('.note-editor-title-input')
+      await title.fill('')
+      await expect(title).toHaveValue('')
+      await expect(title).toHaveAttribute('placeholder', '未命名笔记')
+      await expect(page.locator('.note-item-title').first()).toHaveText('未命名笔记')
+      await expect(page.locator('.note-item-title').first()).toHaveClass(/placeholder/)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps both note cards equal height and scrolls long content inside the editor', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)
