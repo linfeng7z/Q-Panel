@@ -3198,3 +3198,98 @@
 .date-range-rule-row .date-field {
   width: 100%;
 }
+
+/* Two conventional date cells, one range calendar. */
+.date-range-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.date-range-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 37px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-inset);
+  color: var(--text-1);
+  text-align: left;
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+
+.date-range-cell:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-1);
+}
+
+.date-range-cell.open {
+  border-color: color-mix(in srgb, var(--info) 55%, var(--line));
+  background: color-mix(in srgb, var(--info-soft) 35%, var(--surface-inset));
+}
+
+.date-range-cell .date-range-value {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-range-cell > svg {
+  color: var(--text-3);
+}
+
+.date-range-cell.end .date-range-value {
+  padding-left: 1px;
+}
+
+.date-range-field.compact .date-range-cell {
+  height: 24px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 5px;
+  border-color: var(--line-soft);
+  border-radius: 6px;
+  color: var(--text-2);
+}
+
+.date-range-field.compact .date-range-cell .date-range-value {
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+.date-range-field.compact .date-range-control {
+  gap: 3px;
+}
+
+.date-range-field.compact .date-range-rail {
+  font-size: 8px;
+}
+
+.date-range-summary {
+  gap: 6px;
+}
+
+.date-range-summary-endpoint {
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: var(--surface-inset);
+}
+
+.date-range-summary-arrow {
+  text-align: center;
+}

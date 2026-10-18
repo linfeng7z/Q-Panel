@@ -929,9 +929,10 @@ export default function App() {
     showToast('已标记完成：等保 2.0 差距分析闭环')
   }
 
-  const testReminder = () => {
+  const testReminder = async () => {
     if (electronMode) {
-      void window.qpanel?.reminders.test()
+      await window.qpanel?.reminders.test()
+      showToast('已发送桌面测试通知；若未出现，请在 系统设置 → 通知 → Q-Panel 中允许通知')
       return
     }
     setReminderOpen(true)

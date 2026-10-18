@@ -220,6 +220,14 @@ function isWithinDnd(preferences, now = new Date()) {
   return start < end ? current >= start && current < end : current >= start || current < end
 }
 
+function nativeRemindersEnabled() {
+  if (process.env.Q_PANEL_NO_NOTIFICATIONS === '1') return false
+  const preferences = reminderPreferences()
+  if (preferences.nativeNotifications === false) return false
+  if (isWithinDnd(preferences)) return false
+  return Notification.isSupported()
+}
+
 function sendReminderToPanel(entry) {
   if (reminderPreferences().reminderPopup === false) return
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -228,14 +236,13 @@ function sendReminderToPanel(entry) {
 }
 
 function showReminderNotification(entry) {
-  if (process.env.Q_PANEL_NO_NOTIFICATIONS === '1') return
-  const preferences = reminderPreferences()
-  if (preferences.nativeNotifications === false) return
-  if (isWithinDnd(preferences)) return
-  if (!Notification.isSupported()) return
+  if (!nativeRemindersEnabled()) return false
+  const kindLabel =
+    entry.kind === 'task' ? '本周事项' : entry.kind === 'project' ? '长期项目' : '季度任务'
   const notification = new Notification({
-    title: 'Q-Panel 提醒',
-    body: `${entry.title}\n截止 ${entry.dueDate} ${entry.dueTime}`,
+    title: `Q-Panel · ${entry.title}`,
+    subtitle: `${kindLabel} · ${entry.categoryId ?? '未分类'}`,
+    body: `结束 ${entry.dueDate} · ${entry.reminder ?? '按默认提醒'}`,
     silent: false,
   })
   notification.on('click', () => {
@@ -243,6 +250,7 @@ function showReminderNotification(entry) {
     sendReminderToPanel(entry)
   })
   notification.show()
+  return true
 }
 
 function markReminderFired(entry) {
@@ -253,28 +261,28 @@ function markReminderFired(entry) {
 
 function handleReminderDue(entry) {
   markReminderFired(entry)
-  showReminderNotification(entry)
-  sendReminderToPanel(entry)
+  // Desktop notification is the primary delivery path. The in-app card is
+  // only a fallback for an explicitly disabled/unavailable system channel.
+  const delivered = showReminderNotification(entry)
+  if (!delivered) sendReminderToPanel(entry)
 }
 
 function handleMissedReminders(entries) {
   if (entries.length === 0) return
   for (const entry of entries) markReminderFired(entry)
   const preferences = reminderPreferences()
-  if (
-    process.env.Q_PANEL_NO_NOTIFICATIONS !== '1' &&
-    preferences.nativeNotifications !== false &&
-    !isWithinDnd(preferences) &&
-    Notification.isSupported()
-  ) {
+  let delivered = false
+  if (nativeRemindersEnabled()) {
     const notification = new Notification({
       title: `Q-Panel · ${entries.length} 条错过的提醒`,
+      subtitle: '错过的事项提醒',
       body: entries.slice(0, 3).map((entry) => entry.title).join('\n'),
     })
     notification.on('click', () => showWindow())
     notification.show()
+    delivered = true
   }
-  if (preferences.reminderPopup !== false) {
+  if (!delivered && preferences.reminderPopup !== false) {
     mainWindow?.webContents.send('reminders:missed', { entries })
   }
 }

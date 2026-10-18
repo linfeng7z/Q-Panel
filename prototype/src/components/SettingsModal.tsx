@@ -579,17 +579,17 @@ export function SettingsModal({
                       <div className="settings-section-label">通知方式</div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">应用内顶部弹窗</div>
-                          <div className="settings-help">不抢焦点，可完成 / 稍后 / 打开。</div>
+                          <div className="settings-label">桌面系统通知</div>
+                          <div className="settings-help">主提醒方式，会出现在 macOS 通知中心。首次使用需在 系统设置 → 通知 → Q-Panel 允许通知。</div>
                         </div>
-                        <Toggle on={preferences.reminderPopup} onChange={(value) => updatePreferences({ reminderPopup: value })} />
+                        <Toggle on={preferences.nativeNotifications} onChange={(value) => updatePreferences({ nativeNotifications: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">macOS 系统通知</div>
-                          <div className="settings-help">同时进入通知中心，作为记录与兜底。</div>
+                          <div className="settings-label">应用内兜底弹窗</div>
+                          <div className="settings-help">仅在系统通知关闭或不可用时显示，不抢焦点。</div>
                         </div>
-                        <Toggle on={preferences.nativeNotifications} onChange={(value) => updatePreferences({ nativeNotifications: value })} />
+                        <Toggle on={preferences.reminderPopup} onChange={(value) => updatePreferences({ reminderPopup: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -601,10 +601,10 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">测试提醒</div>
-                          <div className="settings-help">立即弹出一条示例提醒，检查弹窗和系统通知。</div>
+                          <div className="settings-help">立即发送一条桌面测试通知；若未出现，请检查系统通知权限。</div>
                         </div>
                         <button type="button" className="btn sm" onClick={onTestReminder}>
-                          测试
+                          发送测试通知
                         </button>
                       </div>
                     </div>

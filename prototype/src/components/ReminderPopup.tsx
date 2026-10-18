@@ -43,7 +43,7 @@ export function ReminderPopup({
             <div className="reminder-copy">
               <div className="reminder-kicker">
                 <Clock size={10} />
-                系统通知 · 24 小时制
+                应用内兜底提醒 · 24 小时制
               </div>
               <div className="reminder-title">{title}</div>
               <div className="reminder-meta">

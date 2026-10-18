@@ -216,27 +216,38 @@ export function DateRangeField({ startDate, endDate, onChange, compact = false }
 
   return (
     <div className={`date-range-field${compact ? ' compact' : ''}`}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`date-range-trigger${open ? ' open' : ''}`}
-        onClick={() => (open ? setOpen(false) : openPicker())}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label="选择开展时间段"
-      >
-        <CalendarBlank size={compact ? 10 : 13} />
-        <span className="date-range-endpoint">
+      <div className="date-range-control">
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`date-range-cell${open ? ' open' : ''}`}
+          onClick={() => (open ? setOpen(false) : openPicker())}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="选择开始日期"
+        >
           {!compact ? <span className="date-range-endpoint-label">开始</span> : null}
-          <span className="date-range-value">{compact ? displayDate(startDate).slice(5) : displayDate(startDate)}</span>
-        </span>
+          <span className="date-range-value">
+            <CalendarBlank size={compact ? 9 : 11} />
+            {compact ? displayDate(startDate).slice(5) : displayDate(startDate)}
+          </span>
+        </button>
         <span className="date-range-rail">→</span>
-        <span className="date-range-endpoint end">
+        <button
+          type="button"
+          className={`date-range-cell end${open ? ' open' : ''}`}
+          onClick={() => (open ? setOpen(false) : openPicker())}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label="选择结束日期"
+        >
           {!compact ? <span className="date-range-endpoint-label">结束</span> : null}
-          <span className="date-range-value">{compact ? displayDate(endDate).slice(5) : displayDate(endDate)}</span>
-        </span>
+          <span className="date-range-value">
+            {compact ? displayDate(endDate).slice(5) : displayDate(endDate)}
+          </span>
+        </button>
         {!compact ? <span className="date-range-total">{rangeDays(startDate, endDate)} 天</span> : null}
-      </button>
+      </div>
       {popover}
     </div>
   )
