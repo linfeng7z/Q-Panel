@@ -721,7 +721,7 @@ app.whenReady().then(() => {
     applicationVersion: app.getVersion(),
     version: app.getVersion(),
     copyright: 'Copyright © 2026 linfeng7z',
-    credits: '系统开发人员：linfeng7z',
+    credits: 'Designed & built by linfeng7z\nhttps://github.com/linfeng7z',
   })
   installApplicationMenu()
   aiConfigStore = createAiConfigStore(path.join(app.getPath('userData'), 'ai-config.json'), safeStorage)

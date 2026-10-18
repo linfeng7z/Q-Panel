@@ -3,6 +3,7 @@ import {
   Bell,
   CalendarBlank,
   Check,
+  GithubLogo,
   HardDrives,
   Minus,
   Plus,
@@ -183,7 +184,20 @@ export function SettingsModal({
                 <div className="modal-sub">所有配置只保存在本机 · 自动写入本地工作区</div>
               </div>
               <div className="settings-head-right">
-                <span className="settings-builder">开发人员 · linfeng7z</span>
+                <a
+                  className="creator-chip"
+                  href="https://github.com/linfeng7z"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Q-Panel · Crafted by linfeng7z"
+                >
+                  <span className="creator-avatar">L7</span>
+                  <span className="creator-copy">
+                    <span>Crafted by</span>
+                    <b>linfeng7z</b>
+                  </span>
+                  <GithubLogo size={11} className="creator-github" />
+                </a>
                 <button type="button" className="modal-close" onClick={onClose} aria-label="关闭设置">
                   <X size={16} />
                 </button>
@@ -306,12 +320,25 @@ export function SettingsModal({
 
                     <div className="settings-section">
                       <div className="settings-section-label">关于</div>
-                      <div className="settings-row">
-                        <div>
-                          <div className="settings-label">系统开发人员</div>
-                          <div className="settings-help">Q-Panel 的开发与维护者</div>
+                      <div className="developer-card">
+                        <div className="developer-main">
+                          <span className="developer-avatar-lg">L7</span>
+                          <div className="developer-copy">
+                            <span className="developer-kicker">Designed &amp; built by</span>
+                            <b>linfeng7z</b>
+                            <span className="developer-role">Creator · Q-Panel</span>
+                          </div>
                         </div>
-                        <span className="developer-mark">linfeng7z</span>
+                        <a
+                          className="developer-github"
+                          href="https://github.com/linfeng7z"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <GithubLogo size={12} />
+                          GitHub
+                          <span aria-hidden="true">↗</span>
+                        </a>
                       </div>
                     </div>
                   </>

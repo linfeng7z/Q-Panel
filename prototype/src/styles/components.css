@@ -3980,3 +3980,178 @@
   font-size: 8.5px;
   letter-spacing: 0.02em;
 }
+
+/* Creator identity: a quiet GitHub-style profile mark, not a plain label. */
+.creator-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 31px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--info) 7%, transparent), transparent 60%),
+    var(--surface-1);
+  color: var(--text-2);
+  text-decoration: none;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+
+.creator-chip:hover {
+  border-color: color-mix(in srgb, var(--info) 42%, var(--line));
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--info) 13%, transparent), transparent 62%),
+    var(--surface-2);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--info) 12%, transparent);
+}
+
+.creator-avatar {
+  position: relative;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, var(--info), var(--cat-team), var(--cat-other), var(--info));
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  box-shadow: inset 0 0 0 3px #10151d, 0 0 12px color-mix(in srgb, var(--info) 18%, transparent);
+}
+
+.creator-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
+}
+
+.creator-copy span {
+  color: var(--text-4);
+  font-size: 6.5px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.creator-copy b {
+  color: var(--text-2);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.creator-github {
+  color: var(--text-4);
+  transition: color 0.18s var(--ease);
+}
+
+.creator-chip:hover .creator-github {
+  color: var(--text-2);
+}
+
+.developer-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 12px 11px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
+  overflow: hidden;
+  background:
+    radial-gradient(320px 100px at 0% 0%, color-mix(in srgb, var(--info) 11%, transparent), transparent 72%),
+    linear-gradient(120deg, var(--surface-1), transparent 72%);
+}
+
+.developer-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text-1) 4%, transparent), transparent);
+  opacity: 0.7;
+}
+
+.developer-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.developer-avatar-lg {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--info) 34%, #10151d), #10151d 64%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--info) 30%, transparent),
+    0 8px 22px color-mix(in srgb, var(--info) 12%, transparent);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.developer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.developer-kicker {
+  color: var(--text-4);
+  font-size: 7px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.developer-copy b {
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+}
+
+.developer-role {
+  color: var(--text-3);
+  font-size: 8.5px;
+}
+
+.developer-github {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 25px;
+  padding: 0 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--surface-1) 80%, transparent);
+  color: var(--text-3);
+  font-size: 8.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease), background 0.18s var(--ease);
+}
+
+.developer-github:hover {
+  border-color: color-mix(in srgb, var(--info) 38%, var(--line));
+  background: var(--surface-2);
+  color: var(--text-1);
+}

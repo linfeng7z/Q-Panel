@@ -9,9 +9,10 @@
 ![Electron](https://img.shields.io/badge/Electron-44-47848F)
 ![React](https://img.shields.io/badge/React-19-61DAFB)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Crafted by linfeng7z](https://img.shields.io/badge/crafted%20by-linfeng7z-6C5CE7?logo=github&style=flat-square)](https://github.com/linfeng7z)
 ![Local-first](https://img.shields.io/badge/local--first-no%20telemetry-2FD6AE)
 
-**开发人员：linfeng7z** · 版本：1.2.0 · 平台：macOS（Apple Silicon）
+**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.2.1 · macOS（Apple Silicon）
 
 [下载安装](#下载与安装) · [功能全景](#功能全景) · [开源条件分析](#开源条件分析) · [免责声明](#免责声明) · [参考项目](#参考项目与致谢)
 
@@ -223,7 +224,7 @@ AI 是可选能力：你可以接自己的 OpenAI 兼容服务，也可以完全
 ### 下载与安装
 
 1. 打开 [GitHub Releases](https://github.com/linfeng7z/Q-Panel/releases/latest)；
-2. 下载 `Q-Panel-1.2.0-arm64.dmg`；
+2. 下载 `Q-Panel-1.2.1-arm64.dmg`；
 3. 双击打开，将 **Q-Panel** 拖入「应用程序」；
 4. 首次打开如果被 Gatekeeper 拦截：右键 App →「打开」→ 确认打开。
 
@@ -259,7 +260,7 @@ npm run pack
 产物：
 
 ```text
-electron/release/Q-Panel-1.2.0-arm64.dmg
+electron/release/Q-Panel-1.2.1-arm64.dmg
 electron/release/mac-arm64/Q-Panel.app
 ```
 
@@ -523,4 +524,4 @@ Q-Panel 的产品方向和部分交互思路参考了 **[xiaopu-ai/TO-DO-Panel](
 
 [MIT](LICENSE) © 2026 **linfeng7z**
 
-> 开发与维护：linfeng7z · Q-Panel 1.2.0 · macOS arm64
+> 开发与维护：linfeng7z · Q-Panel 1.2.1 · macOS arm64
