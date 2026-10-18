@@ -18,7 +18,7 @@ import type { CalendarAdjustment } from '../calendar'
 import { CATEGORIES, CATEGORY_COLORS } from '../data/mock'
 import { cn } from '../utils'
 import { Toggle } from './ui'
-import { TimeSelect } from './TimeSelect'
+import { HourSelect } from './HourSelect'
 import { BlurStrengthControl } from './BlurStrengthControl'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
@@ -536,7 +536,7 @@ export function SettingsModal({
                 {tab === 'reminders' ? (
                   <>
                     <div className="settings-pane-title">提醒</div>
-                    <div className="settings-pane-sub">新建任务或项目时可以选择自定义提醒；不指定则跟随这里的全局默认。系统通知按 24 小时制精确到分钟。</div>
+                    <div className="settings-pane-sub">新建任务或项目时可以选择自定义提醒；不指定则跟随这里的全局默认。提醒时间精确到 24 小时制整点。</div>
 
                     <div className="settings-section">
                       <div className="settings-section-label">默认提醒规则</div>
@@ -565,10 +565,10 @@ export function SettingsModal({
                       </div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">提醒时刻</div>
-                          <div className="settings-help">24 小时制（HH:mm） · 系统通知精确到分钟。</div>
+                          <div className="settings-label">提醒小时</div>
+                          <div className="settings-help">24 小时制整点（HH:00） · 事项按结束日计算。</div>
                         </div>
-                        <TimeSelect
+                        <HourSelect
                           value={reminderDefaults.time}
                           onChange={(time) => onReminderDefaultsChange({ ...reminderDefaults, time })}
                         />

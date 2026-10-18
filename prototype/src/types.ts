@@ -32,6 +32,9 @@ export interface Objective {
   categoryId: CategoryId
   plannedDays: number
   progress: number
+  /** 开展时间段，按自然日；旧数据缺省时回退到 dueDate */
+  startDate?: string
+  endDate?: string
   status: ObjectiveStatus
   dueDate: string
   /** 截止时刻，24 小时制 HH:mm；提醒与系统通知按此时间计算 */
@@ -46,6 +49,9 @@ export interface Milestone {
   id: string
   title: string
   targetDate: string
+  /** 里程碑开展时间段，按自然日 */
+  startDate?: string
+  endDate?: string
   /** 目标时刻，24 小时制 HH:mm */
   targetTime?: string
   status: MilestoneStatus
@@ -58,6 +64,9 @@ export interface ProjectWorkItem {
   title: string
   plannedDays: number
   weekKey: string
+  /** 工作项开展时间段，按自然日 */
+  startDate?: string
+  endDate?: string
   status: WorkItemStatus
   milestoneId?: string
 }
@@ -90,6 +99,9 @@ export interface WeekTask {
   categoryId: CategoryId
   dueDate: string
   dueTime?: string
+  /** 开展时间段，按自然日；结束日即截止日 */
+  startDate?: string
+  endDate?: string
   estimateDays: number
   done: boolean
   objectiveId?: string

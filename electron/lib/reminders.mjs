@@ -48,13 +48,13 @@ export function collectReminderEntries(workspace) {
 
   for (const task of Array.isArray(workspace.tasks) ? workspace.tasks : []) {
     if (!task || task.done) continue
-    add(task, 'task', task.title, task.dueDate, task.dueTime, task.reminder, task.categoryId)
+    add(task, 'task', task.title, task.endDate ?? task.dueDate, task.dueTime, task.reminder, task.categoryId)
   }
   for (const objectives of Object.values(workspace.objectives ?? {})) {
     if (!Array.isArray(objectives)) continue
     for (const objective of objectives) {
       if (!objective || objective.status === 'done') continue
-      add(objective, 'objective', objective.title, objective.dueDate, objective.dueTime, objective.reminder, objective.categoryId)
+      add(objective, 'objective', objective.title, objective.endDate ?? objective.dueDate, objective.dueTime, objective.reminder, objective.categoryId)
     }
   }
   for (const project of Array.isArray(workspace.projects) ? workspace.projects : []) {

@@ -217,6 +217,32 @@ export function quarterLoad(
   }
 }
 
+export function rangeDays(start?: string, end?: string): number {
+  if (!start || !end) return 1
+  const startAt = new Date(`${start}T12:00:00+08:00`).getTime()
+  const endAt = new Date(`${end}T12:00:00+08:00`).getTime()
+  if (Number.isNaN(startAt) || Number.isNaN(endAt)) return 1
+  return Math.max(1, Math.round((endAt - startAt) / 86_400_000) + 1)
+}
+
+export function fmtRange(start?: string, end?: string): string {
+  if (!start && !end) return '未设置'
+  if (!start || start === end) return fmtDate(end ?? start ?? '')
+  return `${fmtDate(start)} – ${fmtDate(end ?? start)}`
+}
+
+export function parseReminder(value: string | undefined, defaults: { offsetDays: number; time: string }) {
+  const text = value ?? ''
+  const sameDay = text.match(/当天\s*·\s*(\d{1,2}):(\d{2})/)
+  if (sameDay) return { offsetDays: 0, time: `${sameDay[1].padStart(2, '0')}:${sameDay[2].padStart(2, '0')}` }
+  const match = text.match(/提前\s*(\d+)\s*(天|周)\s*·\s*(\d{1,2}):(\d{2})/)
+  if (!match) return { offsetDays: defaults.offsetDays, time: defaults.time }
+  return {
+    offsetDays: Number(match[1]) * (match[2] === '周' ? 7 : 1),
+    time: `${match[3].padStart(2, '0')}:${match[4].padStart(2, '0')}`,
+  }
+}
+
 export function formatReminder(offsetDays: number, time: string): string {
   const day = offsetDays === 0 ? '当天' : offsetDays === 7 ? '提前 1 周' : `提前 ${offsetDays} 天`
   return `${day} · ${time}`

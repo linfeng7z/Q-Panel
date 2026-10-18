@@ -73,3 +73,26 @@ test('scheduler catches up missed reminders and respects fired/snoozed state', (
   assert.equal(snoozedResult.scheduled, 1)
   scheduler.clear()
 })
+
+test('uses the day-range end date and the selected whole hour for reminders', () => {
+  const workspace = {
+    tasks: [
+      {
+        id: 'range-task',
+        title: 'Range task',
+        startDate: '2026-10-20',
+        endDate: '2026-10-23',
+        dueDate: '2026-10-20',
+        dueTime: '18:00',
+        reminder: '提前 2 天 · 14:00',
+        categoryId: 'appsec',
+      },
+    ],
+    objectives: {},
+    projects: [],
+  }
+  const [entry] = collectReminderEntries(workspace)
+  assert.equal(entry.dueDate, '2026-10-23')
+  assert.equal(entry.reminder, '提前 2 天 · 14:00')
+  assert.equal(entry.remindAt, '2026-10-21T06:00:00.000Z')
+})

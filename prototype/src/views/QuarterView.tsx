@@ -6,6 +6,7 @@ import {
   FolderSimple,
   Plus,
   SquaresFour,
+  PencilSimple,
   Target,
   WarningCircle,
   X,
@@ -25,6 +26,7 @@ import {
   dateISO,
   fmtDays,
   fmtDue,
+  fmtRange,
   monthGrid,
   pct,
   projectCrossQuarter,
@@ -54,6 +56,7 @@ interface QuarterViewProps {
   onSelectPeriod: (year: number, quarter: number) => void
   onOpenStats: () => void
   onManageCategories: () => void
+  onEditObjective: (objective: Objective) => void
 }
 
 function monthName(month: number): string {
@@ -71,6 +74,7 @@ export function QuarterView({
   onSelectPeriod,
   onOpenStats,
   onManageCategories,
+  onEditObjective,
 }: QuarterViewProps) {
   const [yearOverview, setYearOverview] = useState(false)
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null)
@@ -417,7 +421,7 @@ export function QuarterView({
                               </div>
                               <div className="obj-sub">
                                 <StatusChip status={objective.status} />
-                                <span>截止 {fmtDue(objective.dueDate, objective.dueTime)}</span>
+                                <span>开展 {fmtRange(objective.startDate ?? objective.dueDate, objective.endDate ?? objective.dueDate)}</span>
                                 <span className="sep" />
                                 <span>
                                   {objective.reminder ? (
@@ -564,8 +568,8 @@ export function QuarterView({
                   <div>
                                         <div className="modal-title">{selectedObjective.title}</div>
                     <div className="modal-sub">
-                      {getCategory(selectedObjective.categoryId).name} · Q{quarter} {year} · 截止{' '}
-                      {fmtDue(selectedObjective.dueDate, selectedObjective.dueTime)}
+                      {getCategory(selectedObjective.categoryId).name} · Q{quarter} {year} · 开展{' '}
+                      {fmtRange(selectedObjective.startDate ?? selectedObjective.dueDate, selectedObjective.endDate ?? selectedObjective.dueDate)}
                     </div>
                   </div>
                   <button type="button" className="modal-close" onClick={() => setSelectedObjective(null)}>
@@ -605,6 +609,16 @@ export function QuarterView({
                 <div className="modal-foot">
                   <button type="button" className="btn ghost" onClick={() => setSelectedObjective(null)}>
                     关闭
+                  </button>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={() => {
+                      onEditObjective(selectedObjective)
+                      setSelectedObjective(null)
+                    }}
+                  >
+                    <PencilSimple size={12} /> 编辑
                   </button>
                 </div>
               </div>

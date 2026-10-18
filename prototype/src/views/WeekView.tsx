@@ -16,6 +16,7 @@ import {
   fmtDate,
   fmtDays,
   fmtDue,
+  fmtRange,
   daysOf,
   isOverdue,
   projectNext,
@@ -35,6 +36,7 @@ interface WeekViewProps {
   filter: CategoryId | 'all'
   onFilter: (filter: CategoryId | 'all') => void
   onToggleTask: (id: string) => void
+  onEditTask: (task: WeekTask) => void
   onOpenCreate: (mode: CreateMode) => void
   onMoveOverdue: (ids: string[]) => void
   onOpenQuarter: () => void
@@ -60,6 +62,7 @@ export function WeekView({
   filter,
   onFilter,
   onToggleTask,
+  onEditTask,
   onOpenCreate,
   onMoveOverdue,
   onOpenQuarter,
@@ -88,7 +91,10 @@ export function WeekView({
     const linkedTask = visibleTasks.find((task) => task.projectId === projectId)
     setRelationTaskId(linkedTask?.id ?? null)
   }
-  const weekTasks = tasks.filter((task) => task.weekKey === weekKey)
+  const taskStart = (task: WeekTask) => task.startDate ?? task.dueDate
+  const taskEnd = (task: WeekTask) => task.endDate ?? task.dueDate
+  const taskTouchesWeek = (task: WeekTask) => taskStart(task) <= meta.end && taskEnd(task) >= meta.start
+  const weekTasks = tasks.filter((task) => task.weekKey === weekKey || taskTouchesWeek(task))
   const autoItems = projectWorkItemsForWeek(projects, weekKey)
   const filteredTasks =
     filter === 'all' ? weekTasks : weekTasks.filter((task) => task.categoryId === filter)
@@ -97,7 +103,7 @@ export function WeekView({
       ? autoItems
       : autoItems.filter((item) => item.project.categoryId === filter)
   const visibleTasks = activeDay
-    ? filteredTasks.filter((task) => task.dueDate === activeDay)
+    ? filteredTasks.filter((task) => taskStart(task) <= activeDay && taskEnd(task) >= activeDay)
     : filteredTasks
   const undone = visibleTasks.filter((task) => !task.done)
   const done = visibleTasks.filter((task) => task.done)
@@ -349,6 +355,7 @@ export function WeekView({
                     project={project}
                     objective={objective}
                     onToggle={onToggleTask}
+                    onEdit={onEditTask}
                     onHover={(next) => setRelationTaskId(next?.id ?? null)}
                     related={isRelatedTask(task)}
                     dimmed={relationTask !== null && !isRelatedTask(task)}
@@ -372,6 +379,7 @@ export function WeekView({
                         project={project}
                         objective={objective}
                         onToggle={onToggleTask}
+                    onEdit={onEditTask}
                         onHover={(next) => setRelationTaskId(next?.id ?? null)}
                         related={isRelatedTask(task)}
                         dimmed={relationTask !== null && !isRelatedTask(task)}
@@ -505,7 +513,7 @@ export function WeekView({
                     <span className="project-mini-copy">
                       <b>{project.title}</b>
                       <span>
-                        {next ? `下一里程碑 ${fmtDue(next.targetDate, next.targetTime)}` : '全部里程碑已完成'}
+                        {next ? `下一里程碑 ${fmtRange(next.startDate ?? next.targetDate, next.endDate ?? next.targetDate)}` : '全部里程碑已完成'}
                       </span>
                     </span>
                     <span className="mini-pct">{projectProgress(project)}%</span>

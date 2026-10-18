@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { BellRinging, Check, Clock, X } from '@phosphor-icons/react'
-import { fmtDateTime } from '../utils'
+import { fmtDate } from '../utils'
 
 interface ReminderPopupProps {
   title: string
@@ -49,10 +49,10 @@ export function ReminderPopup({
               <div className="reminder-meta">
                 <span>{kindLabel} · {categoryName}</span>
                 <span className="sep" />
-                <span className="num">截止 {fmtDateTime(dueDate, dueTime)}</span>
+                <span className="num">结束 {fmtDate(dueDate)}</span>
               </div>
               <div className="reminder-rule">
-                提醒规则 {reminder ?? '提前 2 天 · 09:30'} · 精确到分钟
+                提醒规则 {reminder ?? '提前 2 天 · 09:00'} · 精确到小时
               </div>
             </div>
             <button type="button" className="reminder-close" onClick={onClose} aria-label="关闭提醒">

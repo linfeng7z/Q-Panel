@@ -3,8 +3,8 @@ import { Check, Clock, Plus, X } from '@phosphor-icons/react'
 import type { Category, CategoryId, CreateMode, ReminderDefaults } from '../types'
 import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
-import { DateTimeField } from './DateTimeField'
-import { TimeSelect } from './TimeSelect'
+import { DateRangeField } from './DateRangeField'
+import { HourSelect } from './HourSelect'
 import { formatReminder } from '../utils'
 
 interface CreateModalProps {
@@ -16,6 +16,8 @@ interface CreateModalProps {
     title: string
     categoryId: CategoryId
     plannedDays: number
+    startDate: string
+    endDate: string
     dueDate: string
     dueTime: string
     reminder?: string
@@ -23,6 +25,8 @@ interface CreateModalProps {
   onCreateTask: (data: {
     title: string
     categoryId: CategoryId
+    startDate: string
+    endDate: string
     dueDate: string
     dueTime: string
     estimateDays: number
@@ -31,6 +35,8 @@ interface CreateModalProps {
   onCreateProject: (data: {
     title: string
     categoryId: CategoryId
+    startDate: string
+    endDate: string
     targetDate: string
     targetTime: string
     description: string
@@ -70,8 +76,9 @@ export function CreateModal({
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId>(defaultCategory)
   const [days, setDays] = useState(mode === 'objective' ? 15 : mode === 'task' ? 0.5 : 0)
-  const [date, setDate] = useState(defaultDate || TODAY)
-  const [time, setTime] = useState('18:00')
+  const initialEnd = defaultDate || TODAY
+  const [startDate, setStartDate] = useState(mode === 'task' ? initialEnd : TODAY)
+  const [endDate, setEndDate] = useState(initialEnd)
   const [description, setDescription] = useState('')
   const [newCategoryOpen, setNewCategoryOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -81,7 +88,7 @@ export function CreateModal({
   const [reminderOffset, setReminderOffset] = useState(reminderDefaults.offsetDays)
   const [reminderTime, setReminderTime] = useState(reminderDefaults.time)
 
-  const valid = title.trim().length > 0
+  const valid = title.trim().length > 0 && Boolean(startDate) && Boolean(endDate) && endDate >= startDate
 
   const submit = () => {
     if (!valid) return
@@ -90,8 +97,10 @@ export function CreateModal({
         title: title.trim(),
         categoryId,
         plannedDays: Number(days) || 1,
-        dueDate: date,
-        dueTime: time || '18:00',
+        startDate,
+        endDate,
+        dueDate: endDate,
+        dueTime: '18:00',
         reminder:
           reminderMode === 'custom'
             ? formatReminder(reminderOffset, reminderTime)
@@ -101,8 +110,10 @@ export function CreateModal({
       onCreateTask({
         title: title.trim(),
         categoryId,
-        dueDate: date,
-        dueTime: time || '18:00',
+        startDate,
+        endDate,
+        dueDate: endDate,
+        dueTime: '18:00',
         estimateDays: Number(days) || 0.5,
         reminder:
           reminderMode === 'custom'
@@ -113,8 +124,10 @@ export function CreateModal({
       onCreateProject({
         title: title.trim(),
         categoryId,
-        targetDate: date,
-        targetTime: time || '18:00',
+        startDate,
+        endDate,
+        targetDate: endDate,
+        targetTime: '18:00',
         description: description.trim(),
         reminder:
           reminderMode === 'custom'
@@ -283,37 +296,34 @@ export function CreateModal({
                 </div>
               ) : null}
 
-              <div className={mode === 'project' ? 'field-grid one' : 'field-grid two'}>
-                {mode !== 'project' ? (
-                  <div className="field">
-                    <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
-                    <input
-                      className="input num"
-                      type="number"
-                      min={0.25}
-                      max={200}
-                      step={0.25}
-                      value={days}
-                      onChange={(event) => setDays(Number(event.target.value))}
-                    />
-                  </div>
-                ) : null}
+              {mode !== 'project' ? (
                 <div className="field">
-                  <label>{mode === 'project' ? '目标日期与时间' : '截止日期与时间'}</label>
-                  <DateTimeField
-                    value={date}
-                    time={time}
-                    onChange={(nextDate, nextTime) => {
-                      setDate(nextDate)
-                      setTime(nextTime)
-                    }}
-                    ariaLabel={mode === 'project' ? '选择项目目标日期与时间' : '选择截止日期与时间'}
+                  <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
+                  <input
+                    className="input num"
+                    type="number"
+                    min={0.25}
+                    max={200}
+                    step={0.25}
+                    value={days}
+                    onChange={(event) => setDays(Number(event.target.value))}
                   />
                 </div>
+              ) : null}
+              <div className="field">
+                <label>{mode === 'project' ? '项目开展时间段' : '开展时间段'}</label>
+                <DateRangeField
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={(nextStart, nextEnd) => {
+                    setStartDate(nextStart)
+                    setEndDate(nextEnd)
+                  }}
+                />
               </div>
               <div className="datetime-preview">
                 <Clock size={10} />
-                24 小时制 · 系统通知精确到分钟
+                按自然日计算 · 提醒精确到 24 小时制整点
               </div>
 
               <div className="field reminder-field">
@@ -351,7 +361,7 @@ export function CreateModal({
                         <option value={3}>提前 3 天</option>
                         <option value={7}>提前 1 周</option>
                       </select>
-                      <TimeSelect value={reminderTime} onChange={setReminderTime} compact />
+                      <HourSelect value={reminderTime} onChange={setReminderTime} />
                     </>
                   ) : null}
                 </div>

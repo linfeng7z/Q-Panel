@@ -16,6 +16,9 @@ import {
   cn,
   fmtDateTime,
   fmtDays,
+  fmtRange,
+  formatReminder,
+  parseReminder,
   fmtDue,
   projectCrossQuarter,
   projectDecomposedDays,
@@ -27,6 +30,8 @@ import {
   projectScheduledDays,
 } from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
+import { DateRangeField } from '../components/DateRangeField'
+import { HourSelect } from '../components/HourSelect'
 
 interface ProjectsViewProps {
   projects: Project[]
@@ -248,7 +253,7 @@ export function ProjectsView({
                     </div>
                     <div className="project-row-desc">
                       {getCategory(project.categoryId).name} · {project.span} ·{' '}
-                      {next ? `下一里程碑 ${fmtDue(next.targetDate, next.targetTime)}` : '里程碑已完成'}
+                      {next ? `下一里程碑 ${fmtRange(next.startDate ?? next.targetDate, next.endDate ?? next.targetDate)}` : '里程碑已完成'}
                     </div>
                   </div>
                   <div className="project-row-metrics">
@@ -302,6 +307,7 @@ function ProjectDetail({
   onOpenWeek: (weekKey: string) => void
   onToast: (message: string) => void
 }) {
+  const reminderRule = parseReminder(project.reminder, { offsetDays: 2, time: '09:00' })
   const decomposed = projectDecomposedDays(project)
   const scheduled = projectScheduledDays(project)
   const quarterDays = projectQuarterDays(project, year, quarter)
@@ -326,7 +332,19 @@ function ProjectDetail({
   const updateItem = (id: string, patch: Partial<ProjectWorkItem>) => {
     onChange({
       ...project,
-      workItems: project.workItems.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      workItems: project.workItems.map((item) => {
+        if (item.id !== id) return item
+        const next = { ...item, ...patch }
+        if (patch.startDate) {
+          const week = WEEK_ORDER.find((key) => patch.startDate! >= WEEKS[key].start && patch.startDate! <= WEEKS[key].end)
+          if (week) next.weekKey = week
+        }
+        if (patch.weekKey) {
+          next.startDate = WEEKS[patch.weekKey].start
+          next.endDate = WEEKS[patch.weekKey].end
+        }
+        return next
+      }),
     })
   }
 
@@ -336,6 +354,8 @@ function ProjectDetail({
       title: '新工作项',
       plannedDays: 0.5,
       weekKey: CURRENT_WEEK_KEY,
+      startDate: WEEKS[CURRENT_WEEK_KEY].start,
+      endDate: WEEKS[CURRENT_WEEK_KEY].end,
       status: 'todo',
     }
     onChange({ ...project, workItems: [...project.workItems, item] })
@@ -358,11 +378,51 @@ function ProjectDetail({
         <div>
                     <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
-            {project.span} · 计划结束 {fmtDateTime(project.endDate, project.endTime)} · 全局项目 ·{' '}
+            {fmtRange(project.startDate, project.endDate)} · 全局项目 ·{' '}
             {projectDoneCount(project)}/{project.milestones.length}{' '}
             里程碑 · {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
             {fmtDays(quarterDays)} 人日
           </p>
+          <div className="project-date-editor">
+            <DateRangeField
+              startDate={project.startDate}
+              endDate={project.endDate}
+              label="项目开展时间段"
+              onChange={(nextStart, nextEnd) =>
+                onChange({
+                  ...project,
+                  startDate: nextStart,
+                  endDate: nextEnd,
+                  span: `${nextStart.slice(0, 4)}.${nextStart.slice(5, 7)} – ${nextEnd.slice(0, 4)}.${nextEnd.slice(5, 7)}`,
+                })
+              }
+            />
+          </div>
+          <div className="project-reminder-editor">
+            <span>提醒</span>
+            <select
+              className="select"
+              value={reminderRule.offsetDays}
+              onChange={(event) =>
+                onChange({
+                  ...project,
+                  reminder: formatReminder(Number(event.target.value), reminderRule.time),
+                })
+              }
+              aria-label="项目提前量"
+            >
+              <option value={0}>当天</option>
+              <option value={1}>提前 1 天</option>
+              <option value={2}>提前 2 天</option>
+              <option value={3}>提前 3 天</option>
+              <option value={7}>提前 1 周</option>
+            </select>
+            <HourSelect
+              value={reminderRule.time}
+              label="项目提醒小时"
+              onChange={(time) => onChange({ ...project, reminder: formatReminder(reminderRule.offsetDays, time) })}
+            />
+          </div>
           <div className="project-scope-line">
             {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
             {project.reminder ? <span className="tag">提醒 {project.reminder}</span> : null}
@@ -468,7 +528,7 @@ function ProjectDetail({
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
-              <span>工作项</span>
+              <span>工作项 / 时间段</span>
               <span>规划人日</span>
               <span>安排周</span>
               <span>状态</span>
@@ -476,11 +536,30 @@ function ProjectDetail({
             </div>
             {project.workItems.map((item) => (
               <div className="workplan-row" key={item.id}>
-                <input
-                  className="workitem-title"
-                  value={item.title}
-                  onChange={(event) => updateItem(item.id, { title: event.target.value })}
-                />
+                <div className="workitem-main">
+                  <input
+                    className="workitem-title"
+                    value={item.title}
+                    onChange={(event) => updateItem(item.id, { title: event.target.value })}
+                  />
+                  <div className="workitem-range">
+                    <input
+                      type="date"
+                      className="workitem-date"
+                      aria-label={`${item.title} 开始日期`}
+                      value={item.startDate ?? WEEKS[item.weekKey]?.start ?? project.startDate}
+                      onChange={(event) => updateItem(item.id, { startDate: event.target.value })}
+                    />
+                    <span>–</span>
+                    <input
+                      type="date"
+                      className="workitem-date"
+                      aria-label={`${item.title} 结束日期`}
+                      value={item.endDate ?? WEEKS[item.weekKey]?.end ?? project.endDate}
+                      onChange={(event) => updateItem(item.id, { endDate: event.target.value })}
+                    />
+                  </div>
+                </div>
                 <div className="hours-edit compact">
                   <input
                     className="hours-input num"
@@ -608,7 +687,7 @@ function ProjectDetail({
                   >
                     <span className="timeline-dot" />
                     <span className="tl-title">{milestone.title}</span>
-                    <span className="tl-date">{fmtDue(milestone.targetDate, milestone.targetTime)}</span>
+                    <span className="tl-date">{fmtRange(milestone.startDate ?? milestone.targetDate, milestone.endDate ?? milestone.targetDate)}</span>
                   </div>
                 ))}
               </div>

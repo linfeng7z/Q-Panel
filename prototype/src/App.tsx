@@ -47,6 +47,7 @@ import { AIDrawer } from './components/AIDrawer'
 import { SettingsModal } from './components/SettingsModal'
 import type { SettingsTab } from './components/SettingsModal'
 import { CreateModal } from './components/CreateModal'
+import { ItemEditModal } from './components/ItemEditModal'
 import { ReminderPopup } from './components/ReminderPopup'
 import { Toast } from './components/Toast'
 import type { WorkspaceSnapshot } from './workspace'
@@ -89,6 +90,10 @@ function quarterEndDate(year: number, quarter: number): string {
   return dateISO(year, month, day)
 }
 
+function projectSpan(startDate: string, endDate: string): string {
+  return `${startDate.slice(0, 4)}.${startDate.slice(5, 7)} – ${endDate.slice(0, 4)}.${endDate.slice(5, 7)}`
+}
+
 function parseInitialView(): ViewId {
   const value = new URLSearchParams(window.location.search).get('view') as ViewId | null
   return value && VIEWS.includes(value) ? value : 'quarter'
@@ -128,7 +133,7 @@ export default function App() {
     model: 'deepseek-chat',
     hasKey: false,
   })
-  const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
+  const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:00' })
   const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
   const [backdrop, setBackdrop] = useState<DesktopBackdrop | null>(null)
@@ -181,6 +186,7 @@ export default function App() {
   const [reminderOpen, setReminderOpen] = useState(false)
   const [nativeReminder, setNativeReminder] = useState<QPanelReminderEntry | null>(null)
   const [createMode, setCreateMode] = useState<CreateMode | null>(null)
+  const [editingItem, setEditingItem] = useState<{ kind: 'objective' | 'task'; item: Objective | WeekTask } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -764,6 +770,8 @@ export default function App() {
   const createTask = (data: {
     title: string
     categoryId: CategoryId
+    startDate: string
+    endDate: string
     dueDate: string
     dueTime: string
     estimateDays: number
@@ -771,10 +779,12 @@ export default function App() {
   }) => {
     const task: WeekTask = {
       id: `t-${Date.now()}`,
-      weekKey: weekKeyForDate(data.dueDate),
+      weekKey: weekKeyForDate(data.startDate),
       title: data.title,
       categoryId: data.categoryId,
-      dueDate: data.dueDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      dueDate: data.endDate,
       dueTime: data.dueTime,
       estimateDays: data.estimateDays,
       done: false,
@@ -789,6 +799,8 @@ export default function App() {
     title: string
     categoryId: CategoryId
     plannedDays: number
+    startDate: string
+    endDate: string
     dueDate: string
     dueTime: string
     reminder?: string
@@ -801,7 +813,9 @@ export default function App() {
       plannedDays: data.plannedDays,
       progress: 0,
       status: 'planned',
-      dueDate: data.dueDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      dueDate: data.endDate,
       dueTime: data.dueTime,
       reminder:
         data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
@@ -813,21 +827,21 @@ export default function App() {
   const createProject = (data: {
     title: string
     categoryId: CategoryId
+    startDate: string
+    endDate: string
     targetDate: string
     targetTime: string
     description: string
     reminder?: string
   }) => {
-    const targetMonth = Number(data.targetDate.slice(5, 7))
-    const targetYear = data.targetDate.slice(0, 4)
     const project: Project = {
       id: `p-${Date.now()}`,
       title: data.title,
       categoryId: data.categoryId,
       description: data.description || '新建长期项目。',
-      span: `2026.10 – ${targetYear}.${String(targetMonth).padStart(2, '0')}`,
-      startDate: TODAY,
-      endDate: data.targetDate,
+      span: projectSpan(data.startDate, data.endDate),
+      startDate: data.startDate,
+      endDate: data.endDate,
       endTime: data.targetTime,
       reminder:
         data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
@@ -838,8 +852,10 @@ export default function App() {
         {
           id: `m-${Date.now()}`,
           title: '启动与范围确认',
-          targetDate: data.targetDate,
+          targetDate: data.endDate,
           targetTime: data.targetTime,
+          startDate: data.startDate,
+          endDate: data.endDate,
           status: 'doing',
         },
       ],
@@ -857,6 +873,8 @@ export default function App() {
       categoryId: task.categoryId,
       dueDate: task.dueDate,
       dueTime: task.dueTime,
+      startDate: task.dueDate,
+      endDate: task.dueDate,
       estimateDays: task.estimateDays,
       done: false,
       objectiveId: task.objectiveId,
@@ -871,7 +889,14 @@ export default function App() {
     setTasks((value) =>
       value.map((task) =>
         ids.includes(task.id)
-          ? { ...task, weekKey, dueDate: weekEnd, dueTime: '18:00' }
+          ? {
+              ...task,
+              weekKey,
+              startDate: WEEKS[weekKey]?.start ?? weekEnd,
+              endDate: weekEnd,
+              dueDate: weekEnd,
+              dueTime: '18:00',
+            }
           : task,
       ),
     )
@@ -969,6 +994,7 @@ export default function App() {
             }}
             onOpenStats={() => setView('stats')}
             onManageCategories={manageCategories}
+            onEditObjective={(item) => setEditingItem({ kind: 'objective', item })}
           />
         )
       case 'week':
@@ -987,6 +1013,7 @@ export default function App() {
             onOpenProjects={() => setView('projects')}
             onToggleWorkItem={toggleProjectWorkItem}
             onManageCategories={manageCategories}
+            onEditTask={(item) => setEditingItem({ kind: 'task', item })}
           />
         )
       case 'projects':
@@ -1218,6 +1245,26 @@ export default function App() {
           sidebarLabels={sidebarLabels}
           onUpdateSidebarLabel={updateSidebarLabel}
           onResetSidebarLabels={resetSidebarLabels}
+        />
+      ) : null}
+
+      {editingItem ? (
+        <ItemEditModal
+          kind={editingItem.kind}
+          item={editingItem.item}
+          reminderDefaults={reminderDefaults}
+          onClose={() => setEditingItem(null)}
+          onSave={(next) => {
+            if (editingItem.kind === 'objective') {
+              setObjectives((value) => {
+                const key = quarterKey(year, quarter)
+                return { ...value, [key]: (value[key] ?? []).map((item) => (item.id === next.id ? (next as Objective) : item)) }
+              })
+            } else {
+              setTasks((value) => value.map((item) => (item.id === next.id ? { ...(next as WeekTask), weekKey: weekKeyForDate((next as WeekTask).startDate ?? (next as WeekTask).dueDate) } : item)))
+            }
+            showToast('已更新事项')
+          }}
         />
       ) : null}
 

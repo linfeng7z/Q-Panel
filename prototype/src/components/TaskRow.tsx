@@ -1,7 +1,7 @@
-import { Clock, Target } from '@phosphor-icons/react'
+import { Clock, PencilSimple, Target } from '@phosphor-icons/react'
 import type { Objective, Project, WeekTask } from '../types'
 import { TODAY, getCategory } from '../data/mock'
-import { cn, fmtDays, fmtDue, isOverdue } from '../utils'
+import { cn, fmtDays, fmtRange, isOverdue } from '../utils'
 import { catStyle } from './ui'
 import { CheckBox } from './ui'
 
@@ -10,6 +10,7 @@ interface TaskRowProps {
   project?: Project
   objective?: Objective
   onToggle: (id: string) => void
+  onEdit?: (task: WeekTask) => void
   onHover?: (task: WeekTask | null) => void
   related?: boolean
   dimmed?: boolean
@@ -19,11 +20,11 @@ function shortReminder(value?: string): string {
   return value ?? ''
 }
 
-export function TaskRow({ task, project, objective, onToggle, onHover, related, dimmed }: TaskRowProps) {
+export function TaskRow({ task, project, objective, onToggle, onEdit, onHover, related, dimmed }: TaskRowProps) {
   const category = getCategory(task.categoryId)
   const overdue = isOverdue(task)
   const today = task.dueDate === TODAY
-  const dueLabel = fmtDue(task.dueDate, task.dueTime)
+  const dueLabel = fmtRange(task.startDate ?? task.dueDate, task.endDate ?? task.dueDate)
 
   return (
     <div
@@ -66,6 +67,17 @@ export function TaskRow({ task, project, objective, onToggle, onHover, related, 
         <b>{fmtDays(task.estimateDays)}</b>
         <span>人日</span>
       </div>
+      {onEdit ? (
+        <button
+          type="button"
+          className="task-edit-btn"
+          onClick={() => onEdit(task)}
+          title="编辑事项"
+          aria-label={`编辑 ${task.title}`}
+        >
+          <PencilSimple size={12} />
+        </button>
+      ) : null}
     </div>
   )
 }
