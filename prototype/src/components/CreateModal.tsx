@@ -162,7 +162,7 @@ export function CreateModal({
         }}
       >
         <div className="modal-card">
-          <div className="modal-inner">
+          <div className="modal-inner create-modal-inner">
             <div className="modal-head">
               <div>
                                 <div className="modal-title">{meta.title}</div>

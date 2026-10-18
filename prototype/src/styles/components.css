@@ -3862,3 +3862,43 @@
       rgba(var(--material-rgb), 0.62)
     );
 }
+
+/* Create/edit dialogs: the body scrolls, the footer stays fully visible. */
+.modal-inner.create-modal-inner {
+  overflow: hidden;
+}
+
+.create-modal-inner .modal-head {
+  flex: 0 0 auto;
+}
+
+.create-modal-inner .create-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.create-modal-inner .modal-foot {
+  flex: 0 0 auto;
+  background: color-mix(in srgb, var(--panel-2) 96%, transparent);
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.create-modal-inner .modal-foot .btn {
+  flex: 0 0 auto;
+}
+
+/* Category labels are unbounded user data; keep the form body navigable. */
+.create-body .category-picker {
+  max-height: 104px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 3px;
+  scrollbar-width: thin;
+}
+
+.modal-inner.create-modal-inner {
+  max-height: calc(min(700px, calc(100vh - 70px)) - 2px);
+}

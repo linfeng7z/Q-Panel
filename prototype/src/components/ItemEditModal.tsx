@@ -71,7 +71,7 @@ export function ItemEditModal({ kind, item, reminderDefaults, projects, onClose,
         }}
       >
         <div className="modal-card" style={{ width: 560 }}>
-          <div className="modal-inner">
+          <div className="modal-inner create-modal-inner">
             <div className="modal-head">
               <div>
                 <div className="modal-title">{kind === 'objective' ? '编辑季度任务' : '编辑本周事项'}</div>
