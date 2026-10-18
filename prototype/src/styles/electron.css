@@ -130,74 +130,83 @@ html.electron-runtime #root {
   display: none;
 }
 
-/* Hover affordance for the otherwise invisible physical-notch hit area. */
-.qp-root.electron-mode.notch-mode .notch::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 240px;
-  height: 28px;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center bottom, rgba(105, 145, 255, 0.32), transparent 70%);
-  opacity: 0;
-  transition: opacity 180ms ease;
-  pointer-events: none;
-}
-
+/* Precision optical contour: the camera cutout has no pixels. Both layers
+   stay inside the bottom 10px of the 200px native hit area, without a halo. */
+.qp-root.electron-mode.notch-mode .notch::before,
 .qp-root.electron-mode.notch-mode .notch::after {
   content: "";
   position: absolute;
+  box-sizing: border-box;
   left: 50%;
-  bottom: 2px;
-  width: 54px;
-  height: 9px;
-  background: linear-gradient(90deg, transparent, rgba(183, 205, 255, 1), transparent);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  bottom: 1px;
+  width: calc(100% - 16px);
+  max-width: 184px;
+  height: 8px;
+  border-radius: 3px 3px 88px 88px / 2px 2px 6px 6px;
   opacity: 0;
-  transform: translateX(-50%) translateY(-4px) scale(0.7);
-  transform-origin: center;
+  transform: translateX(-50%) scale(0.46, 0.5);
+  transform-origin: center bottom;
   transition:
-    opacity 160ms ease,
-    transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  filter: drop-shadow(0 0 7px rgba(143, 177, 255, 0.85));
+    opacity 150ms ease-out,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
+/* A graphite optical housing, with a second inset machining line. No blur or
+   exterior shadow: even the top edge is below the physical camera cutout. */
+.qp-root.electron-mode.notch-mode .notch::before {
+  border: 1px solid rgba(191, 203, 203, 0.3);
+  background: linear-gradient(180deg, #323839 0%, #181c1e 48%, #0e1113 100%);
+  box-shadow: inset 0 1px 0 rgba(237, 243, 241, 0.12),
+    inset 0 -2px 0 rgba(7, 10, 12, 0.72);
+}
+
+/* Mask the mirror finish to a 1px contour, leaving the graphite center clear.
+   The first background is a narrow reflection; the second is the quiet rim.
+   Only this tiny 184x8 paint surface scans, once per pointer/focus entry. */
+.qp-root.electron-mode.notch-mode .notch::after {
+  padding: 1px;
+  background:
+    linear-gradient(105deg, transparent 43%, rgba(218, 242, 238, 0.24) 47%,
+      #f4fbf8 50%, rgba(218, 242, 238, 0.24) 53%, transparent 57%)
+      110% 0 / 250% 100% no-repeat,
+    linear-gradient(90deg, rgba(179, 194, 193, 0.22),
+      rgba(218, 229, 226, 0.75) 28%, rgba(231, 240, 236, 0.9) 50%,
+      rgba(218, 229, 226, 0.75) 72%, rgba(179, 194, 193, 0.22));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
 .qp-root.electron-mode.notch-mode .notch:hover::before,
-.qp-root.electron-mode.notch-mode .notch:focus-visible::before {
+.qp-root.electron-mode.notch-mode .notch:focus-visible::before,
+.qp-root.electron-mode.notch-mode .notch:hover::after,
+.qp-root.electron-mode.notch-mode .notch:focus-visible::after {
   opacity: 1;
-  animation: notch-aura 1.7s ease-in-out infinite;
+  transform: translateX(-50%) scale(1);
 }
 
 .qp-root.electron-mode.notch-mode .notch:hover::after,
 .qp-root.electron-mode.notch-mode .notch:focus-visible::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(1px) scale(1);
-  animation: notch-signal 1.7s ease-in-out infinite;
+  animation: notch-optical-scan 680ms linear 80ms 1 both;
 }
 
-@keyframes notch-signal {
-  0%, 100% {
-    opacity: 0.65;
-    filter: drop-shadow(0 0 5px rgba(143, 177, 255, 0.55));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 12px rgba(143, 177, 255, 0.95));
-  }
-}
-
-@keyframes notch-aura {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
+@keyframes notch-optical-scan {
+  from { background-position: 110% 0, 0 0; }
+  to { background-position: -10% 0, 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .qp-root.electron-mode.notch-mode .notch:hover::before,
-  .qp-root.electron-mode.notch-mode .notch:focus-visible::before,
+  .qp-root.electron-mode.notch-mode .notch::before,
+  .qp-root.electron-mode.notch-mode .notch::after {
+    transition: none;
+    animation: none;
+  }
+
   .qp-root.electron-mode.notch-mode .notch:hover::after,
   .qp-root.electron-mode.notch-mode .notch:focus-visible::after {
     animation: none;
+    background-position: -10% 0, 0 0;
   }
 }

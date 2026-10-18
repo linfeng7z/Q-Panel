@@ -216,6 +216,11 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
     await expect
       .poll(async () => Number(await notchPage.locator('.notch').evaluate((node) => getComputedStyle(node, '::after').opacity)))
       .toBeGreaterThan(0.2)
+    const motion = await notchPage.locator('.notch').evaluate((node) => {
+      const style = getComputedStyle(node, '::after')
+      return { clip: style.clipPath, animation: style.animationName, iterations: style.animationIterationCount }
+    })
+    expect(motion).toEqual({ clip: 'none', animation: 'notch-optical-scan', iterations: '1' })
     await notchPage.locator('.notch').click()
     await expect.poll(async () => {
       return app.evaluate(({ BrowserWindow }) => {
