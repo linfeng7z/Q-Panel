@@ -17,13 +17,26 @@
 
 **Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS 优先，Windows/Linux 实验性
 
-[预览](#预览) · [功能](#功能) · [下载](#下载) · [源码构建](#源码构建) · [GitHub Actions](#github-actions) · [免责声明](#免责声明)
+[桌面体验](#桌面体验) · [功能](#功能) · [下载](#下载) · [源码构建](#源码构建) · [GitHub Actions](#github-actions) · [免责声明](#免责声明)
 
 ---
 
-## 预览
+## 桌面体验
 
-![Q-Panel 演示](docs/demo.gif)
+![Q-Panel 刘海桌面](docs/screenshots/desktop-notch.png)
+
+**点击 Mac 屏幕顶部中央的刘海，Q-Panel 会贴着屏幕顶部展开。**
+
+它不是普通窗口：平时收在菜单栏/刘海区域，不占 Dock、不进入程序坞；点击刘海热区后，面板贴着屏幕顶部与刘海下缘展开，只占屏幕顶部，始终浮在当前桌面之上。再点一次刘海、按 `Esc` 或点击面板外部即可收起。
+
+![刘海点击展开演示](docs/desktop-demo.gif)
+
+> 桌面效果示意图：系统壁纸 + Q-Panel 真实运行界面；任务内容为演示数据。
+> [观看 MP4 演示](docs/desktop-demo.mp4)
+
+## 界面细节
+
+![Q-Panel 界面演示](docs/demo.gif)
 
 | 季度规划 | 本周必做 | 项目详情 |
 | --- | --- | --- |
@@ -80,6 +93,13 @@
 - API Key 使用 Electron `safeStorage` 保存，渲染层拿不到明文。
 - 没有配置 Key 时显示配置引导，不生成假数据。
 
+### macOS 刘海交互
+
+- 平时收在菜单栏/刘海热区，不占 Dock、不进入程序坞。
+- 点击屏幕顶部中央的刘海展开；面板贴着屏幕顶部与刘海下缘展开，只占屏幕顶部，不铺满整块桌面。
+- 再点刘海、按 `Esc` 或点击面板外部收起；支持 ⌘⇧Space 全局快捷键。
+- 窗口始终浮动在当前桌面之上，支持全屏空间和多个桌面。
+
 ### 本地优先细节
 
 - 本地工作区原子写入。
@@ -97,7 +117,7 @@
 
 | 平台 | 状态 | 说明 |
 | --- | --- | --- |
-| macOS（Apple Silicon） | ✅ 稳定 | 主要目标；刘海面板、菜单栏、通知和背景材质 |
+| macOS（Apple Silicon） | ✅ 稳定 | 主要目标；点击刘海展开、贴顶面板、菜单栏、通知和背景材质 |
 | macOS（Intel） | ✅ 可构建 | GitHub Actions 生成 x64 DMG |
 | Windows x64 | ⚠️ 实验性 | CI 构建；没有刘海/菜单栏优先体验，维护者未做运行验证 |
 | Linux x64 | ⚠️ 实验性 | CI 生成 AppImage；托盘/通知行为依赖发行版 |

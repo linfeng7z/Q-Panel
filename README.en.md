@@ -17,13 +17,26 @@
 
 **Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS first, Windows/Linux experimental
 
-[Preview](#preview) · [Features](#features) · [Download](#download) · [Build from source](#build-from-source) · [GitHub Actions](#github-actions) · [Disclaimer](#disclaimer)
+[Desktop](#desktop-experience) · [Features](#features) · [Download](#download) · [Build from source](#build-from-source) · [GitHub Actions](#github-actions) · [Disclaimer](#disclaimer)
 
 ---
 
-## Preview
+## Desktop experience
 
-![Q-Panel demo](docs/demo.gif)
+![Q-Panel notch desktop](docs/screenshots/desktop-notch.png)
+
+**Click the Mac notch at the top center of the screen and Q-Panel opens flush with the top edge.**
+
+It is not a normal window: it lives quietly in the menu bar/notch area, takes no Dock icon, and opens directly below the notch when you click the notch hot zone. Click the notch again, press `Esc`, or click outside to hide it.
+
+![Click the notch to open](docs/desktop-demo.gif)
+
+> Desktop mockup: system wallpaper + real Q-Panel UI; task content is demo data.
+> [Watch the MP4 demo](docs/desktop-demo.mp4)
+
+## UI close-ups
+
+![Q-Panel interface demo](docs/demo.gif)
 
 | Quarterly planning | Weekly must-dos | Project detail |
 | --- | --- | --- |
@@ -82,6 +95,13 @@
 - API keys are stored with Electron `safeStorage`; the renderer never sees the plaintext key.
 - Without a configured key, Q-Panel shows setup guidance instead of fake generated data.
 
+### macOS notch experience
+
+- Lives in the menu bar/notch hot zone; no Dock icon.
+- Click the notch at the top center of the screen to open; the panel opens flush with the top edge, directly below the notch.
+- Click the notch again, press `Esc`, or click outside to hide it. `⌘⇧Space` toggles it globally.
+- The panel floats above the current desktop and works across Spaces and full-screen apps.
+
 ### Local-first details
 
 - Atomic local workspace writes.
@@ -99,7 +119,7 @@
 
 | Platform | Status | Notes |
 | --- | --- | --- |
-| macOS (Apple Silicon) | ✅ Stable | Primary target; notch panel, menu bar, notifications and background material |
+| macOS (Apple Silicon) | ✅ Stable | Primary target; click-notch opening, top-edge panel, menu bar, notifications and background material |
 | macOS (Intel) | ✅ Build available | Built by GitHub Actions as x64 DMG |
 | Windows x64 | ⚠️ Experimental | Built by CI; no notch/menu-bar-first experience; not runtime-tested by the maintainer |
 | Linux x64 | ⚠️ Experimental | AppImage built by CI; desktop tray/notification behavior varies by distribution |
