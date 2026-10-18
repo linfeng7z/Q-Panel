@@ -3348,3 +3348,26 @@
   line-height: 1.5;
   color: var(--text-3);
 }
+
+.note-editor-title-input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 5px;
+  margin-left: -5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  outline: none;
+  background: transparent;
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+.note-editor-title-input:hover,
+.note-editor-title-input:focus {
+  border-color: var(--line-soft);
+  background: var(--surface-inset);
+}

@@ -436,6 +436,22 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('renames a note title and keeps the first markdown heading in sync', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("临时笔记")').click()
+      await page.getByRole('button', { name: '新建笔记' }).click()
+      const title = page.locator('.note-editor-title-input')
+      await title.fill('周会纪要')
+      await expect(page.locator('.note-item-title').first()).toHaveText('周会纪要')
+      await page.locator('.note-mode-toggle').click()
+      await expect(page.locator('.md')).toContainText('周会纪要')
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps both note cards equal height and scrolls long content inside the editor', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)
@@ -488,7 +504,7 @@ test.describe('Q-Panel feature regression', () => {
       await expect(page.locator('.note-item')).toHaveCount(2)
       await expect(page.locator('.page-sub')).toContainText('2 条笔记')
       await expect(page.locator('.note-item-title').filter({ hasText: firstName })).toHaveCount(0)
-      await expect(page.locator('.note-editor-title')).not.toHaveText(firstName)
+      await expect(page.locator('.note-editor-title-input')).not.toHaveValue(firstName)
       await expect(page.locator('.note-item.active')).toHaveCount(1)
     } finally {
       await closeApp(app, userData)

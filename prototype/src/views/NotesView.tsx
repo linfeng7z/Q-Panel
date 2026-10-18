@@ -103,6 +103,25 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
     )
   }
 
+  const updateTitle = (title: string) => {
+    if (!selected) return
+    const nextTitle = title || '未命名笔记'
+    let content = selected.content
+    // The default note template starts with "# title"; keep that heading in
+    // sync when renaming so the list title and first heading never disagree.
+    if (content.startsWith('# ')) {
+      const [first, ...rest] = content.split('\n')
+      if (first.slice(2).trim() === selected.title) {
+        content = `# ${nextTitle}${rest.length ? `\n${rest.join('\n')}` : ''}`
+      }
+    }
+    onChange(
+      notes.map((note) =>
+        note.id === selected.id ? { ...note, title: nextTitle, content, updatedAt: '刚刚' } : note,
+      ),
+    )
+  }
+
   const togglePin = () => {
     if (!selected) return
     onChange(
@@ -187,7 +206,18 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
           {selected ? (
             <>
               <div className="note-editor-toolbar">
-                <span className="note-editor-title">{selected.title}</span>
+                <input
+                  className="note-editor-title-input"
+                  value={selected.title}
+                  onChange={(event) => updateTitle(event.target.value)}
+                  onBlur={() => {
+                    if (!selected.title.trim()) updateTitle('未命名笔记')
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') event.currentTarget.blur()
+                  }}
+                  aria-label="笔记标题"
+                />
                 <button
                   type="button"
                   className={cn('icon-btn', selected.pinned && 'active')}
