@@ -175,6 +175,23 @@ export function projectCrossQuarter(project: Project, year: number, quarter: num
   return project.endDate > quarterEndISO(year, quarter)
 }
 
+/** Projects already represented by a quarterly objective. Their work items are
+ * execution detail, not extra capacity, so they must not be counted twice. */
+export function linkedProjectIds(
+  objectives: Objective[],
+  projects: Project[],
+): Set<string> {
+  const objectiveIds = new Set(objectives.map((objective) => objective.id))
+  const linked = new Set<string>()
+  for (const objective of objectives) {
+    if (objective.projectId) linked.add(objective.projectId)
+  }
+  for (const project of projects) {
+    if (project.objectiveId && objectiveIds.has(project.objectiveId)) linked.add(project.id)
+  }
+  return linked
+}
+
 export interface QuarterLoad {
   taskDays: number
   projectDays: number
@@ -198,9 +215,14 @@ export function quarterLoad(
   const taskDoneDays = roundDays(
     objectives.reduce((sum, objective) => sum + objective.plannedDays * (objective.progress / 100), 0),
   )
-  const projectDays = projectsQuarterDays(projects, year, quarter)
+  const linked = linkedProjectIds(objectives, projects)
+  const independentProjects = projects.filter((project) => !linked.has(project.id))
+  const projectDays = projectsQuarterDays(independentProjects, year, quarter)
   const projectDoneDays = roundDays(
-    projects.reduce((sum, project) => sum + projectQuarterDoneDays(project, year, quarter), 0),
+    independentProjects.reduce(
+      (sum, project) => sum + projectQuarterDoneDays(project, year, quarter),
+      0,
+    ),
   )
   const committedDays = roundDays(taskDays + projectDays)
   const doneDays = roundDays(taskDoneDays + projectDoneDays)

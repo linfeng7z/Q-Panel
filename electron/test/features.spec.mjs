@@ -75,8 +75,8 @@ test.describe('Q-Panel feature regression', () => {
       }
 
       await expect(page.locator('.capacity-stat .stat-value').nth(0)).toContainText('60')
-      await expect(page.locator('.capacity-stat .stat-value').nth(1)).toContainText('58.5')
-      await expect(page.locator('.capacity-stat .stat-value').nth(2)).toContainText('1.5')
+      await expect(page.locator('.capacity-stat .stat-value').nth(1)).toContainText('48.5')
+      await expect(page.locator('.capacity-stat .stat-value').nth(2)).toContainText('11.5')
 
       await page.locator('.icon-btn[title="切换皮肤"]').click()
       await expect(page.locator('.qp-root')).toHaveAttribute('data-theme', 'ops')
@@ -232,6 +232,20 @@ test.describe('Q-Panel feature regression', () => {
       await expect(modal.locator('.date-range-control .date-range-total')).toContainText('61 天')
       await modal.locator('.modal-foot .btn.primary').click()
       await expect(page.locator('.project-overview-row').filter({ hasText: '时间段验证项目' })).toHaveCount(1)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('counts linked project work once in quarter capacity', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("季度规划")').click()
+      const used = page.locator('.capacity-stat').nth(1)
+      await expect(used).toContainText('48.5')
+      await expect(used).toContainText('季度任务 48 + 独立项目 0.5')
+      await expect(used).not.toContainText('项目本季')
     } finally {
       await closeApp(app, userData)
     }

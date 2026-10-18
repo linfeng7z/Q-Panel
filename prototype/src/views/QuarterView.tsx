@@ -32,6 +32,7 @@ import {
   pct,
   projectCrossQuarter,
   projectWorkItemsInQuarter,
+  linkedProjectIds,
   quarterLoad,
   sumDays,
 } from '../utils'
@@ -98,16 +99,19 @@ export function QuarterView({
   const completion = load.completion
   const globalProjectDays = projects.reduce((sum, project) => sum + project.plannedDays, 0)
   const crossQuarterProjects = projects.filter((project) => projectCrossQuarter(project, year, quarter)).length
-  const projectItems = projects.flatMap((project) =>
-    projectWorkItemsInQuarter(project, year, quarter).map((item) => ({ item, project })),
-  )
+  const linkedProjects = linkedProjectIds(objectivesOfPeriod, projects)
+  const independentProjectItems = projects
+    .filter((project) => !linkedProjects.has(project.id))
+    .flatMap((project) =>
+      projectWorkItemsInQuarter(project, year, quarter).map((item) => ({ item, project })),
+    )
   const firstMonth = quarter * 3 - 2
   const months = [firstMonth, firstMonth + 1, firstMonth + 2]
   const segments = CATEGORIES.map((category) => ({
     category,
     days:
       sumDays(objectivesOfPeriod.filter((objective) => objective.categoryId === category.id)) +
-      projectItems
+      independentProjectItems
         .filter(({ project }) => project.categoryId === category.id)
         .reduce((sum, { item }) => sum + item.plannedDays, 0),
   })).filter((segment) => segment.days > 0)
@@ -274,13 +278,20 @@ export function QuarterView({
                     </span>
                   </div>
                   <div className="capacity-stat stat">
-                    <span className="stat-label">已占用</span>
+                    <span
+                      className="stat-label"
+                      title="已占用 = 季度任务人日 + 未关联季度任务的项目本季工作项人日；关联项目的工作项属于任务拆解，不重复计算。"
+                    >
+                      已占用
+                    </span>
                     <span className="stat-value num">
                       <CountUp value={committed} decimals={Number.isInteger(committed) ? 0 : 1} />
                       <small>人日</small>
                     </span>
                     <span className="stat-foot">
-                      季度任务 {fmtDays(taskDays)} + 项目本季 {fmtDays(projectDays)}
+                      {projectDays > 0
+                        ? `季度任务 ${fmtDays(taskDays)} + 独立项目 ${fmtDays(projectDays)}`
+                        : `季度任务 ${fmtDays(taskDays)} · 项目排期已计入关联任务`}
                     </span>
                   </div>
                   <div className="capacity-stat stat">
@@ -301,7 +312,7 @@ export function QuarterView({
                       <CountUp value={completion} />
                       <small>%</small>
                     </span>
-                    <span className="stat-foot">季度任务 + 项目本季事项</span>
+                    <span className="stat-foot">季度任务 + 独立项目</span>
                   </div>
                 </div>
                 <div className="capacity-bar-wrap">
@@ -336,7 +347,9 @@ export function QuarterView({
                     {stats.estimated
                       ? '官方放假安排尚未发布，当前按周末规则估算'
                       : `${year} Q${quarter} 已按官方节假日 + 调休补班计算`}
-                    ；本季度任务 {fmtDays(taskDays)} + 项目本季排期 {fmtDays(projectDays)} 人日，剩余 <b>{fmtDays(remaining)} 人日</b>
+                    ；本季度任务 {fmtDays(taskDays)}
+                    {projectDays > 0 ? ` + 独立项目 ${fmtDays(projectDays)}` : '（项目排期已计入关联任务）'}
+                    人日，剩余 <b>{fmtDays(remaining)} 人日</b>
                   </span>
                   <span>
                     {stats.estimated
