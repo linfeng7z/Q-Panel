@@ -31,6 +31,8 @@
 
 ---
 
+> Screenshots show the Chinese interface. The app also includes an **English UI Beta** covering the core navigation, planning, weekly and project screens.
+
 ## Features
 
 ### Quarterly planning with real capacity
