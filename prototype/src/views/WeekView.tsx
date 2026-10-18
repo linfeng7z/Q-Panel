@@ -24,6 +24,7 @@ import {
   projectProgress,
   projectWorkItemDays,
   projectWorkItemsForWeek,
+  type ProjectWeekItem,
 } from '../utils'
 import { TaskRow } from '../components/TaskRow'
 import { RelationThreads } from '../components/RelationThreads'
@@ -101,23 +102,31 @@ export function WeekView({
   const taskTouchesWeek = (task: WeekTask) => taskStart(task) <= meta.end && taskEnd(task) >= meta.start
   const weekTasks = tasks.filter((task) => task.weekKey === weekKey || taskTouchesWeek(task))
   const autoItems = projectWorkItemsForWeek(projects, weekKey)
+  const autoTouchesDay = (item: ProjectWeekItem) => {
+    if (!activeDay) return true
+    const start = item.startDate ?? WEEKS[item.weekKey]?.start ?? meta.start
+    const end = item.endDate ?? WEEKS[item.weekKey]?.end ?? meta.end
+    return start <= activeDay && end >= activeDay
+  }
   const filteredTasks =
     filter === 'all' ? weekTasks : weekTasks.filter((task) => task.categoryId === filter)
   const visibleAutoItems =
     filter === 'all'
-      ? autoItems
-      : autoItems.filter((item) => item.project.categoryId === filter)
+      ? autoItems.filter(autoTouchesDay)
+      : autoItems.filter((item) => item.project.categoryId === filter && autoTouchesDay(item))
   const visibleTasks = activeDay
     ? filteredTasks.filter((task) => taskStart(task) <= activeDay && taskEnd(task) >= activeDay)
     : filteredTasks
   const undone = visibleTasks.filter((task) => !task.done)
   const done = visibleTasks.filter((task) => task.done)
+  const autoUndone = visibleAutoItems.filter((item) => item.status !== 'done')
+  const autoDone = visibleAutoItems.filter((item) => item.status === 'done')
   const autoPlanned = projectWorkItemDays(autoItems)
-  const autoDone = autoItems
+  const autoDoneDays = autoItems
     .filter((item) => item.status === 'done')
     .reduce((sum, item) => sum + item.weekDays, 0)
   const planned = daysOf(weekTasks) + autoPlanned
-  const doneDays = doneDaysOf(weekTasks) + autoDone
+  const doneDays = doneDaysOf(weekTasks) + autoDoneDays
   const available = meta.workdays - meta.leaveDays
   const remaining = available - planned
   const overdue = meta.end <= '2026-12-31' ? tasks.filter(isOverdue) : []
@@ -154,6 +163,54 @@ export function WeekView({
   const totalDone =
     weekTasks.filter((task) => task.done).length +
     autoItems.filter((item) => item.status === 'done').length
+
+  const renderAutoRow = (item: ProjectWeekItem) => {
+    const category = getCategory(item.project.categoryId)
+    return (
+      <div
+        key={item.id}
+        className={cn('task-row auto-row', item.status === 'done' && 'done', relationProjectId === item.project.id && 'relation-related')}
+        style={catStyle(item.project.categoryId)}
+      >
+        <CheckBox
+          on={item.status === 'done'}
+          onToggle={() => onToggleWorkItem(item.project.id, item.id)}
+          label={item.title}
+        />
+        <div className="task-main">
+          <div className="task-title">{item.title}</div>
+          <div className="task-meta">
+            <span className="meta-item">
+              <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
+              {category.name}
+            </span>
+            <span className="project-chip">
+              <Target size={9} />
+              {item.project.title}
+            </span>
+            <span className="auto-tag">自动排期</span>
+            <span className="meta-item">第 {meta.num} 周</span>
+            {item.weekDays !== item.plannedDays ? (
+              <span className="meta-item">总 {fmtDays(item.plannedDays)} 人日</span>
+            ) : null}
+          </div>
+        </div>
+        <div className={cn('task-hours', item.status === 'done' && 'done')}>
+          <b>{fmtDays(item.weekDays)}</b>
+          <span>人日</span>
+        </div>
+        <button
+          type="button"
+          className="auto-remove-btn"
+          title="从本周移除，不再自动同步"
+          aria-label={`从本周移除 ${item.title}`}
+          onClick={() => onSkipProjectItem(item.project.id, item.id, weekKey)}
+        >
+          <Trash size={11} />
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="view week-view">
@@ -274,11 +331,8 @@ export function WeekView({
           <div className="list-head week-list-head">
             <div className="week-list-heading">
               <div className="list-title">
-                本周事项
+                本周必做
                 <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
-                {visibleAutoItems.length > 0 ? (
-                  <span className="auto-head-tag">项目自动排期 {visibleAutoItems.length} 项</span>
-                ) : null}
               </div>
             </div>
             <div className="list-actions week-list-actions">
@@ -346,9 +400,9 @@ export function WeekView({
               </div>
             ) : null}
 
-            {undone.length > 0 ? (
+            {undone.length + autoUndone.length > 0 ? (
               <div className="section-label">
-                <CheckCircle size={10} /> 本周必做 · {undone.length}
+                <CheckCircle size={10} /> 待完成 · {undone.length + autoUndone.length}
               </div>
             ) : null}
             <div className="task-rows">
@@ -370,11 +424,12 @@ export function WeekView({
                   />
                 )
               })}
+              {autoUndone.map(renderAutoRow)}
             </div>
-            {done.length > 0 ? (
+            {done.length + autoDone.length > 0 ? (
               <>
                 <div className="section-label">
-                  <CheckCircle size={10} /> 已完成 · {done.length}
+                  <CheckCircle size={10} /> 已完成 · {done.length + autoDone.length}
                 </div>
                 <div className="task-rows">
                   {done.map((task) => {
@@ -395,70 +450,12 @@ export function WeekView({
                       />
                     )
                   })}
-                </div>
-              </>
-            ) : null}
-            {!activeDay && visibleAutoItems.length > 0 ? (
-              <>
-                <div className="section-label auto-section-label">
-                  <FolderSimple size={10} />
-                  项目自动排期 · {visibleAutoItems.length} 项 ·{' '}
-                  {fmtDays(visibleAutoItems.reduce((sum, item) => sum + item.weekDays, 0))} 人日
-                  <span className="auto-section-hint">来自全局项目规划</span>
-                </div>
-                <div className="task-rows">
-                  {visibleAutoItems.map((item) => {
-                    const category = getCategory(item.project.categoryId)
-                    return (
-                      <div
-                        key={item.id}
-                        className={cn('task-row auto-row', item.status === 'done' && 'done', relationProjectId === item.project.id && 'relation-related')}
-                        style={catStyle(item.project.categoryId)}
-                      >
-                        <CheckBox
-                          on={item.status === 'done'}
-                          onToggle={() => onToggleWorkItem(item.project.id, item.id)}
-                          label={item.title}
-                        />
-                        <div className="task-main">
-                          <div className="task-title">{item.title}</div>
-                          <div className="task-meta">
-                            <span className="meta-item">
-                              <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
-                              {category.name}
-                            </span>
-                            <span className="project-chip">
-                              <Target size={9} />
-                              {item.project.title}
-                            </span>
-                            <span className="auto-tag">自动排期</span>
-                            <span className="meta-item">第 {meta.num} 周</span>
-                            {item.weekDays !== item.plannedDays ? (
-                              <span className="meta-item">总 {fmtDays(item.plannedDays)} 人日</span>
-                            ) : null}
-                          </div>
-                        </div>
-                        <div className={cn('task-hours', item.status === 'done' && 'done')}>
-                          <b>{fmtDays(item.weekDays)}</b>
-                          <span>人日</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="auto-remove-btn"
-                          title="从本周移除，不再自动同步"
-                          aria-label={`从本周移除 ${item.title}`}
-                          onClick={() => onSkipProjectItem(item.project.id, item.id, weekKey)}
-                        >
-                          <Trash size={11} />
-                        </button>
-                      </div>
-                    )
-                  })}
+                  {autoDone.map(renderAutoRow)}
                 </div>
               </>
             ) : null}
 
-            {visibleTasks.length === 0 && (activeDay || visibleAutoItems.length === 0) ? (
+            {visibleTasks.length === 0 && visibleAutoItems.length === 0 ? (
               <div className="task-empty">这一周还没有事项。先建一件最想推进的事。</div>
             ) : null}
           </div>

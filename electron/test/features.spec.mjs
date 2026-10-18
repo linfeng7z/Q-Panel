@@ -343,6 +343,9 @@ test.describe('Q-Panel feature regression', () => {
       await expect(w42Row).toContainText('总 0.5 人日')
 
       await page.locator('[aria-label="下一周"]').click()
+      await expect(page.locator('.list-title')).toContainText('本周必做')
+      await expect(page.locator('.section-label').first()).toContainText('待完成')
+      await expect(page.locator('.auto-section-label')).toHaveCount(0)
       const w43Row = page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })
       await expect(w43Row).toHaveCount(1)
       await w43Row.hover()
