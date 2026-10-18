@@ -309,6 +309,24 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('deletes a note from the toolbar and selects the next one', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("临时笔记")').click()
+      await expect(page.locator('.note-item')).toHaveCount(3)
+      const firstName = await page.locator('.note-item-title').first().innerText()
+      await page.locator('.note-delete-btn').click()
+      await expect(page.locator('.note-item')).toHaveCount(2)
+      await expect(page.locator('.page-sub')).toContainText('2 条笔记')
+      await expect(page.locator('.note-item-title').filter({ hasText: firstName })).toHaveCount(0)
+      await expect(page.locator('.note-editor-title')).not.toHaveText(firstName)
+      await expect(page.locator('.note-item.active')).toHaveCount(1)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('opens project detail, settings and notes without errors', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

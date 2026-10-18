@@ -7,6 +7,7 @@ import {
   PencilSimple,
   Plus,
   PushPin,
+  Trash,
 } from '@phosphor-icons/react'
 import type { Note } from '../types'
 import { cn } from '../utils'
@@ -102,6 +103,17 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
     )
   }
 
+  const deleteNote = () => {
+    if (!selected) return
+    const index = notes.findIndex((note) => note.id === selected.id)
+    const next = notes.filter((note) => note.id !== selected.id)
+    onChange(next)
+    const fallback = next[index] ?? next[index - 1] ?? next[0]
+    setSelectedId(fallback?.id ?? '')
+    setPreview(true)
+    onToast(`已删除「${selected.title}」`)
+  }
+
   return (
     <div className="view notes-view">
       <div className="page-head" style={{ marginBottom: 13 }}>
@@ -174,6 +186,15 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
                   title={selected.pinned ? '取消置顶' : '置顶'}
                 >
                   <PushPin size={14} weight={selected.pinned ? 'fill' : 'regular'} />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn note-delete-btn"
+                  onClick={deleteNote}
+                  title="删除笔记"
+                  aria-label="删除笔记"
+                >
+                  <Trash size={14} />
                 </button>
                 <button
                   type="button"

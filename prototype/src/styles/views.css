@@ -2116,6 +2116,12 @@
   place-items: center;
 }
 
+.note-delete-btn:hover {
+  color: #ff9b9b;
+  border-color: rgba(255, 120, 120, 0.22);
+  background: rgba(255, 80, 80, 0.1);
+}
+
 .note-editor-toolbar {
   display: flex;
   align-items: center;
