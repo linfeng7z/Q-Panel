@@ -361,12 +361,14 @@ export function QuarterView({
 
               <div className="quarter-grid">
                 <Card>
-                  <div className="list-head">
-                    <div className="list-title">
-                      季度任务
-                      <span className="list-count num">{filteredObjectives.length}</span>
+                  <div className="list-head quarter-list-head">
+                    <div className="quarter-list-heading">
+                      <div className="list-title">
+                        季度任务
+                        <span className="list-count num">{filteredObjectives.length}</span>
+                      </div>
                     </div>
-                    <div className="list-actions">
+                    <div className="list-actions quarter-list-actions">
                       <button
                         type="button"
                         className={cn('chip', filter === 'all' && 'active')}
@@ -378,7 +380,7 @@ export function QuarterView({
                         const count = objectivesOfPeriod.filter(
                           (objective) => objective.categoryId === category.id,
                         ).length
-                        if (!count && !category.id.startsWith('cat-')) return null
+                        if (!count && filter !== category.id) return null
                         return (
                           <button
                             key={category.id}
@@ -388,7 +390,7 @@ export function QuarterView({
                             onClick={() => onFilter(category.id)}
                           >
                             <span className="dot" />
-                            {category.name}
+                            <span className="cat-name">{category.name}</span>
                             <span className="count">{count}</span>
                           </button>
                         )

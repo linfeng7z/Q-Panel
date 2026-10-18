@@ -3381,3 +3381,52 @@
   color: var(--text-3);
   font-weight: 500;
 }
+
+/* Quarter filters: title gets its own row; many categories wrap instead of
+   squeezing the heading or pushing chips outside the card. */
+.list-head.quarter-list-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 11px 14px 9px;
+}
+
+.quarter-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.quarter-list-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.quarter-list-actions .chip {
+  flex: 0 0 auto;
+}
+
+.quarter-list-actions .chip.cat {
+  max-width: 178px;
+}
+
+.quarter-list-actions .chip.cat:not(.active) {
+  opacity: 0.82;
+}
+
+.quarter-list-actions .chip.cat .cat-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
