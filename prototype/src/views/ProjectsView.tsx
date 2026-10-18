@@ -172,7 +172,7 @@ export function ProjectsView({
         </button>
         {CATEGORIES.map((category) => {
           const count = projects.filter((project) => project.categoryId === category.id).length
-          if (!count && !category.id.startsWith('cat-')) return null
+          if (!count && filter !== category.id) return null
           return (
             <button
               key={category.id}
@@ -182,7 +182,7 @@ export function ProjectsView({
               onClick={() => onFilter(category.id)}
             >
               <span className="dot" />
-              {category.name}
+              <span className="cat-name">{category.name}</span>
               <span className="count">{count}</span>
             </button>
           )
@@ -191,8 +191,6 @@ export function ProjectsView({
           <Plus size={10} />
           分类
         </button>
-        <span className="filter-spacer" />
-        <span className="card-meta">按风险优先 · 点击项目查看工作规划</span>
       </div>
 
       {visibleProjects.length === 0 ? (
@@ -210,15 +208,12 @@ export function ProjectsView({
         </Card>
       ) : (
         <Card className="project-overview-card" innerClassName="project-overview-inner">
-          <div className="list-head">
-            <div className="list-title">
-              项目概览
-              <span className="list-count num">{sortedProjects.length}</span>
-            </div>
-            <span className="card-meta">全局规划 / 本季排期 / 进度</span>
-          </div>
           <div className="project-overview-head">
-            <span>项目</span>
+            <div className="project-overview-head-main">
+              <span className="project-overview-heading">项目概览</span>
+              <span className="list-count num">{sortedProjects.length}</span>
+              <span className="project-overview-sort">按风险优先</span>
+            </div>
             <div className="project-overview-head-metrics">
               <span>全局规划</span>
               <span>本季排期</span>
