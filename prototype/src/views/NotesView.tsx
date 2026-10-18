@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Eye,
@@ -19,7 +19,7 @@ interface NotesViewProps {
   onToast: (message: string) => void
 }
 
-function Markdown({ content }: { content: string }) {
+function Markdown({ content, onEdit }: { content: string; onEdit?: () => void }) {
   const blocks: ReactNode[] = []
   const bullets: string[] = []
   let key = 0
@@ -57,19 +57,28 @@ function Markdown({ content }: { content: string }) {
     blocks.push(<p key={`p-${key}`}>{line}</p>)
   })
   flush()
-  return <div className="md scroll">{blocks}</div>
+  return (
+    <div className="md scroll" onDoubleClick={onEdit} title={onEdit ? '双击进入编辑' : undefined}>
+      {blocks}
+    </div>
+  )
 }
 
 export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
   const [selectedId, setSelectedId] = useState(notes[0]?.id ?? '')
   const [query, setQuery] = useState('')
   const [preview, setPreview] = useState(true)
+  const editorRef = useRef<HTMLTextAreaElement>(null)
   const selected = notes.find((note) => note.id === selectedId) ?? notes[0]
   const filtered = notes.filter(
     (note) =>
       note.title.toLowerCase().includes(query.toLowerCase()) ||
       note.content.toLowerCase().includes(query.toLowerCase()),
   )
+
+  useEffect(() => {
+    if (!preview) editorRef.current?.focus()
+  }, [preview, selectedId])
 
   const addNote = () => {
     const id = `n-${Date.now()}`
@@ -81,7 +90,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
     }
     onChange([note, ...notes])
     setSelectedId(id)
-    setPreview(true)
+    setPreview(false)
     onToast('已新建一条笔记')
   }
 
@@ -198,21 +207,24 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
                 </button>
                 <button
                   type="button"
-                  className={cn('icon-btn', preview && 'active')}
+                  className={cn('note-mode-toggle', !preview && 'active')}
                   onClick={() => setPreview((value) => !value)}
-                  title={preview ? '编辑' : '预览'}
+                  title={preview ? '进入编辑' : '切换到预览'}
                 >
-                  {preview ? <PencilSimple size={14} /> : <Eye size={14} />}
+                  {preview ? <PencilSimple size={13} /> : <Eye size={13} />}
+                  <span>{preview ? '编辑' : '预览'}</span>
                 </button>
               </div>
               <div className="note-editor-meta">
                 更新于 {selected.updatedAt} · Markdown · {selected.content.length} 字符
               </div>
               {preview ? (
-                <Markdown content={selected.content} />
+                <Markdown content={selected.content} onEdit={() => setPreview(false)} />
               ) : (
                 <textarea
+                  ref={editorRef}
                   className="note-textarea scroll"
+                  autoFocus
                   value={selected.content}
                   onChange={(event) => updateContent(event.target.value)}
                   spellCheck={false}

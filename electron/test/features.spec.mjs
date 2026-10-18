@@ -418,6 +418,24 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('creates a note directly in edit mode and keeps typed content', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("临时笔记")').click()
+      await page.getByRole('button', { name: '新建笔记' }).click()
+      const editor = page.locator('.note-textarea')
+      await expect(editor).toBeVisible()
+      await expect(editor).toBeFocused()
+      await editor.fill('# 可编辑笔记\n\n这是直接输入的内容')
+      await expect(page.locator('.note-editor-meta')).toContainText('Markdown')
+      await page.locator('.note-mode-toggle').click()
+      await expect(page.locator('.md')).toContainText('这是直接输入的内容')
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps both note cards equal height and scrolls long content inside the editor', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)
@@ -433,10 +451,10 @@ test.describe('Q-Panel feature regression', () => {
       })
       expect(before.list).toBeCloseTo(before.editor, 1)
 
-      await page.locator('.note-editor-pane .icon-btn[title="编辑"]').click()
+      await page.locator('.note-editor-pane .note-mode-toggle').click()
       const long = Array.from({ length: 90 }, (_, i) => `- 第 ${i + 1} 条长内容，用于验证编辑器和预览只在卡片内部滚动。`).join('\n')
       await page.locator('.note-textarea').fill(`# 长笔记\n\n${long}`)
-      await page.locator('.note-editor-pane .icon-btn[title="预览"]').click()
+      await page.locator('.note-editor-pane .note-mode-toggle').click()
       const after = await page.evaluate(() => {
         const list = document.querySelector('.note-list-pane').getBoundingClientRect()
         const editor = document.querySelector('.note-editor-pane').getBoundingClientRect()

@@ -3293,3 +3293,28 @@
 .date-range-summary-arrow {
   text-align: center;
 }
+
+.note-mode-toggle {
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-inset);
+  color: var(--text-2);
+  font-size: 9.5px;
+}
+
+.note-mode-toggle:hover,
+.note-mode-toggle.active {
+  color: var(--text-1);
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+
+.note-textarea:focus {
+  outline: none;
+  color: var(--text-1);
+}
