@@ -268,15 +268,17 @@ export function WeekView({
 
       <div className="week-grid">
         <Card>
-          <div className="list-head">
-            <div className="list-title">
-              本周事项
-              <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
-              {visibleAutoItems.length > 0 ? (
-                <span className="auto-head-tag">项目自动排期 {visibleAutoItems.length} 项</span>
-              ) : null}
+          <div className="list-head week-list-head">
+            <div className="week-list-heading">
+              <div className="list-title">
+                本周事项
+                <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
+                {visibleAutoItems.length > 0 ? (
+                  <span className="auto-head-tag">项目自动排期 {visibleAutoItems.length} 项</span>
+                ) : null}
+              </div>
             </div>
-            <div className="list-actions">
+            <div className="list-actions week-list-actions">
               <button
                 type="button"
                 className={cn('chip', filter === 'all' && 'active')}
@@ -288,7 +290,7 @@ export function WeekView({
                 const count =
                   weekTasks.filter((task) => task.categoryId === category.id).length +
                   autoItems.filter((item) => item.project.categoryId === category.id).length
-                if (!count && !category.id.startsWith('cat-')) return null
+                if (!count && filter !== category.id) return null
                 return (
                   <button
                     key={category.id}
@@ -298,7 +300,7 @@ export function WeekView({
                     onClick={() => onFilter(category.id)}
                   >
                     <span className="dot" />
-                    {category.name}
+                    <span className="cat-name">{category.name}</span>
                   </button>
                 )
               })}

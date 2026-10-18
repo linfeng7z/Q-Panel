@@ -286,6 +286,42 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('keeps week category filters contained when categories grow', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.icon-btn[title="设置"]').click()
+      await page.locator('.settings-tab:has-text("分类")').click()
+      for (const name of ['合规审计', '数据治理', '云安全', '供应链安全', '安全意识', '漏洞管理']) {
+        await page.locator('.category-add-row .input').fill(name)
+        await page.locator('.category-add-row .btn').click()
+      }
+      await page.locator('.settings-modal .modal-close').click()
+      await page.locator('.nav-item:has-text("本周安排")').click()
+      const layout = await page.evaluate(() => {
+        const head = document.querySelector('.week-list-head')
+        const card = head?.closest('.bezel')
+        const title = head?.querySelector('.list-title')
+        if (!head || !card || !title) return null
+        const headBox = head.getBoundingClientRect()
+        const titleBox = title.getBoundingClientRect()
+        return {
+          contained: head.scrollWidth <= head.clientWidth + 1,
+          headLeft: headBox.left,
+          titleLeft: titleBox.left,
+          cardRight: card.getBoundingClientRect().right,
+          headRight: headBox.right,
+        }
+      })
+      expect(layout).not.toBeNull()
+      expect(layout?.contained).toBe(true)
+      expect(Math.abs((layout?.titleLeft ?? 0) - (layout?.headLeft ?? 0))).toBeLessThan(20)
+      expect((layout?.headRight ?? 0) <= (layout?.cardRight ?? 0) + 1).toBe(true)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps an empty person-day field empty while typing', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

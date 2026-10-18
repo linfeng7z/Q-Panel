@@ -3582,3 +3582,42 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Week filters: full-width second row, no squeezed title. */
+.list-head.week-list-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 7px;
+}
+
+.week-list-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.week-list-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.week-list-actions .chip {
+  flex: 0 0 auto;
+  max-width: 178px;
+}
+
+.week-list-actions .chip .cat-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
