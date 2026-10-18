@@ -49,6 +49,10 @@ contextBridge.exposeInMainWorld('qpanel', {
   app: {
     version: () => ipcRenderer.invoke('app:version'),
     setAutoLaunch: (enabled) => ipcRenderer.invoke('app:set-auto-launch', enabled),
-    setWindowBlur: (strength) => ipcRenderer.invoke('app:set-window-blur', strength),
+    getBackdrop: () => ipcRenderer.invoke('app:get-backdrop'),
+    onBackdrop: (callback) => {
+      ipcRenderer.on('app:backdrop', (_event, backdrop) => callback(backdrop))
+      return () => ipcRenderer.removeAllListeners('app:backdrop')
+    },
   },
 })

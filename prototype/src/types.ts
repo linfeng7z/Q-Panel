@@ -159,6 +159,7 @@ export interface UserPreferences {
   aiScope: 'minimal' | 'summary' | 'all'
   backupDays: number
   blurStrength: number
+  yearOptions: number[]
 }
 
 export interface AiConfigPublic {

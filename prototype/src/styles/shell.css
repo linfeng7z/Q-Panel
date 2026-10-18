@@ -504,6 +504,23 @@
   cursor: default;
 }
 
+.year-nav.year-add {
+  color: rgba(180, 203, 255, 0.9);
+  border-color: rgba(143, 177, 255, 0.2);
+  background: rgba(120, 150, 255, 0.08);
+}
+
+.year-nav.year-add:hover {
+  color: #fff;
+  background: rgba(120, 150, 255, 0.18);
+}
+
+.year-nav.year-delete:hover:not(:disabled) {
+  color: #ff9c9c;
+  border-color: rgba(255, 120, 120, 0.24);
+  background: rgba(255, 90, 90, 0.1);
+}
+
 .year-strip {
   display: flex;
   flex: 1;

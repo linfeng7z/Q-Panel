@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Notification, Tray, dialog, globalShortcut, ipcMain, nativeImage, safeStorage, screen, shell } from 'electron'
+import { app, BrowserWindow, Menu, Notification, Tray, desktopCapturer, dialog, globalShortcut, ipcMain, nativeImage, safeStorage, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { callAiGeneration, createAiConfigStore, testAiConnection } from './lib/ai.mjs'
@@ -28,6 +28,7 @@ let store = null
 let reminderScheduler = null
 let reminderStateStore = null
 let lastWorkspace = null
+let lastBackdrop = null
 let aiConfigStore = null
 
 // Matches the physical MacBook notch / menu-bar height; the collapsed window
@@ -100,17 +101,66 @@ function hideNotch() {
   notchWindow?.hide()
 }
 
-function showWindow() {
+async function captureBackdrop() {
+  if (process.env.Q_PANEL_DISABLE_SCREEN_CAPTURE === '1') return null
+  try {
+    const bounds = mainWindow?.getBounds()
+    if (!bounds) return null
+    const display = screen.getDisplayMatching(bounds)
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: {
+        width: Math.round(display.size.width * display.scaleFactor),
+        height: Math.round(display.size.height * display.scaleFactor),
+      },
+    })
+    const source = sources.find((item) => item.display_id === String(display.id)) ?? sources[0]
+    if (!source?.thumbnail || source.thumbnail.isEmpty()) return null
+    const jpeg = source.thumbnail.toJPEG(82)
+    if (!jpeg.length) return null
+    return {
+      image: `data:image/jpeg;base64,${jpeg.toString('base64')}`,
+      screen: { width: display.size.width, height: display.size.height },
+      window: bounds,
+    }
+  } catch {
+    return null
+  }
+}
+
+async function showWindow() {
   if (!mainWindow) {
     createWindow()
     mainWindow?.once('ready-to-show', showWindow)
     return
   }
+  if (mainWindow.isVisible()) {
+    mainWindow.focus()
+    showNotch()
+    return
+  }
   if (mainWindow.isMinimized()) mainWindow.restore()
   placePanelOnDisplay()
+  // Capture the desktop before the panel is on screen; a temporary notch hide
+  // keeps the hit target out of the background image.
+  hideNotch()
+  await new Promise((resolve) => setTimeout(resolve, 40))
+  const backdrop = await captureBackdrop()
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
+  try {
+    // If screen capture is unavailable (TCC denied), fall back to a native
+    // material. The window has native rounded corners, so the material cannot
+    // paint white squares outside a CSS clip.
+    mainWindow.setVibrancy(backdrop ? null : 'under-window')
+  } catch {
+    // Vibrancy is a fallback only.
+  }
   mainWindow.show()
   mainWindow.focus()
+  if (backdrop) {
+    lastBackdrop = backdrop
+    if (!mainWindow.webContents.isLoading()) mainWindow.webContents.send('app:backdrop', backdrop)
+  }
   showNotch()
 }
 
@@ -119,10 +169,10 @@ function hideWindow() {
   showNotch()
 }
 
-function toggleWindow() {
+async function toggleWindow() {
   if (!mainWindow) return
   if (mainWindow.isVisible()) hideWindow()
-  else showWindow()
+  else await showWindow()
 }
 
 function targetDisplay() {
@@ -510,14 +560,15 @@ function registerIpc() {
     toggleWindow()
     return { ok: true }
   })
-  ipcMain.handle('notch:expand', () => {
-    showWindow()
+  ipcMain.handle('notch:expand', async () => {
+    await showWindow()
     return { ok: true, visible: true }
   })
-  ipcMain.handle('notch:toggle', () => {
-    toggleWindow()
+  ipcMain.handle('notch:toggle', async () => {
+    await toggleWindow()
     return { ok: true, visible: Boolean(mainWindow?.isVisible()) }
   })
+  ipcMain.handle('app:get-backdrop', () => lastBackdrop)
   ipcMain.handle('ai:config:get', async () => {
     if (!aiConfigStore) return { ok: false, error: 'not_ready' }
     return { ok: true, config: (await aiConfigStore.load()).config }
@@ -567,22 +618,6 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
-  ipcMain.handle('app:set-window-blur', (_event, strength) => {
-    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_window' }
-    const numeric = Number(strength)
-    // macOS does not expose a continuous blur radius. Map the slider to three
-    // native materials so the change is visible, while CSS handles the fine
-    // grain. An opaque CSS radius is deliberately avoided: the native window
-    // clips the vibrancy layer to its own rounded silhouette, which prevents
-    // the white material squares that appeared at CSS-clipped corners.
-    const vibrancy = numeric <= 2 ? null : numeric < 28 ? 'hud' : numeric < 58 ? 'sidebar' : 'under-window'
-    try {
-      mainWindow.setVibrancy(vibrancy)
-    } catch {
-      return { ok: false, error: 'vibrancy_unavailable' }
-    }
-    return { ok: true, vibrancy }
-  })
   ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
 
     if (process.env.Q_PANEL_DISABLE_AUTO_LAUNCH === '1') return { ok: true, skipped: 'disabled-by-env' }

@@ -49,7 +49,18 @@ interface QPanelBridge {
   app: {
     version: () => Promise<string>
     setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; openAtLogin?: boolean }>
-    setWindowBlur: (strength: number) => Promise<{ ok: boolean; vibrancy?: string | null; error?: string }>
+    getBackdrop: () => Promise<{
+      image: string
+      screen: { width: number; height: number }
+      window: { x: number; y: number; width: number; height: number }
+    } | null>
+    onBackdrop: (
+      callback: (backdrop: {
+        image: string
+        screen: { width: number; height: number }
+        window: { x: number; y: number; width: number; height: number }
+      }) => void,
+    ) => () => void
   }
   ai: {
     getConfig: () => Promise<{ ok: boolean; config?: { baseUrl: string; model: string; hasKey: boolean }; error?: string }>

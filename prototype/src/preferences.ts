@@ -13,4 +13,5 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   aiScope: 'summary',
   backupDays: 14,
   blurStrength: 56,
+  yearOptions: [],
 }

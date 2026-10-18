@@ -168,6 +168,25 @@ test('persists user preferences across an app restart', async () => {
   }
 })
 
+test('manages years explicitly instead of preloading future years', async () => {
+  const userData = await createUserData()
+  const { app, page } = await launchApp(userData)
+  try {
+    await page.locator('.period-btn').click()
+    const years = page.locator('.year-btn')
+    await expect(years).toHaveText(['2026'])
+    await expect(page.locator('.year-delete')).toHaveCount(0)
+    await page.locator('.year-add').click()
+    await expect(years).toHaveText(['2026', '2027'])
+    await expect(years.filter({ hasText: '2029' })).toHaveCount(0)
+    await page.locator('.year-delete').click()
+    await expect(years).toHaveText(['2026'])
+    await expect(years.filter({ hasText: '2026' })).toHaveClass(/active/)
+  } finally {
+    await closeApp(app, userData)
+  }
+})
+
 test('starts collapsed on the notch, expands on click and hides on blur', async () => {
   const userData = await createUserData()
   const { app } = await launchApp(userData, { Q_PANEL_START_EXPANDED: '0' })

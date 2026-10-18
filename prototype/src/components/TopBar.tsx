@@ -8,7 +8,9 @@ import {
   GearSix,
   MagnifyingGlass,
   Palette,
+  Plus,
   Sparkle,
+  Trash,
 } from '@phosphor-icons/react'
 import {
   CURRENT_QUARTER,
@@ -18,7 +20,6 @@ import {
   QUARTER_STATS,
   WEEK_ORDER,
   WEEKS,
-  YEARS,
   quarterKey,
   quarterRange,
 } from '../data/mock'
@@ -36,6 +37,9 @@ interface TopBarProps {
   weekKey: string
   onWeekChange: (weekKey: string) => void
   onPeriodChange: (year: number, quarter: number) => void
+  years: number[]
+  onAddYear: () => void
+  onRemoveYear: (year: number) => void
   onOpenCommand: () => void
   onOpenAI: () => void
   onOpenSettings: () => void
@@ -54,6 +58,9 @@ export function TopBar({
   weekKey,
   onWeekChange,
   onPeriodChange,
+  years,
+  onAddYear,
+  onRemoveYear,
   onOpenCommand,
   onOpenAI,
   onOpenSettings,
@@ -71,10 +78,10 @@ export function TopBar({
   const suppressYearClickRef = useRef(false)
   const weekMeta = WEEKS[weekKey] ?? WEEKS[CURRENT_WEEK_KEY]
   const weekIndex = WEEK_ORDER.indexOf(weekKey)
-  const yearIndex = YEARS.indexOf(year)
+  const yearIndex = years.indexOf(year)
 
   const stepYear = (direction: number) => {
-    const next = YEARS[Math.min(YEARS.length - 1, Math.max(0, yearIndex + direction))]
+    const next = years[Math.min(years.length - 1, Math.max(0, yearIndex + direction))]
     if (next !== undefined && next !== year) onPeriodChange(next, quarter)
   }
   const quarterWeeks = WEEK_ORDER.filter((key) => {
@@ -215,7 +222,7 @@ export function TopBar({
                     yearDragRef.current = null
                   }}
                 >
-                  {YEARS.map((item) => (
+                  {years.map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -233,14 +240,34 @@ export function TopBar({
                   type="button"
                   className="year-nav"
                   onClick={() => stepYear(1)}
-                  disabled={yearIndex >= YEARS.length - 1}
+                  disabled={yearIndex >= years.length - 1}
                   aria-label="下一年"
                 >
                   <CaretRight size={12} weight="bold" />
                 </button>
+                <button
+                  type="button"
+                  className="year-nav year-add"
+                  onClick={onAddYear}
+                  aria-label="新增下一年度"
+                  title="新增下一年度"
+                >
+                  <Plus size={12} weight="bold" />
+                </button>
+                {year !== CURRENT_YEAR && years.length > 1 ? (
+                  <button
+                    type="button"
+                    className="year-nav year-delete"
+                    onClick={() => onRemoveYear(year)}
+                    aria-label="移除年份"
+                    title="从年份列表移除（数据保留）"
+                  >
+                    <Trash size={11} />
+                  </button>
+                ) : null}
               </div>
               <div className="period-years-note">
-                滚轮 / ← → / 左右拖动切年 · 当前年份起自动准备未来三年
+                滚轮 / ← → / 拖动切换 · ＋ 新增下一年度 · 当前年份不可删除
               </div>
               <div className="q-card-grid" key={year}>
                 {[1, 2, 3, 4].map((q) => {

@@ -44,6 +44,28 @@ html.electron-runtime #root {
   background-clip: padding-box;
 }
 
+.qp-root.electron-mode .panel-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  opacity: 0.32;
+}
+
+.qp-root.electron-mode .panel-backdrop-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(4, 5, 9, 0.34);
+  pointer-events: none;
+}
+
+.qp-root.electron-mode .panel-body {
+  position: relative;
+  z-index: 2;
+}
+
 /* The simulated-desktop glass highlight becomes a hard white rim in the
    native transparent window; keep only the pointer glow here. */
 .qp-root.electron-mode .panel::before {

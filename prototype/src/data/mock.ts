@@ -102,8 +102,9 @@ export function replaceCategories(next: Category[]): void {
   CATEGORIES.splice(0, CATEGORIES.length, ...next.map((category) => ({ ...category })))
 }
 
-// Start at the current year and keep the next three prepared automatically.
-export const YEARS = Array.from({ length: 4 }, (_, index) => CURRENT_YEAR + index)
+// Prepared capacity for optional year management; only the current year is
+// shown by default. Users add years explicitly from the year switcher.
+export const YEARS = Array.from({ length: 11 }, (_, index) => CURRENT_YEAR + index)
 
 export function quarterKey(year: number, quarter: number): string {
   return `${year}-Q${quarter}`
@@ -297,7 +298,7 @@ export const PROJECTS: Project[] = [
 ]
 
 export const WEEKS: Record<string, WeekMeta> = Object.fromEntries(
-  generateWeeks(`${CURRENT_YEAR - 1}-01-01`, `${CURRENT_YEAR + 5}-12-31`).map((info) => [
+  generateWeeks(`${CURRENT_YEAR - 1}-01-01`, `${CURRENT_YEAR + 10}-12-31`).map((info) => [
     info.key,
     {
       key: info.key,

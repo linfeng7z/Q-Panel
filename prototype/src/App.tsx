@@ -27,6 +27,7 @@ import {
   OBJECTIVES,
   PROJECTS,
   CURRENT_WEEK_KEY,
+  CURRENT_YEAR,
   NOW,
   TODAY,
   WEEKS,
@@ -96,6 +97,12 @@ function parseInitialTheme(): ThemeId {
   return value && THEMES.includes(value) ? value : 'noir'
 }
 
+type DesktopBackdrop = {
+  image: string
+  screen: { width: number; height: number }
+  window: { x: number; y: number; width: number; height: number }
+}
+
 export default function App() {
   const params = useMemo(() => new URLSearchParams(window.location.search), [])
   const electronMode = Boolean(window.qpanel?.isElectron)
@@ -128,6 +135,13 @@ export default function App() {
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:30' })
   const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
+  const [backdrop, setBackdrop] = useState<DesktopBackdrop | null>(null)
+  const yearOptions = useMemo(() => {
+    const values = [CURRENT_YEAR, year, ...(preferences.yearOptions ?? [])].filter(
+      (item) => Number.isInteger(item) && item >= CURRENT_YEAR,
+    )
+    return [...new Set(values)].sort((a, b) => a - b)
+  }, [preferences.yearOptions, year])
   const viewTransitionRef = useRef<{ finished: Promise<void> } | null>(null)
 
   useEffect(() => {
@@ -205,6 +219,37 @@ export default function App() {
     if (toastTimer.current) window.clearTimeout(toastTimer.current)
     toastTimer.current = window.setTimeout(() => setToast(null), 3000)
   }, [])
+
+  const addNextYear = useCallback(() => {
+    const last = yearOptions[yearOptions.length - 1] ?? CURRENT_YEAR
+    const next = last + 1
+    if (next > CURRENT_YEAR + 10) {
+      showToast(`最多准备到 ${CURRENT_YEAR + 10} 年`)
+      return
+    }
+    setPreferences((prev) => ({
+      ...prev,
+      yearOptions: [...new Set([...(prev.yearOptions ?? []), CURRENT_YEAR, next])].sort((a, b) => a - b),
+    }))
+    setYear(next)
+    showToast(`已新增 ${next} 年度`)
+  }, [showToast, yearOptions])
+
+  const removeYearOption = useCallback(
+    (target: number) => {
+      if (target === CURRENT_YEAR) {
+        showToast('当前年份不可删除')
+        return
+      }
+      setPreferences((prev) => ({
+        ...prev,
+        yearOptions: (prev.yearOptions ?? []).filter((item) => item !== target),
+      }))
+      if (year === target) setYear(CURRENT_YEAR)
+      showToast(`已从年份列表移除 ${target}（数据保留）`)
+    },
+    [showToast, year],
+  )
 
   const applyWorkspace = useCallback((value: unknown) => {
     if (!hasWorkspaceShape(value)) return false
@@ -342,6 +387,29 @@ export default function App() {
 
   useEffect(() => {
     if (!electronMode || notchMode) return
+    let alive = true
+    const unsubscribe = window.qpanel?.app.onBackdrop((next) => {
+      if (alive) setBackdrop(next)
+    })
+    void window.qpanel?.app.getBackdrop().then((next) => {
+      if (alive && next) setBackdrop(next)
+    })
+    return () => {
+      alive = false
+      unsubscribe?.()
+    }
+  }, [electronMode, notchMode])
+
+  useEffect(() => {
+    setPreferences((prev) => {
+      const current = prev.yearOptions ?? []
+      if (current.includes(year)) return prev
+      return { ...prev, yearOptions: [...current, year].sort((a, b) => a - b) }
+    })
+  }, [year])
+
+  useEffect(() => {
+    if (!electronMode || notchMode) return
     return window.qpanel?.reminders.onMissed(({ entries }) => {
       if (!entries.length) return
       setNativeReminder(entries[0])
@@ -354,10 +422,6 @@ export default function App() {
     void window.qpanel?.app.setAutoLaunch(preferences.autoLaunch)
   }, [electronMode, preferences.autoLaunch])
 
-  useEffect(() => {
-    if (!electronMode) return
-    void window.qpanel?.app.setWindowBlur(preferences.blurStrength)
-  }, [electronMode, preferences.blurStrength])
 
 
   useEffect(() => {
@@ -1000,6 +1064,21 @@ export default function App() {
           <div className="panel-wrap">
             <div className="panel-shell">
               <div className="panel" data-theme={theme}>
+                {backdrop ? (
+                  <>
+                    <div
+                      className="panel-backdrop"
+                      aria-hidden="true"
+                      style={{
+                        backgroundImage: `url("${backdrop.image}")`,
+                        backgroundSize: `${backdrop.screen.width}px ${backdrop.screen.height}px`,
+                        backgroundPosition: `-${backdrop.window.x}px -${backdrop.window.y}px`,
+                        filter: `blur(${preferences.blurStrength}px) saturate(1.08)`,
+                      }}
+                    />
+                    <div className="panel-backdrop-shade" aria-hidden="true" />
+                  </>
+                ) : null}
                 <TopBar
                   projects={projects}
                   onToggleTheme={() =>
@@ -1010,6 +1089,9 @@ export default function App() {
                   view={view}
                   weekKey={weekKey}
                   onWeekChange={changeWeek}
+                  years={yearOptions}
+                  onAddYear={addNextYear}
+                  onRemoveYear={removeYearOption}
                   onPeriodChange={(nextYear, nextQuarter) => {
                     setYear(nextYear)
                     setQuarter(nextQuarter)
