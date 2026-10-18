@@ -3842,3 +3842,23 @@
 .time-select .select-menu-option-label {
   font-family: var(--font-mono);
 }
+
+/* Dark themes keep the ambient desktop image out of the working column.
+   A light desktop must not turn the content area into a washed-out gray. */
+.qp-root.electron-mode .content {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(var(--material-rgb), 0.56),
+      rgba(var(--material-rgb), 0.68)
+    );
+}
+
+.qp-root.electron-mode .sidebar {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(var(--material-rgb), 0.48),
+      rgba(var(--material-rgb), 0.62)
+    );
+}
