@@ -349,6 +349,12 @@ test.describe('Q-Panel feature regression', () => {
       const w43Row = page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })
       await expect(w43Row).toHaveCount(1)
       await w43Row.hover()
+      await expect.poll(() => page.locator('.relation-thread').count()).toBeGreaterThan(0)
+      await expect.poll(() => page.locator('.auto-row.relation-related').count()).toBeGreaterThan(0)
+      await page.locator('.project-mini').first().hover()
+      await expect(page.locator('.project-mini.relation-target')).toHaveCount(1)
+      await expect.poll(() => page.locator('.auto-row.relation-related').count()).toBeGreaterThan(0)
+      await w43Row.hover()
       await w43Row.locator('.auto-remove-btn').click()
       await expect(page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })).toHaveCount(0)
 

@@ -78,25 +78,7 @@ export function WeekView({
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
   const meta = WEEKS[weekKey] ?? WEEKS[CURRENT_WEEK_KEY]
-  const [relationTaskId, setRelationTaskId] = useState<string | null>(null)
-  const relationTask = relationTaskId ? tasks.find((task) => task.id === relationTaskId) ?? null : null
-  const relationObjectiveId = relationTask?.objectiveId
-  const relationProjectId = relationTask?.projectId
-  const isRelatedTask = (task: WeekTask) =>
-    relationTask !== null &&
-    (task.id === relationTask.id ||
-      (relationObjectiveId !== undefined && task.objectiveId === relationObjectiveId) ||
-      (relationProjectId !== undefined && task.projectId === relationProjectId))
-
-  const focusObjective = (objectiveId: string) => {
-    const linkedTask = visibleTasks.find((task) => task.objectiveId === objectiveId)
-    setRelationTaskId(linkedTask?.id ?? null)
-  }
-
-  const focusProject = (projectId: string) => {
-    const linkedTask = visibleTasks.find((task) => task.projectId === projectId)
-    setRelationTaskId(linkedTask?.id ?? null)
-  }
+  const [relationId, setRelationId] = useState<string | null>(null)
   const taskStart = (task: WeekTask) => task.startDate ?? task.dueDate
   const taskEnd = (task: WeekTask) => task.endDate ?? task.dueDate
   const taskTouchesWeek = (task: WeekTask) => taskStart(task) <= meta.end && taskEnd(task) >= meta.start
@@ -117,6 +99,32 @@ export function WeekView({
   const visibleTasks = activeDay
     ? filteredTasks.filter((task) => taskStart(task) <= activeDay && taskEnd(task) >= activeDay)
     : filteredTasks
+  const relationTask = relationId ? weekTasks.find((task) => task.id === relationId) ?? null : null
+  const relationAuto = relationId ? autoItems.find((item) => item.id === relationId) ?? null : null
+  const relationObjectiveId = relationTask?.objectiveId ?? relationAuto?.project.objectiveId
+  const relationProjectId = relationTask?.projectId ?? relationAuto?.project.id
+  const relationSourceId = relationTask?.id ?? relationAuto?.id ?? null
+  const isRelatedTask = (task: WeekTask) =>
+    relationId !== null &&
+    (task.id === relationId ||
+      (relationObjectiveId !== undefined && task.objectiveId === relationObjectiveId) ||
+      (relationProjectId !== undefined && task.projectId === relationProjectId))
+  const isRelatedAuto = (item: ProjectWeekItem) =>
+    relationId !== null &&
+    (item.id === relationId ||
+      (relationProjectId !== undefined && item.project.id === relationProjectId))
+
+  const focusObjective = (objectiveId: string) => {
+    const linkedTask = visibleTasks.find((task) => task.objectiveId === objectiveId)
+    const linkedAuto = visibleAutoItems.find((item) => item.project.objectiveId === objectiveId)
+    setRelationId(linkedTask?.id ?? linkedAuto?.id ?? null)
+  }
+
+  const focusProject = (projectId: string) => {
+    const linkedTask = visibleTasks.find((task) => task.projectId === projectId)
+    const linkedAuto = visibleAutoItems.find((item) => item.project.id === projectId)
+    setRelationId(linkedTask?.id ?? linkedAuto?.id ?? null)
+  }
   const undone = visibleTasks.filter((task) => !task.done)
   const done = visibleTasks.filter((task) => task.done)
   const autoUndone = visibleAutoItems.filter((item) => item.status !== 'done')
@@ -132,7 +140,10 @@ export function WeekView({
   const overdue = meta.end <= '2026-12-31' ? tasks.filter(isOverdue) : []
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
   const linkedObjectiveIds = Array.from(
-    new Set(weekTasks.map((task) => task.objectiveId).filter(Boolean)),
+    new Set([
+      ...weekTasks.map((task) => task.objectiveId).filter(Boolean),
+      ...autoItems.map((item) => item.project.objectiveId).filter(Boolean),
+    ]),
   ) as string[]
   const linkedObjectives = linkedObjectiveIds
     .map((id) => objectives.find((objective) => objective.id === id))
@@ -169,8 +180,16 @@ export function WeekView({
     return (
       <div
         key={item.id}
-        className={cn('task-row auto-row', item.status === 'done' && 'done', relationProjectId === item.project.id && 'relation-related')}
+        className={cn(
+          'task-row auto-row',
+          item.status === 'done' && 'done',
+          isRelatedAuto(item) && 'relation-related',
+          relationId !== null && !isRelatedAuto(item) && 'relation-dimmed',
+        )}
         style={catStyle(item.project.categoryId)}
+        data-relation-task={item.id}
+        onMouseEnter={() => setRelationId(item.id)}
+        onMouseLeave={() => setRelationId(null)}
       >
         <CheckBox
           on={item.status === 'done'}
@@ -418,9 +437,9 @@ export function WeekView({
                     onToggle={onToggleTask}
                     onEdit={onEditTask}
                     onDelete={onDeleteTask}
-                    onHover={(next) => setRelationTaskId(next?.id ?? null)}
+                    onHover={(next) => setRelationId(next?.id ?? null)}
                     related={isRelatedTask(task)}
-                    dimmed={relationTask !== null && !isRelatedTask(task)}
+                    dimmed={relationId !== null && !isRelatedTask(task)}
                   />
                 )
               })}
@@ -444,9 +463,9 @@ export function WeekView({
                         onToggle={onToggleTask}
                     onEdit={onEditTask}
                     onDelete={onDeleteTask}
-                        onHover={(next) => setRelationTaskId(next?.id ?? null)}
+                        onHover={(next) => setRelationId(next?.id ?? null)}
                         related={isRelatedTask(task)}
-                        dimmed={relationTask !== null && !isRelatedTask(task)}
+                        dimmed={relationId !== null && !isRelatedTask(task)}
                       />
                     )
                   })}
@@ -487,7 +506,7 @@ export function WeekView({
                   data-relation-objective={objective.id}
                   onClick={onOpenQuarter}
                   onMouseEnter={() => focusObjective(objective.id)}
-                  onMouseLeave={() => setRelationTaskId(null)}
+                  onMouseLeave={() => setRelationId(null)}
                 >
                   <div className="objective-mini-top" style={catStyle(objective.categoryId)}>
                     <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
@@ -522,7 +541,7 @@ export function WeekView({
                     key={project.id}
                     data-relation-project={project.id}
                     onMouseEnter={() => focusProject(project.id)}
-                    onMouseLeave={() => setRelationTaskId(null)}
+                    onMouseLeave={() => setRelationId(null)}
                   >
                     <span className="project-mini-icon" style={catStyle(project.categoryId)}>
                       <FolderSimple size={14} />
@@ -545,7 +564,7 @@ export function WeekView({
         </div>
       </div>
       <RelationThreads
-        taskId={relationTask?.id ?? null}
+        taskId={relationSourceId}
         objectiveId={relationObjectiveId}
         projectId={relationProjectId}
       />
