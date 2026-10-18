@@ -479,6 +479,16 @@ Q-Panel 的产品方向和部分交互思路参考了 **[xiaopu-ai/TO-DO-Panel](
 
 ---
 
+## Crafted by
+
+Q-Panel 由 **linfeng7z** 独立设计、开发与维护。应用内使用 GitHub 风格的创作者卡片展示项目身份和入口，而不是一行普通署名。
+
+![Q-Panel creator card](docs/screenshots/creator-credit.png)
+
+[GitHub @linfeng7z](https://github.com/linfeng7z)
+
+---
+
 ## 免责声明
 
 **请在使用前阅读。**
