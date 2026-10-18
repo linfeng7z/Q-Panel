@@ -87,7 +87,7 @@ npm run pack
 产物：
 
 ```text
-release/Q-Panel-1.1.38-arm64.dmg
+release/Q-Panel-1.1.39-arm64.dmg
 release/mac-arm64/Q-Panel.app
 ```
 

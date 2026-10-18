@@ -212,10 +212,6 @@ export function WeekView({
               {item.project.title}
             </span>
             <span className="auto-tag">自动排期</span>
-            <span className="meta-item">第 {meta.num} 周</span>
-            {item.weekDays !== item.plannedDays ? (
-              <span className="meta-item">总 {fmtDays(item.plannedDays)} 人日</span>
-            ) : null}
           </div>
         </div>
         <div className={cn('task-hours', item.status === 'done' && 'done')}>
@@ -231,6 +227,7 @@ export function WeekView({
         >
           <Trash size={11} />
         </button>
+        <span className="auto-row-actions-pad" aria-hidden="true" />
       </div>
     )
   }

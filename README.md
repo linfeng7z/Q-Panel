@@ -101,7 +101,7 @@ npm run shot
 npm run interact
 ```
 
-当前：日历/背景合成单元测试 7/7；Electron 单测 14/14；Electron E2E 40/40；四皮肤 `--text-3` 对主底色对比度 >4.5:1；1.1.38 打包版以密集黑白大字/彩条作为桌面实测，最高档反转后方窗口时面板内部截屏像素差为 0。原生验证脚本见 `electron/scripts/verify-material.mjs`。
+当前：日历/背景合成单元测试 7/7；Electron 单测 14/14；Electron E2E 40/40；四皮肤 `--text-3` 对主底色对比度 >4.5:1；1.1.39 打包版以密集黑白大字/彩条作为桌面实测，最高档反转后方窗口时面板内部截屏像素差为 0。原生验证脚本见 `electron/scripts/verify-material.mjs`。
 
 ## 下一步
 

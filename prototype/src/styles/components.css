@@ -3945,3 +3945,10 @@
   line-height: 1.25;
   white-space: nowrap;
 }
+
+/* Manual rows have edit + delete actions; the auto row has one action.
+   Reserve the second slot so the weekly person-day column stays aligned. */
+.auto-row .auto-row-actions-pad {
+  flex: 0 0 25px;
+  width: 25px;
+}

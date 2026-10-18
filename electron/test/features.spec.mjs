@@ -360,7 +360,12 @@ test.describe('Q-Panel feature regression', () => {
       await page.locator('.nav-item:has-text("本周安排")').click()
       const w42Row = page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })
       await expect(w42Row).toHaveCount(1)
-      await expect(w42Row).toContainText('总 0.5 人日')
+      await expect(w42Row).not.toContainText('第 42 周')
+      await expect(w42Row).not.toContainText('总 0.5 人日')
+      const hourLefts = await page.locator('.task-row .task-hours').evaluateAll((rows) =>
+        rows.map((row) => Math.round(row.getBoundingClientRect().left)),
+      )
+      expect(new Set(hourLefts).size).toBe(1)
 
       await page.locator('[aria-label="下一周"]').click()
       await expect(page.locator('.list-title')).toContainText('本周必做')
