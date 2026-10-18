@@ -7,7 +7,10 @@ export function backdropMaterial(value: number) {
   return {
     strength,
     radius: 160 * response,
-    tint: strength === 80 ? 1 : 0.74 + 0.26 * response,
+    // Keep the desktop visible through most of the travel, then close the
+    // material completely at 100%. This keeps the slider perceptible while the
+    // reading surfaces themselves stay opaque.
+    tint: strength === 80 ? 1 : 0.34 + 0.66 * Math.pow(progress, 1.7),
     percent: Math.round(progress * 100),
   }
 }

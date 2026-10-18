@@ -121,7 +121,7 @@ test('slider previews within a frame and visibly changes the material before sav
       }
       return values
     })
-    expect(result.map((x) => x.tint)).toEqual(result.map((x) => x.value === 80 ? 1 : 0.74 + 0.26 * Math.sqrt(x.value / 80)))
+    expect(result.map((x) => x.tint)).toEqual(result.map((x) => x.value === 80 ? 1 : 0.34 + 0.66 * Math.pow(x.value / 80, 1.7)))
     expect(Math.max(...result.map((x) => x.elapsed))).toBeLessThan(150)
     await expect(page.locator('.settings-range-value')).toHaveText('100%')
     await page.mouse.click(20, 20)
