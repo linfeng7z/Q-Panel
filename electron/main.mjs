@@ -331,9 +331,6 @@ function createWindow() {
     },
   })
 
-  // The constructor's transparent background can still leave a white backing
-  // store on macOS; re-applying a fully transparent color clears the clipped
-  // rounded corners so the desktop shows through instead of white squares.
   mainWindow.setBackgroundColor('#00000000')
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })

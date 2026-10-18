@@ -1,92 +1,51 @@
-/* Native material is an opaque compositing surface, never a translucent image
-   sitting over the unfiltered live desktop. Window corners remain OS-owned. */
+/* Keep the original single glass skin. The opaque backing store lives at the
+   native window layer, so the live desktop cannot leak through the transparent
+   renderer while the CSS material remains visually one surface. */
 .qp-root.electron-mode {
   --material-rgb: 13, 15, 20;
-  --material-surface-rgb: 21, 24, 31;
-  --text-1: #f2f4f8;
-  --text-2: #c2c8d2;
-  --text-3: #9da6b5;
-  --text-4: #727d8d;
+  --text-3: rgba(255, 255, 255, 0.56);
 }
 
 .qp-root.electron-mode[data-theme="ops"] {
   --material-rgb: 8, 16, 25;
-  --material-surface-rgb: 14, 26, 39;
+  --text-3: #8fa6bc;
 }
 
 .qp-root.electron-mode[data-theme="aurora"] {
   --material-rgb: 17, 13, 27;
-  --material-surface-rgb: 26, 20, 39;
-  --text-2: #c9c0dc;
-  --text-3: #ada1c2;
+  --text-3: #a493c0;
 }
 
 .qp-root.electron-mode[data-theme="ember"] {
   --material-rgb: 24, 17, 13;
-  --material-surface-rgb: 34, 25, 19;
-  --text-2: #d7c4b4;
-  --text-3: #b9a595;
+  --text-3: #b8a18a;
 }
 
 .qp-root.electron-mode .panel {
-  /* Alpha must be 1: CSS backdrop-filter cannot blur the live desktop through
-     Electron. This stops sharp text from bypassing our captured blur layer. */
+  /* One opaque skin, not a set of child surfaces: the whole panel reads as the
+     same material, while the native window keeps its rounded transparent edge. */
   background: rgb(var(--material-rgb));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: none;
 }
 
 .qp-root.electron-mode .panel-backdrop {
-  position: absolute;
-  z-index: 0;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  /* 1/4-resolution surface + overscan prevents transparent filter edges and
-     makes pointer-rate updates much cheaper than full Retina image filtering. */
+  /* One ambient layer for the whole panel. It is behind every existing surface;
+     no sidebar/topbar/content child gets its own color treatment. */
   inset: auto;
   top: -192px;
   left: -192px;
   width: calc(25% + 96px);
   height: calc(25% + 96px);
-  opacity: 1;
+  opacity: 0.42;
   transform-origin: 0 0;
   transform: scale(4);
-  filter: blur(var(--material-blur, 33.47px)) saturate(0.85);
+  filter: blur(var(--material-blur, 33.47px)) saturate(0.9);
   will-change: filter;
   transition: none;
 }
 
 .qp-root.electron-mode .panel-backdrop-shade {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: rgba(var(--material-rgb), var(--material-tint, 0.958));
+  background: rgba(var(--material-rgb), var(--material-tint, 0.34));
   transition: none;
-}
-
-/* Reading surfaces do not depend on what another application is displaying.
-   Frosted ambience stays in the gutters; task text sits on stable ink. */
-.qp-root.electron-mode .bezel-inner {
-  background: linear-gradient(
-    180deg,
-    rgba(var(--material-surface-rgb), 0.96),
-    rgba(var(--material-surface-rgb), 0.985)
-  );
-}
-
-.qp-root.electron-mode .sidebar {
-  background: rgba(var(--material-rgb), 0.94);
-}
-
-.qp-root.electron-mode .content {
-  /* The page header and whitespace are text-bearing too, not just cards. Keep
-     them on a dark material so a white external document cannot wash them out. */
-  background: rgba(var(--material-rgb), 0.8);
-  border-left: 1px solid var(--line-soft);
-}
-
-.qp-root.electron-mode .topbar {
-  background: rgba(var(--material-rgb), 0.88);
 }

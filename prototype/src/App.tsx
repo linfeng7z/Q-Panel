@@ -1062,7 +1062,11 @@ export default function App() {
                     <div
                       className="panel-backdrop"
                       aria-hidden="true"
-                      style={backdropImageStyle(backdrop)}
+                      style={{
+                        ...backdropImageStyle(backdrop),
+                        // 100% is a deliberate no-desktop mode, not just a tint.
+                        opacity: preferences.blurStrength >= 80 ? 0 : undefined,
+                      }}
                     />
                     <div className="panel-backdrop-shade" aria-hidden="true" />
                   </>
