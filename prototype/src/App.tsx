@@ -354,10 +354,6 @@ export default function App() {
     void window.qpanel?.app.setAutoLaunch(preferences.autoLaunch)
   }, [electronMode, preferences.autoLaunch])
 
-  useEffect(() => {
-    if (!electronMode) return
-    void window.qpanel?.app.setWindowBlur(preferences.blurStrength)
-  }, [electronMode, preferences.blurStrength])
 
   useEffect(() => {
     if (!electronMode) return

@@ -279,6 +279,10 @@ function createWindow() {
     },
   })
 
+  // The constructor's transparent background can still leave a white backing
+  // store on macOS; re-applying a fully transparent color clears the clipped
+  // rounded corners so the desktop shows through instead of white squares.
+  mainWindow.setBackgroundColor('#00000000')
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
@@ -380,6 +384,7 @@ function createNotchWindow() {
     },
   })
 
+  notchWindow.setBackgroundColor('#00000000')
   notchWindow.setAlwaysOnTop(true, 'screen-saver', 1)
   notchWindow.setIgnoreMouseEvents(false)
   notchWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
@@ -560,17 +565,6 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
-  ipcMain.handle('app:set-window-blur', (_event, strength) => {
-    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_window' }
-    const numeric = Number(strength)
-    const vibrancy = numeric <= 8 ? null : numeric < 32 ? 'hud' : 'under-window'
-    try {
-      mainWindow.setVibrancy(vibrancy)
-    } catch {
-      return { ok: false, error: 'vibrancy_unavailable' }
-    }
-    return { ok: true, vibrancy }
-  })
   ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
     if (process.env.Q_PANEL_DISABLE_AUTO_LAUNCH === '1') return { ok: true, skipped: 'disabled-by-env' }
     if (!app.isPackaged) return { ok: true, skipped: 'development' }

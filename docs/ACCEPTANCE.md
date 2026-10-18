@@ -1,8 +1,8 @@
-# Q-Panel v1.1.3 验收记录
+# Q-Panel v1.1.4 验收记录
 
 验收日期：2026-10-18  
 环境：macOS Apple Silicon，Electron 44.9.0，Playwright Electron，Chrome（原型回归）  
-交付：`electron/release/Q-Panel-1.1.3-arm64.dmg`（ad-hoc 签名，arm64）
+交付：`electron/release/Q-Panel-1.1.4-arm64.dmg`（ad-hoc 签名，arm64）
 
 ## 自动化结果
 
@@ -24,7 +24,7 @@
 - [x] LSUIElement + accessory 激活策略，Dock/Cmd-Tab 不显示 Q-Panel；
 - [x] 刘海悬停显示渐显脉冲提示；
 - [x] 设置页移除底部“完成”栏，调整实时生效；所有新增/编辑/设置弹窗点击空白自动关闭（提醒除外）；
-- [x] 窗口 28px 圆角、CSS-only 圆角裁切、无原生矩形阴影/白边；
+- [x] 窗口 28px 圆角、CSS-only 圆角裁切、无原生矩形阴影/白边；关闭原生 vibrancy，避免最大模糊时圆角出现白色 material；
 - [x] 单实例、本地持久化、原子写、每日备份；
 - [x] 四套皮肤热切换并持久化；新增待办勾选面板 Logo 与新 App 图标；
 - [x] 可调背景模糊（仅保留模糊度滑块），默认更强的可读性；滑块值持久化。
