@@ -5,6 +5,7 @@ import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
 import { DateRangeField } from './DateRangeField'
 import { DayInput } from './DayInput'
+import { SelectMenu } from './SelectMenu'
 import { ReminderFields } from './ReminderFields'
 import { formatReminder, formatReminderDate, shiftDate } from '../utils'
 
@@ -253,18 +254,17 @@ export function CreateModal({
                       placeholder="分类名称"
                       maxLength={12}
                     />
-                    <select
-                      className="select"
+                    <SelectMenu
                       value={newCategoryColor}
-                      onChange={(event) => setNewCategoryColor(event.target.value)}
-                      aria-label="分类颜色"
-                    >
-                      {CATEGORY_COLORS.map((color) => (
-                        <option value={color.value} key={color.value}>
-                          {color.label}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setNewCategoryColor}
+                      options={CATEGORY_COLORS.map((color) => ({
+                        value: color.value,
+                        label: color.label,
+                        swatch: `var(${color.value})`,
+                      }))}
+                      label="分类颜色"
+                      menuWidth={150}
+                    />
                     <button
                       type="button"
                       className="btn primary sm"
@@ -302,37 +302,39 @@ export function CreateModal({
               {mode === 'project' ? (
                 <div className="field">
                   <label>关联季度规划</label>
-                  <select
-                    className="select"
+                  <SelectMenu
                     value={objectiveId}
-                    onChange={(event) => setObjectiveId(event.target.value)}
-                    aria-label="关联季度规划"
-                  >
-                    <option value="">不关联，按独立项目占用容量</option>
-                    {quarterObjectives.map((objective) => (
-                      <option value={objective.id} key={objective.id}>
-                        {objective.title} · {objective.plannedDays} 人日
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setObjectiveId}
+                    options={[
+                      { value: '', label: '不关联', description: '按独立项目占用容量' },
+                      ...quarterObjectives.map((objective) => ({
+                        value: objective.id,
+                        label: objective.title,
+                        description: `${objective.plannedDays} 人日 · ${objective.status === 'done' ? '已完成' : '进行中'}`,
+                      })),
+                    ]}
+                    label="关联季度规划"
+                    menuWidth={300}
+                  />
                   <div className="field-help">关联后项目工作项视为该季度任务的拆解，不重复占用容量。</div>
                 </div>
               ) : mode === 'objective' ? (
                 <div className="field">
                   <label>关联项目</label>
-                  <select
-                    className="select"
+                  <SelectMenu
                     value={projectId}
-                    onChange={(event) => setProjectId(event.target.value)}
-                    aria-label="关联项目"
-                  >
-                    <option value="">不关联，作为独立季度任务</option>
-                    {projects.map((project) => (
-                      <option value={project.id} key={project.id}>
-                        {project.title}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setProjectId}
+                    options={[
+                      { value: '', label: '不关联', description: '作为独立季度任务' },
+                      ...projects.map((project) => ({
+                        value: project.id,
+                        label: project.title,
+                        description: `${project.plannedDays} 人日 · ${project.categoryId}`,
+                      })),
+                    ]}
+                    label="关联项目"
+                    menuWidth={300}
+                  />
                   <div className="field-help">关联后该项目的工作项归入此季度任务，不再重复占用容量。</div>
                 </div>
               ) : null}

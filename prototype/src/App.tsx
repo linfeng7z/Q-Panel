@@ -1342,6 +1342,7 @@ export default function App() {
           kind={editingItem.kind}
           item={editingItem.item}
           reminderDefaults={reminderDefaults}
+          projects={projects}
           onClose={() => setEditingItem(null)}
           onDelete={(id) => {
             if (editingItem.kind === 'objective') deleteObjective(id)
@@ -1349,10 +1350,32 @@ export default function App() {
           }}
           onSave={(next) => {
             if (editingItem.kind === 'objective') {
-              setObjectives((value) => {
-                const key = quarterKey(year, quarter)
-                return { ...value, [key]: (value[key] ?? []).map((item) => (item.id === next.id ? (next as Objective) : item)) }
-              })
+              const nextObjective = next as Objective
+              setObjectives((value) =>
+                Object.fromEntries(
+                  Object.entries(value).map(([key, list]) => [
+                    key,
+                    list.map((item) => {
+                      if (item.id === nextObjective.id) return nextObjective
+                      if (nextObjective.projectId && item.projectId === nextObjective.projectId) {
+                        return { ...item, projectId: undefined }
+                      }
+                      return item
+                    }),
+                  ]),
+                ),
+              )
+              setProjects((value) =>
+                value.map((project) => {
+                  if (nextObjective.projectId && project.id === nextObjective.projectId) {
+                    return { ...project, objectiveId: nextObjective.id }
+                  }
+                  if (project.objectiveId === nextObjective.id && project.id !== nextObjective.projectId) {
+                    return { ...project, objectiveId: undefined }
+                  }
+                  return project
+                }),
+              )
             } else {
               setTasks((value) => value.map((item) => (item.id === next.id ? { ...(next as WeekTask), weekKey: weekKeyForDate((next as WeekTask).startDate ?? (next as WeekTask).dueDate) } : item)))
             }

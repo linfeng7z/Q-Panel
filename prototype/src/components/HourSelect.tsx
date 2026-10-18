@@ -1,4 +1,5 @@
-import { CaretDown, Clock } from '@phosphor-icons/react'
+import { Clock } from '@phosphor-icons/react'
+import { SelectMenu } from './SelectMenu'
 
 interface HourSelectProps {
   value: string
@@ -10,16 +11,18 @@ interface HourSelectProps {
 export function HourSelect({ value, onChange, label = '提醒小时' }: HourSelectProps) {
   const hour = String(Math.min(23, Math.max(0, Number((value || '09:00').split(':')[0]) || 0))).padStart(2, '0')
   return (
-    <label className="hour-select" title={label}>
-      <Clock size={10} />
-      <select value={hour} onChange={(event) => onChange(`${event.target.value}:00`)} aria-label={label}>
-        {Array.from({ length: 24 }, (_, index) => {
-          const item = String(index).padStart(2, '0')
-          return <option key={item} value={item}>{item}:00</option>
-        })}
-      </select>
-      <CaretDown size={9} className="hour-select-caret" />
-      <span className="hour-select-unit">24H</span>
-    </label>
+    <SelectMenu
+      className="hour-select"
+      value={`${hour}:00`}
+      onChange={(next) => onChange(next)}
+      options={Array.from({ length: 24 }, (_, index) => {
+        const item = String(index).padStart(2, '0')
+        return { value: `${item}:00`, label: `${item}:00` }
+      })}
+      label={label}
+      prefix={<Clock size={10} />}
+      compact
+      menuWidth={112}
+    />
   )
 }

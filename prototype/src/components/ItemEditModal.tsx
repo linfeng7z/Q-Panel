@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Check, Trash, X } from '@phosphor-icons/react'
-import type { CategoryId, Objective, ReminderDefaults, WeekTask } from '../types'
+import type { CategoryId, Objective, Project, ReminderDefaults, WeekTask } from '../types'
 import { CATEGORIES } from '../data/mock'
 import { cn } from '../utils'
 import { fmtRange, formatReminder, formatReminderDate, rangeDays, resolveReminder } from '../utils'
 import { DateRangeField } from './DateRangeField'
 import { ReminderFields } from './ReminderFields'
+import { SelectMenu } from './SelectMenu'
 import { catStyle } from './ui'
 
 type EditableKind = 'objective' | 'task'
@@ -15,6 +16,7 @@ interface ItemEditModalProps {
   kind: EditableKind
   item: EditableItem
   reminderDefaults: ReminderDefaults
+  projects: Project[]
   onClose: () => void
   onSave: (item: EditableItem) => void
   onDelete?: (id: string) => void
@@ -24,10 +26,11 @@ function isObjective(item: EditableItem): item is Objective {
   return 'plannedDays' in item
 }
 
-export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, onDelete }: ItemEditModalProps) {
+export function ItemEditModal({ kind, item, reminderDefaults, projects, onClose, onSave, onDelete }: ItemEditModalProps) {
   const initialReminder = resolveReminder(item.reminder, item.endDate ?? item.dueDate, reminderDefaults)
   const [title, setTitle] = useState(item.title)
   const [categoryId, setCategoryId] = useState<CategoryId>(item.categoryId)
+  const [projectId, setProjectId] = useState(isObjective(item) ? item.projectId ?? '' : item.projectId ?? '')
   const [days, setDays] = useState(String(isObjective(item) ? item.plannedDays : item.estimateDays))
   const [startDate, setStartDate] = useState(item.startDate ?? item.dueDate)
   const [endDate, setEndDate] = useState(item.endDate ?? item.dueDate)
@@ -51,7 +54,7 @@ export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, o
       reminder,
     }
     if (kind === 'objective' && isObjective(item)) {
-      onSave({ ...item, ...common, plannedDays: Math.max(0.25, Number(days) || 1) })
+      onSave({ ...item, ...common, projectId: projectId || undefined, plannedDays: Math.max(0.25, Number(days) || 1) })
     } else if (!isObjective(item)) {
       onSave({ ...item, ...common, estimateDays: Math.max(0.25, Number(days) || 0.5) })
     }
@@ -100,6 +103,26 @@ export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, o
                   ))}
                 </div>
               </div>
+              {kind === 'objective' ? (
+                <div className="field">
+                  <label>关联项目</label>
+                  <SelectMenu
+                    value={projectId}
+                    onChange={setProjectId}
+                    options={[
+                      { value: '', label: '不关联', description: '作为独立季度任务' },
+                      ...projects.map((project) => ({
+                        value: project.id,
+                        label: project.title,
+                        description: `${project.plannedDays} 人日`,
+                      })),
+                    ]}
+                    label="关联项目"
+                    menuWidth={300}
+                  />
+                  <div className="field-help">关联项目的工作项会计入此任务，容量不重复计算。</div>
+                </div>
+              ) : null}
               <div className="field">
                 <label>{kind === 'objective' ? '计划人日' : '预计人日'}</label>
                 <input

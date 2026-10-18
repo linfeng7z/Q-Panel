@@ -21,6 +21,7 @@ import { Toggle } from './ui'
 import { HourSelect } from './HourSelect'
 import { BlurStrengthControl } from './BlurStrengthControl'
 import { GlobalShortcutField } from './GlobalShortcutField'
+import { SelectMenu } from './SelectMenu'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
@@ -283,18 +284,20 @@ export function SettingsModal({
                           <div className="settings-label">默认展开页</div>
                           <div className="settings-help">点击刘海展开时先看到的页面。</div>
                         </div>
-                        <select
-                          className="select"
-                          style={{ width: 120 }}
+                        <SelectMenu
                           value={preferences.defaultView}
-                          onChange={(event) => updatePreferences({ defaultView: event.target.value as UserPreferences['defaultView'] })}
-                        >
-                          <option value="quarter">季度规划</option>
-                          <option value="week">本周安排</option>
-                          <option value="projects">全局项目</option>
-                          <option value="notes">临时笔记</option>
-                          <option value="links">收藏链接</option>
-                        </select>
+                          onChange={(value) => updatePreferences({ defaultView: value as UserPreferences['defaultView'] })}
+                          options={[
+                            { value: 'quarter', label: '季度规划' },
+                            { value: 'week', label: '本周安排' },
+                            { value: 'projects', label: '全局项目' },
+                            { value: 'notes', label: '临时笔记' },
+                            { value: 'links', label: '收藏链接' },
+                          ]}
+                          label="默认展开页"
+                          style={{ width: 120 }}
+                          menuWidth={140}
+                        />
                       </div>
                     </div>
                   </>
@@ -563,23 +566,25 @@ export function SettingsModal({
                           <div className="settings-label">提前量</div>
                           <div className="settings-help">分类和事项可以单独覆盖。</div>
                         </div>
-                        <select
-                          className="select"
-                          style={{ width: 130 }}
-                          value={reminderDefaults.offsetDays}
-                          onChange={(event) =>
+                        <SelectMenu
+                          value={String(reminderDefaults.offsetDays)}
+                          onChange={(value) =>
                             onReminderDefaultsChange({
                               ...reminderDefaults,
-                              offsetDays: Number(event.target.value),
+                              offsetDays: Number(value),
                             })
                           }
-                        >
-                          <option value={0}>当天</option>
-                          <option value={1}>提前 1 天</option>
-                          <option value={2}>提前 2 天</option>
-                          <option value={3}>提前 3 天</option>
-                          <option value={7}>提前 1 周</option>
-                        </select>
+                          options={[
+                            { value: '0', label: '当天' },
+                            { value: '1', label: '提前 1 天' },
+                            { value: '2', label: '提前 2 天' },
+                            { value: '3', label: '提前 3 天' },
+                            { value: '7', label: '提前 1 周' },
+                          ]}
+                          label="提前量"
+                          style={{ width: 130 }}
+                          menuWidth={140}
+                        />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -641,12 +646,17 @@ export function SettingsModal({
                           <div className="settings-label">服务类型</div>
                           <div className="settings-help">一套 OpenAI 兼容接口，兼容 DeepSeek、方舟、Ollama。</div>
                         </div>
-                        <select className="select" style={{ width: 150 }} value={provider} onChange={(event) => setProvider(event.target.value)}>
-                          <option>OpenAI 兼容</option>
-                          <option>DeepSeek</option>
-                          <option>火山方舟</option>
-                          <option>Ollama</option>
-                        </select>
+                        <SelectMenu
+                          value={provider}
+                          onChange={setProvider}
+                          options={['OpenAI 兼容', 'DeepSeek', '火山方舟', 'Ollama'].map((item) => ({
+                            value: item,
+                            label: item,
+                          }))}
+                          label="服务类型"
+                          style={{ width: 150 }}
+                          menuWidth={150}
+                        />
                       </div>
                       <div className="field" style={{ marginTop: 12 }}>
                         <label>BASE URL</label>
@@ -654,17 +664,19 @@ export function SettingsModal({
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>模型</label>
-                        <select className="select" value={aiModel} onChange={(event) => onAiModelChange(event.target.value)}>
-                          {MODEL_GROUPS.map((group) => (
-                            <optgroup label={group.label} key={group.label}>
-                              {group.models.map((item) => (
-                                <option value={item} key={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))}
-                        </select>
+                        <SelectMenu
+                          value={aiModel}
+                          onChange={onAiModelChange}
+                          options={MODEL_GROUPS.flatMap((group) =>
+                            group.models.map((item) => ({
+                              value: item,
+                              label: item,
+                              group: group.label,
+                            })),
+                          )}
+                          label="模型"
+                          menuWidth={250}
+                        />
                       </div>
                       <div className="field" style={{ marginTop: 9 }}>
                         <label>API KEY</label>
@@ -686,16 +698,18 @@ export function SettingsModal({
                           <div className="settings-label">发送给 AI 的上下文</div>
                           <div className="settings-help">摘要包含当前周期、季度任务、项目与本周事项的标题/状态/人日；笔记与链接默认不发送。</div>
                         </div>
-                        <select
-                          className="select"
-                          style={{ width: 150 }}
+                        <SelectMenu
                           value={preferences.aiScope}
-                          onChange={(event) => updatePreferences({ aiScope: event.target.value as UserPreferences['aiScope'] })}
-                        >
-                          <option value="minimal">最小</option>
-                          <option value="summary">摘要（推荐）</option>
-                          <option value="all">全部</option>
-                        </select>
+                          onChange={(value) => updatePreferences({ aiScope: value as UserPreferences['aiScope'] })}
+                          options={[
+                            { value: 'minimal', label: '最小' },
+                            { value: 'summary', label: '摘要（推荐）' },
+                            { value: 'all', label: '全部' },
+                          ]}
+                          label="发送给 AI 的上下文"
+                          style={{ width: 150 }}
+                          menuWidth={150}
+                        />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -767,11 +781,18 @@ export function SettingsModal({
                           <div className="settings-label">自动备份</div>
                           <div className="settings-help">每天一份快照，保留最近 14 天；迁移或导入前强制备份。</div>
                         </div>
-                        <select className="select" style={{ width: 100 }}>
-                          <option>14 天</option>
-                          <option>30 天</option>
-                          <option>7 天</option>
-                        </select>
+                        <SelectMenu
+                          value={String(preferences.backupDays)}
+                          onChange={(value) => updatePreferences({ backupDays: Number(value) })}
+                          options={[
+                            { value: '7', label: '7 天' },
+                            { value: '14', label: '14 天' },
+                            { value: '30', label: '30 天' },
+                          ]}
+                          label="自动备份"
+                          style={{ width: 100 }}
+                          menuWidth={110}
+                        />
                       </div>
                     </div>
 
