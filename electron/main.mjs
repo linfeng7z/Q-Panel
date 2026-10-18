@@ -149,7 +149,7 @@ async function showWindow() {
   hideNotch()
   await new Promise((resolve) => setTimeout(resolve, 40))
   const backdrop = await captureBackdrop()
-  mainWindow.setAlwaysOnTop(true, 'screen-saver')
+  mainWindow.setAlwaysOnTop(true, 'floating')
   try {
     // No native material fallback: denied capture must remain a readable solid
     // surface, not reintroduce a translucent live desktop behind the text.
@@ -345,7 +345,7 @@ function createWindow() {
   })
 
   mainWindow.setBackgroundColor('#00000000')
-  mainWindow.setAlwaysOnTop(true, 'screen-saver')
+  mainWindow.setAlwaysOnTop(true, 'floating')
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
   mainWindow.once('ready-to-show', () => {
