@@ -288,7 +288,7 @@ export function QuarterView({
                     <span className="stat-foot">
                       {projectDays > 0
                         ? `季度任务 ${fmtDays(taskDays)} + 独立项目 ${fmtDays(projectDays)}`
-                        : `季度任务 ${fmtDays(taskDays)} · 项目排期已计入关联任务`}
+                        : `季度任务 ${fmtDays(taskDays)} 人日`}
                     </span>
                   </div>
                   <div className="capacity-stat stat">
@@ -344,9 +344,8 @@ export function QuarterView({
                     {stats.estimated
                       ? '官方放假安排尚未发布，当前按周末规则估算'
                       : `${year} Q${quarter} 已按官方节假日 + 调休补班计算`}
-                    ；本季度任务 {fmtDays(taskDays)}
-                    {projectDays > 0 ? ` + 独立项目 ${fmtDays(projectDays)}` : '（项目排期已计入关联任务）'}
-                    人日，剩余 <b>{fmtDays(remaining)} 人日</b>
+                    ；本季度任务 {fmtDays(taskDays)} 人日
+                    {projectDays > 0 ? ` + 独立项目 ${fmtDays(projectDays)} 人日` : ''}，剩余 <b>{fmtDays(remaining)} 人日</b>
                   </span>
                   <span>
                     {stats.estimated
