@@ -66,8 +66,17 @@ export function TopBar({
   const [weekOpen, setWeekOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const weekRef = useRef<HTMLDivElement>(null)
+  const lastWheelRef = useRef(0)
+  const yearDragRef = useRef<number | null>(null)
+  const suppressYearClickRef = useRef(false)
   const weekMeta = WEEKS[weekKey] ?? WEEKS[CURRENT_WEEK_KEY]
   const weekIndex = WEEK_ORDER.indexOf(weekKey)
+  const yearIndex = YEARS.indexOf(year)
+
+  const stepYear = (direction: number) => {
+    const next = YEARS[Math.min(YEARS.length - 1, Math.max(0, yearIndex + direction))]
+    if (next !== undefined && next !== year) onPeriodChange(next, quarter)
+  }
   const quarterWeeks = WEEK_ORDER.filter((key) => {
     const meta = WEEKS[key]
     const endYear = Number(meta.end.slice(0, 4))
@@ -83,6 +92,21 @@ export function TopBar({
     document.addEventListener('mousedown', onPointerDown)
     return () => document.removeEventListener('mousedown', onPointerDown)
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        stepYear(-1)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        stepYear(1)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  })
 
   useEffect(() => {
     if (!weekOpen) return
@@ -132,7 +156,20 @@ export function TopBar({
           </button>
 
           {open ? (
-            <div className="period-pop" role="dialog" aria-label="选择期间">
+            <div
+              className="period-pop"
+              role="dialog"
+              aria-label="选择期间"
+              onWheel={(event) => {
+                event.preventDefault()
+                const now = Date.now()
+                if (now - lastWheelRef.current < 160) return
+                lastWheelRef.current = now
+                const delta =
+                  Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+                if (delta !== 0) stepYear(delta > 0 ? 1 : -1)
+              }}
+            >
               <div className="period-pop-head">
                 <span className="period-pop-title">Jump to period</span>
                 <button
@@ -146,20 +183,66 @@ export function TopBar({
                   回到当前 Q{CURRENT_QUARTER}
                 </button>
               </div>
-              <div className="year-strip">
-                {YEARS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={cn('year-btn', item === year && 'active')}
-                    onClick={() => onPeriodChange(item, quarter)}
-                  >
-                    {item}
-                  </button>
-                ))}
+              <div className="year-strip-wrap">
+                <button
+                  type="button"
+                  className="year-nav"
+                  onClick={() => stepYear(-1)}
+                  disabled={yearIndex <= 0}
+                  aria-label="上一年"
+                >
+                  <CaretLeft size={12} weight="bold" />
+                </button>
+                <div
+                  className="year-strip"
+                  onPointerDown={(event) => {
+                    yearDragRef.current = event.clientX
+                  }}
+                  onPointerUp={(event) => {
+                    const start = yearDragRef.current
+                    yearDragRef.current = null
+                    if (start === null) return
+                    const delta = event.clientX - start
+                    if (Math.abs(delta) > 34) {
+                      suppressYearClickRef.current = true
+                      window.setTimeout(() => {
+                        suppressYearClickRef.current = false
+                      }, 0)
+                      stepYear(delta < 0 ? 1 : -1)
+                    }
+                  }}
+                  onPointerCancel={() => {
+                    yearDragRef.current = null
+                  }}
+                >
+                  {YEARS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={cn('year-btn', item === year && 'active')}
+                      onClick={() => {
+                        if (suppressYearClickRef.current) return
+                        onPeriodChange(item, quarter)
+                      }}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="year-nav"
+                  onClick={() => stepYear(1)}
+                  disabled={yearIndex >= YEARS.length - 1}
+                  aria-label="下一年"
+                >
+                  <CaretRight size={12} weight="bold" />
+                </button>
               </div>
-              <div className="period-years-note">当前年份起自动准备未来三年，可左右滑动</div>
-              <div className="q-card-grid">
+              <div className="period-years-note">
+                滚轮 / ← → / 左右拖动切年 · 当前年份起自动准备未来三年
+              </div>
+              <div className="q-card-grid" key={year}>
                 {[1, 2, 3, 4].map((q) => {
                   const key = quarterKey(year, q)
                   const stats = QUARTER_STATS[key]

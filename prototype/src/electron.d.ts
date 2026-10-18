@@ -49,6 +49,7 @@ interface QPanelBridge {
   app: {
     version: () => Promise<string>
     setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; openAtLogin?: boolean }>
+    setWindowBlur: (strength: number) => Promise<{ ok: boolean; vibrancy?: string | null; error?: string }>
   }
   ai: {
     getConfig: () => Promise<{ ok: boolean; config?: { baseUrl: string; model: string; hasKey: boolean }; error?: string }>

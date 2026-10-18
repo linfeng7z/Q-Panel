@@ -80,7 +80,9 @@ function notchBounds() {
     x: Math.round(display.bounds.x + (display.bounds.width - NOTCH_WIDTH) / 2),
     y: display.bounds.y - menuBarHeight,
     width: NOTCH_WIDTH,
-    height: menuBarHeight * 2,
+    // 10px below the menu bar so the hover glow is actually visible;
+    // the camera cutout itself has no display pixels.
+    height: menuBarHeight * 2 + 10,
   }
 }
 
@@ -261,7 +263,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     hasShadow: false,
-    roundedCorners: false,
+    roundedCorners: true,
     resizable: false,
     movable: false,
     alwaysOnTop: true,
@@ -565,7 +567,24 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:set-window-blur', (_event, strength) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_window' }
+    const numeric = Number(strength)
+    // macOS does not expose a continuous blur radius. Map the slider to three
+    // native materials so the change is visible, while CSS handles the fine
+    // grain. An opaque CSS radius is deliberately avoided: the native window
+    // clips the vibrancy layer to its own rounded silhouette, which prevents
+    // the white material squares that appeared at CSS-clipped corners.
+    const vibrancy = numeric <= 2 ? null : numeric < 28 ? 'hud' : numeric < 58 ? 'sidebar' : 'under-window'
+    try {
+      mainWindow.setVibrancy(vibrancy)
+    } catch {
+      return { ok: false, error: 'vibrancy_unavailable' }
+    }
+    return { ok: true, vibrancy }
+  })
   ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
+
     if (process.env.Q_PANEL_DISABLE_AUTO_LAUNCH === '1') return { ok: true, skipped: 'disabled-by-env' }
     if (!app.isPackaged) return { ok: true, skipped: 'development' }
     app.setLoginItemSettings({ openAtLogin: Boolean(enabled) })

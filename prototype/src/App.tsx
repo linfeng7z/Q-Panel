@@ -354,6 +354,11 @@ export default function App() {
     void window.qpanel?.app.setAutoLaunch(preferences.autoLaunch)
   }, [electronMode, preferences.autoLaunch])
 
+  useEffect(() => {
+    if (!electronMode) return
+    void window.qpanel?.app.setWindowBlur(preferences.blurStrength)
+  }, [electronMode, preferences.blurStrength])
+
 
   useEffect(() => {
     if (!electronMode) return
@@ -974,6 +979,7 @@ export default function App() {
       data-save-seq={saveSequence}
       style={{
         '--panel-blur': `${preferences.blurStrength}px`,
+        '--panel-shade': String(Math.min(0.2, (preferences.blurStrength / 80) * 0.2)),
       } as CSSProperties}
     >
       {!electronMode ? (

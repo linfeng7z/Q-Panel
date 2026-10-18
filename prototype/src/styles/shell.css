@@ -181,6 +181,7 @@
   background: var(--panel);
   backdrop-filter: blur(var(--panel-blur, 56px)) saturate(1.35);
   -webkit-backdrop-filter: blur(var(--panel-blur, 56px)) saturate(1.35);
+  box-shadow: inset 0 0 0 999px rgba(4, 5, 9, var(--panel-shade, 0.14));
 }
 
 .panel::before {
@@ -472,8 +473,40 @@
   color: var(--text-1);
 }
 
+.year-strip-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.year-nav {
+  width: 25px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 25px;
+  border-radius: 8px;
+  color: var(--text-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: color 0.18s var(--ease), background 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.year-nav:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-color: rgba(143, 177, 255, 0.22);
+}
+
+.year-nav:disabled {
+  opacity: 0.24;
+  cursor: default;
+}
+
 .year-strip {
   display: flex;
+  flex: 1;
   gap: 4px;
   padding: 3px;
   border-radius: 11px;
@@ -481,6 +514,12 @@
   border: 1px solid var(--line-soft);
   overflow-x: auto;
   scrollbar-width: none;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.year-strip:active {
+  cursor: grabbing;
 }
 
 .year-strip::-webkit-scrollbar {
@@ -513,8 +552,12 @@
 
 .year-btn.active {
   color: var(--text-1);
-  background: var(--surface-3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(143, 177, 255, 0.2), var(--surface-3));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 1px rgba(143, 177, 255, 0.22),
+    0 6px 18px rgba(75, 115, 255, 0.18);
+  transform: translateY(-1px);
 }
 
 .q-card-grid {
@@ -522,6 +565,18 @@
   grid-template-columns: 1fr 1fr;
   gap: 7px;
   margin-top: 9px;
+  animation: period-cards-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes period-cards-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .q-card {

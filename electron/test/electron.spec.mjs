@@ -187,7 +187,7 @@ test('starts collapsed on the notch, expands on click and hides on blur', async 
     }).toMatchObject({
       mainVisible: false,
       notchVisible: true,
-      notchBounds: { y: -33, width: 200, height: 66 },
+      notchBounds: { y: -33, width: 200, height: 76 },
       notchTop: true,
     })
 
