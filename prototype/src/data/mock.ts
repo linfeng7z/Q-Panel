@@ -37,10 +37,10 @@ export const CURRENT_QUARTER = chinaQuarter(NOW)
 export const CURRENT_QUARTER_KEY = `${CURRENT_YEAR}-Q${CURRENT_QUARTER}`
 
 export const CATEGORIES: Category[] = [
-  { id: 'appsec', name: '应用安全', colorVar: '--cat-appsec' },
-  { id: 'secops', name: '安全运营', colorVar: '--cat-secops' },
-  { id: 'team', name: '团队建设', colorVar: '--cat-team' },
-  { id: 'other', name: '其它提醒', colorVar: '--cat-other' },
+  { id: 'appsec', name: '重点项目', colorVar: '--cat-appsec' },
+  { id: 'secops', name: '日常事项', colorVar: '--cat-secops' },
+  { id: 'team', name: '协作沟通', colorVar: '--cat-team' },
+  { id: 'other', name: '其他', colorVar: '--cat-other' },
 ]
 
 export const STATUS_LABEL: Record<Objective['status'], string> = {
