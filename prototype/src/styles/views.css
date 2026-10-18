@@ -1966,6 +1966,15 @@
 
 /* ================= notes ================= */
 
+.view.view-fill {
+  /* Notes owns the viewport height, so its two cards share one fixed frame
+     instead of growing the outer page with long note content. */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .view.notes-view {
   display: flex;
   flex-direction: column;
@@ -1985,12 +1994,20 @@
 .note-list-pane,
 .note-editor-pane {
   min-height: 0;
+  height: 100%;
 }
 
 .note-list-pane .bezel-inner,
 .note-editor-pane .bezel-inner {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.note-editor-pane .bezel-inner {
+  min-height: 0;
 }
 
 .note-list-head {

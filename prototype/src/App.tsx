@@ -1115,7 +1115,7 @@ export default function App() {
                   />
                   <div className="content">
                     <div className="view-scroll scroll" ref={scrollRef}>
-                      <div className="view" key={`${view}-${year}-${quarter}-${weekKey}`}>
+                      <div className={cn('view', view === 'notes' && 'view-fill')} key={`${view}-${year}-${quarter}-${weekKey}`}>
                         {renderView()}
                       </div>
                     </div>

@@ -268,6 +268,47 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('keeps both note cards equal height and scrolls long content inside the editor', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("临时笔记")').click()
+      await expect(page.locator('.page-title')).toContainText('临时笔记')
+      const cards = page.locator('.note-list-pane, .note-editor-pane')
+      await expect(cards).toHaveCount(2)
+      const before = await page.evaluate(() => {
+        const list = document.querySelector('.note-list-pane').getBoundingClientRect()
+        const editor = document.querySelector('.note-editor-pane').getBoundingClientRect()
+        return { list: list.height, editor: editor.height }
+      })
+      expect(before.list).toBeCloseTo(before.editor, 1)
+
+      await page.locator('.note-editor-pane .icon-btn[title="编辑"]').click()
+      const long = Array.from({ length: 90 }, (_, i) => `- 第 ${i + 1} 条长内容，用于验证编辑器和预览只在卡片内部滚动。`).join('\n')
+      await page.locator('.note-textarea').fill(`# 长笔记\n\n${long}`)
+      await page.locator('.note-editor-pane .icon-btn[title="预览"]').click()
+      const after = await page.evaluate(() => {
+        const list = document.querySelector('.note-list-pane').getBoundingClientRect()
+        const editor = document.querySelector('.note-editor-pane').getBoundingClientRect()
+        const md = document.querySelector('.md')
+        const outer = document.querySelector('.view-scroll')
+        return {
+          list: list.height,
+          editor: editor.height,
+          mdClient: md.clientHeight,
+          mdScroll: md.scrollHeight,
+          outerClient: outer.clientHeight,
+          outerScroll: outer.scrollHeight,
+        }
+      })
+      expect(after.list).toBeCloseTo(after.editor, 1)
+      expect(after.mdScroll).toBeGreaterThan(after.mdClient)
+      expect(after.outerScroll).toBeLessThanOrEqual(after.outerClient + 1)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('opens project detail, settings and notes without errors', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)
