@@ -46,6 +46,8 @@ cd electron && npm run dev
 
 ## 打包
 
+GitHub Actions 会自动构建并发布 tag 版本；本地构建脚本支持 macOS，Windows/Linux 为 experimental。
+
 ```bash
 npm run pack
 ```
@@ -53,7 +55,7 @@ npm run pack
 产物：
 
 ```text
-release/Q-Panel-1.2.1-arm64.dmg
+release/Q-Panel-1.2.2-mac-arm64.dmg
 release/mac-arm64/Q-Panel.app
 ```
 

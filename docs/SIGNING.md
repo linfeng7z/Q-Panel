@@ -1,16 +1,12 @@
 # Q-Panel 签名与公证
 
-当前 `release/Q-Panel-1.2.1-arm64.dmg` 使用 **ad-hoc 签名**（`identity: null`），供本机与内部测试安装。
+当前 `release/Q-Panel-1.2.2-mac-arm64.dmg` 使用 **ad-hoc 签名**（`identity: null`），供本机与内部测试安装。
 
 ## Ad-hoc 安装
 
 1. 打开 DMG；
 2. 将 Q-Panel 拖入「应用程序」；
-3. 首次启动如被 Gatekeeper 拦截，右键 → 打开，或执行：
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Q-Panel.app
-```
+3. 首次启动如被 Gatekeeper 拦截，右键 → 打开，再确认打开。
 
 ## 升级为 Developer ID 签名
 
@@ -46,7 +42,7 @@ npx electron-builder --mac dmg notarize
 ```bash
 spctl --assess --type execute --verbose=4 release/mac-arm64/Q-Panel.app
 codesign --verify --deep --strict --verbose=2 release/mac-arm64/Q-Panel.app
-xcrun stapler validate release/Q-Panel-1.2.1-arm64.dmg
+xcrun stapler validate release/Q-Panel-1.2.2-mac-arm64.dmg
 ```
 
 > 未配置证书时不要开启 hardened runtime 或自动公证，否则构建会失败；当前 ad-hoc 配置是自洽的。

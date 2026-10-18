@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible problem in Q-Panel
+title: '[Bug] '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请先确认使用的是最新版本，并不要粘贴 API Key、私人任务或含隐私的截图。
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Q-Panel version and build channel
+      placeholder: 1.2.2 / DMG
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: macOS version and Apple Silicon / Intel
+      placeholder: macOS 15.3, Apple Silicon
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Remove all secrets and personal data before pasting.
+      render: shell

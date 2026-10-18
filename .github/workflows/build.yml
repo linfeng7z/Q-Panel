@@ -1,0 +1,105 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS (arm64 + x64)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install renderer dependencies
+        working-directory: prototype
+        run: npm ci
+      - name: Install Electron dependencies
+        working-directory: electron
+        run: npm ci
+      - name: Build macOS installers
+        working-directory: electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run pack:mac
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: q-panel-macos
+          path: |
+            electron/release/*.dmg
+            electron/release/*.blockmap
+          if-no-files-found: error
+
+  experimental:
+    name: ${{ matrix.label }} (experimental)
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: Windows x64
+            command: pack:win
+            artifact: q-panel-windows
+            path: electron/release/*.exe
+          - os: ubuntu-latest
+            label: Linux x64
+            command: pack:linux
+            artifact: q-panel-linux
+            path: electron/release/*.AppImage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install renderer dependencies
+        working-directory: prototype
+        run: npm ci
+      - name: Install Electron dependencies
+        working-directory: electron
+        run: npm ci
+      - name: Build experimental installer
+        working-directory: electron
+        run: npm run ${{ matrix.command }}
+      - name: Upload experimental artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.path }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.macos.result == 'success'
+    needs: [macos, experimental]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: artifacts
+          pattern: q-panel-*
+          merge-multiple: true
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: artifacts/**/*

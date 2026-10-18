@@ -1,6 +1,6 @@
 {
   "name": "q-panel",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "Q-Panel personal daily workbench — quarterly capacity, weekly plan, projects and links.",
   "author": "linfeng7z",
@@ -11,7 +11,10 @@
     "dev": "Q_PANEL_DEV_URL=http://127.0.0.1:5178 electron .",
     "build:renderer": "npm --prefix ../prototype run build",
     "build": "npm run build:renderer",
-    "pack": "npm run build:renderer && electron-builder --mac --arm64"
+    "pack": "npm run build:renderer && electron-builder --mac --arm64",
+    "pack:mac": "npm run build:renderer && electron-builder --mac --arm64 --x64",
+    "pack:win": "npm run build:renderer && electron-builder --win --x64",
+    "pack:linux": "npm run build:renderer && electron-builder --linux --x64"
   },
   "devDependencies": {
     "electron": "^44.9.0",
@@ -39,27 +42,47 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64"
-          ]
-        },
-        {
-          "target": "dir",
-          "arch": [
-            "arm64"
-          ]
-        }
+        "dmg",
+        "dir"
       ],
       "identity": null,
       "hardenedRuntime": false,
       "icon": "assets/icon.icns",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}",
       "extendInfo": {
         "LSUIElement": true
       }
     },
     "afterPack": "scripts/after-pack.cjs",
-    "copyright": "Copyright © 2026 linfeng7z"
+    "copyright": "Copyright © 2026 linfeng7z",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "${productName}-${version}-win-${arch}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon-1024.png",
+      "category": "Office",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
+    }
   }
 }

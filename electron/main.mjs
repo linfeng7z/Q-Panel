@@ -355,7 +355,9 @@ function createWindow() {
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
   mainWindow.once('ready-to-show', () => {
-    if (process.env.Q_PANEL_START_EXPANDED === '1') showWindow()
+    if (process.platform !== 'darwin' || process.env.Q_PANEL_START_EXPANDED === '1') {
+      void showWindow()
+    }
   })
 
   mainWindow.on('blur', () => {
@@ -420,6 +422,7 @@ function createWindow() {
 }
 
 function createNotchWindow() {
+  if (process.platform !== 'darwin') return
   const bounds = notchBounds()
   notchWindow = new BrowserWindow({
     x: bounds.x,
@@ -487,11 +490,19 @@ function createNotchWindow() {
 }
 
 function createTray() {
-  const iconPath = path.join(__dirname, 'assets', 'trayTemplate.png')
+  const iconPath = path.join(
+    __dirname,
+    'assets',
+    process.platform === 'darwin' ? 'trayTemplate.png' : 'icon-1024.png',
+  )
   const icon = nativeImage.createFromPath(iconPath)
   if (process.platform === 'darwin') icon.setTemplateImage(true)
   tray = new Tray(icon.resize({ width: 18, height: 18 }))
-  tray.setToolTip('Q-Panel · 点击刘海或 ⌥ Space 打开')
+  tray.setToolTip(
+    process.platform === 'darwin'
+      ? 'Q-Panel · 点击刘海或 ⌥ Space 打开'
+      : 'Q-Panel · 点击打开工作台',
+  )
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: '显示 Q-Panel', click: showWindow },
@@ -716,13 +727,15 @@ app.whenReady().then(() => {
     app.setActivationPolicy('accessory')
     if (process.env.Q_PANEL_HIDE_DOCK !== '0') app.dock?.hide()
   }
-  app.setAboutPanelOptions({
-    applicationName: 'Q-Panel',
-    applicationVersion: app.getVersion(),
-    version: app.getVersion(),
-    copyright: 'Copyright © 2026 linfeng7z',
-    credits: 'Designed & built by linfeng7z\nhttps://github.com/linfeng7z',
-  })
+  if (process.platform === 'darwin') {
+    app.setAboutPanelOptions({
+      applicationName: 'Q-Panel',
+      applicationVersion: app.getVersion(),
+      version: app.getVersion(),
+      copyright: 'Copyright © 2026 linfeng7z',
+      credits: 'Designed & built by linfeng7z\nhttps://github.com/linfeng7z',
+    })
+  }
   installApplicationMenu()
   aiConfigStore = createAiConfigStore(path.join(app.getPath('userData'), 'ai-config.json'), safeStorage)
   reminderStateStore = new ReminderStateStore(app.getPath('userData'))
