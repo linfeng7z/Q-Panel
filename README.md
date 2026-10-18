@@ -1,10 +1,10 @@
 # Q-Panel
 
-[简体中文](README.md) · [English](README.en.md)
+**简体中文** · [English](README.en.md)
 
-> **A local-first personal workbench for quarterly goals, weekly must-dos and long-running projects.**
+> **面向个人的本地优先工作台：季度目标、每周必做、长期项目。**
 >
-> 把季度目标拆到每一周，把每一周变成能完成的事。
+> 把年度目标拆到每一周，把每一周变成能完成的事。
 
 [![Build](https://github.com/linfeng7z/Q-Panel/actions/workflows/build.yml/badge.svg)](https://github.com/linfeng7z/Q-Panel/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -15,132 +15,124 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB)
 [![Crafted by linfeng7z](https://img.shields.io/badge/crafted%20by-linfeng7z-6C5CE7?logo=github&style=flat-square)](https://github.com/linfeng7z)
 
-**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS first, Windows/Linux experimental
+**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS 优先，Windows/Linux 实验性
 
-[Preview](#preview) · [Features](#features) · [Download](#download) · [Build from source](#build-from-source) · [GitHub Actions](#github-actions) · [Disclaimer](#disclaimer)
-
-<details>
-<summary><strong>English overview</strong></summary>
-
-Q-Panel connects quarterly capacity planning, weekly must-dos, long-running projects, reminders, notes, links and an optional AI assistant in one local-first macOS app.
-
-It uses **person-days** as the single planning unit, automatically splits project work items across every overlapping week, and keeps manual tasks and project-scheduled tasks in one weekly must-do list. No account, no cloud sync and no telemetry by default.
-
-Keywords: personal productivity, weekly planner, quarterly planning, task management, project management, local-first, macOS, Electron, React, open source, planner, OKR, time blocking, personal dashboard.
-
-</details>
+[预览](#预览) · [功能](#功能) · [下载](#下载) · [源码构建](#源码构建) · [GitHub Actions](#github-actions) · [免责声明](#免责声明)
 
 ---
 
-## Preview
+## 预览
 
-![Q-Panel demo](docs/demo.gif)
+![Q-Panel 演示](docs/demo.gif)
 
-| Quarterly planning | Weekly must-dos | Project detail |
+| 季度规划 | 本周必做 | 项目详情 |
 | --- | --- | --- |
-| ![Quarterly planning](docs/screenshots/quarter-planning.png) | ![Weekly must-dos](docs/screenshots/week-must-do.png) | ![Project detail](docs/screenshots/project-detail.png) |
+| ![季度规划](docs/screenshots/quarter-planning.png) | ![本周必做](docs/screenshots/week-must-do.png) | ![项目详情](docs/screenshots/project-detail.png) |
 
 ---
 
-## Features
+## 功能
 
-### Quarterly planning with real capacity
+### 基于真实容量的季度规划
 
-- Plan in **person-days**, not vague hours: `0.25 / 0.5 / 1 / 1.5` days are all valid.
-- Workdays are calculated from weekends, Chinese public holidays and make-up workdays.
-- Add leave, training or other unavailable days and see the capacity update immediately.
-- Track available, committed, remaining and completion figures for each quarter.
-- See over-allocation early instead of discovering it at the end of the quarter.
-- Objectives support planned days, start/end dates, due date, reminder, progress and status.
-- Objective and project links share one capacity calculation, avoiding double counting.
+- 使用 **人日** 规划，而不是模糊的小时数：`0.25 / 0.5 / 1 / 1.5` 人日都可以。
+- 按周末、中国法定节假日和调休补班日自动计算工作日。
+- 添加请假、培训或其他不可用日期后，容量立即更新。
+- 查看每个季度的可用、已占用、剩余和完成度。
+- 提前发现超载，而不是在季度末才发现做不完。
+- 季度任务支持计划人日、起止日期、截止日、提醒、进度和状态。
+- 季度任务和项目关联后共用一套容量口径，不重复计算。
 
-### Weekly must-do list
+### 本周必做
 
-- Every item in a week is a must-do: manually created tasks and project-scheduled items use the same list.
-- Check items off, filter by category or by day, and see the week's planned person-days.
-- Items left unchecked in the previous week appear in a backlog.
-- Move the backlog into the current week with one action; completed previous items never reappear.
-- Project-scheduled items participate in the same checklist, capacity and completion figures.
+- 本周的所有事项都是必做：手动创建的事项和项目自动排期进入同一份清单。
+- 勾选完成、按分类或日期筛选，并查看本周已排人日。
+- 上周未勾选的事项会进入 **上期未完成**。
+- 一键把上期未完成移入本周；已完成的旧事项不会重复出现。
+- 项目自动排期同样参与本周清单、容量和完成度统计。
 
-### Projects and automatic scheduling
+### 项目与自动排期
 
-- Create long-running projects with total planned days, dates, status, category and description.
-- Plan work items with a date range and planned days.
-- A work item is automatically split across **every overlapping week**, weighted by workdays:
-  - A `10.12 – 10.31` item with 10 planned days becomes W42 + W43 + W44 slices;
-  - Weekly slices sum back to 10;
-  - Each overlapping week gets its own scheduled record.
-- Manual removal from one week is remembered and does not affect other weeks.
-- Milestones, project progress, current-quarter load and remaining unplanned days stay in sync.
-- Link a project to a quarterly objective without counting its execution twice.
-- Hover a weekly item to highlight its objective/project and draw the relationship animation.
+- 创建长期项目，填写总规划人日、起止日期、状态、分类和说明。
+- 工作项可以设置日期范围和规划人日。
+- 工作项会自动拆分到 **所有重叠的周**，并按工作日加权：
+  - 例如 `10.12 – 10.31`、总规划 10 人日，会拆成 W42 + W43 + W44；
+  - 三周分摊合计仍然等于 10；
+  - 每个重叠周都会生成一条排期记录。
+- 从某一周手动移除后，该周不再自动同步，其他周不受影响。
+- 里程碑、项目进度、本季度投入和剩余待拆解人日实时同步。
+- 项目可以关联季度任务，执行明细归入任务拆解，不再重复占用容量。
+- 悬停本周事项时，关联季度任务/项目自动高亮，并绘制关系动画。
 
-### Reminders, notes and links
+### 提醒、笔记与链接
 
-- Absolute date + 24-hour time reminders for objectives, weekly items and projects.
-- macOS notifications, in-app reminder cards, snooze, missed reminder recovery and DND hours.
-- Quick notes with title/heading sync, pinning and deletion.
-- Link collections with search, editing, custom categories and automatic title/description metadata.
-- Link fetching runs in the main process and blocks private networks, credentials in URLs and unsafe redirects.
+- 季度任务、本周事项和项目都支持绝对日期 + 24 小时制提醒。
+- macOS 系统通知、应用内提醒、稍后提醒、错过提醒补发和免打扰时段。
+- 临时笔记支持标题/一级标题同步、置顶和删除。
+- 收藏链接支持集合、搜索、编辑、自定义分类和标题/描述元数据自动抓取。
+- 链接抓取在主进程完成，并阻断私网、URL 凭据和不安全重定向。
 
-### Optional AI assistant
+### 可选 AI 助手
 
-- Connect any OpenAI-compatible endpoint; no model is bundled.
-- AI proposals are previewed before anything is written.
-- Choose how much workspace context to send: minimal, summary or full.
-- API keys are stored with Electron `safeStorage`; the renderer never sees the plaintext key.
-- Without a configured key, Q-Panel shows setup guidance instead of fake generated data.
+- 支持任意 OpenAI 兼容接口，不内置模型。
+- AI 生成的事项先预览，确认后才写入。
+- 可以控制发送给 AI 的上下文：最小、摘要或全部。
+- API Key 使用 Electron `safeStorage` 保存，渲染层拿不到明文。
+- 没有配置 Key 时显示配置引导，不生成假数据。
 
-### Local-first details
+### 本地优先细节
 
-- Atomic local workspace writes.
-- Daily backups, retained for 14 days by default.
-- Full JSON import/export and automatic schema migration.
-- Four themes (Noir / Ops / Aurora / Ember).
-- Adjustable background material, with a readable solid fallback when screen capture permission is unavailable.
-- ⌘K command palette, customizable global shortcut and menu-bar/tray access.
-- All motion respects `prefers-reduced-motion`.
+- 本地工作区原子写入。
+- 默认每日备份，保留最近 14 天。
+- 完整 JSON 导入/导出和旧版 schema 自动迁移。
+- 四套主题：Noir / Ops / Aurora / Ember。
+- 可调背景材质；没有屏幕录制权限时回退为可读的纯色背景。
+- ⌘K 命令面板、自定义全局快捷键、菜单栏/托盘入口。
+- 所有动效尊重 `prefers-reduced-motion`。
 - 界面语言：**简体中文 / English（Beta，核心界面）**。
 
 ---
 
-## Platform support
+## 平台支持
 
-| Platform | Status | Notes |
+| 平台 | 状态 | 说明 |
 | --- | --- | --- |
-| macOS (Apple Silicon) | ✅ Stable | Primary target; notch panel, menu bar, notifications and background material |
-| macOS (Intel) | ✅ Build available | Built by GitHub Actions as x64 DMG |
-| Windows x64 | ⚠️ Experimental | Built by CI; no notch/menu-bar-first experience; not runtime-tested by the maintainer |
-| Linux x64 | ⚠️ Experimental | AppImage built by CI; desktop tray/notification behavior varies by distribution |
+| macOS（Apple Silicon） | ✅ 稳定 | 主要目标；刘海面板、菜单栏、通知和背景材质 |
+| macOS（Intel） | ✅ 可构建 | GitHub Actions 生成 x64 DMG |
+| Windows x64 | ⚠️ 实验性 | CI 构建；没有刘海/菜单栏优先体验，维护者未做运行验证 |
+| Linux x64 | ⚠️ 实验性 | CI 生成 AppImage；托盘/通知行为依赖发行版 |
 
-The macOS app is the only officially supported target. Windows and Linux artifacts are provided for evaluation and feedback, not as a promise of parity.
-
----
-
-## Download
-
-Download the latest installer from [GitHub Releases](https://github.com/linfeng7z/Q-Panel/releases/latest):
-
-- macOS Apple Silicon: `Q-Panel-1.3.0-mac-arm64.dmg`
-- macOS Intel: `Q-Panel-1.3.0-mac-x64.dmg`
-- Windows x64 (experimental): `Q-Panel-1.3.0-win-x64-setup.exe`
-- Linux x64 (experimental): `Q-Panel-1.3.0-linux-x64.AppImage`
-
-### macOS first launch
-
-Q-Panel is currently **ad-hoc signed and not notarized**. macOS may block the first launch. Right-click the app → **Open** → confirm to open it. This is a known limitation of the current release; Apple Developer ID signing and notarization can be added later.
-
-Only download builds from this repository's Releases page. Do not run installers from unknown sources.
+macOS 是唯一正式支持的目标。Windows/Linux 产物用于评估和反馈，不代表与 macOS 完全一致。
 
 ---
 
-## Build from source
+## 下载
 
-Requirements:
+从 [GitHub Releases](https://github.com/linfeng7z/Q-Panel/releases/latest) 下载最新版本：
+
+- macOS Apple Silicon：`Q-Panel-1.3.0-mac-arm64.dmg`
+- macOS Intel：`Q-Panel-1.3.0-mac-x64.dmg`
+- Windows x64（实验性）：`Q-Panel-1.3.0-win-x64-setup.exe`
+- Linux x64（实验性）：`Q-Panel-1.3.0-linux-x64.AppImage`
+
+### macOS 首次打开
+
+Q-Panel 当前为 **ad-hoc 签名，未公证**。macOS 可能拦截首次启动：
+
+1. 右键 App → **打开**；
+2. 在提示框中再次确认打开。
+
+这是当前版本的已知限制，后续可以升级为 Apple Developer ID 签名和 notarization。请只从本仓库的 Releases 页面下载，不要运行来源不明的安装包。
+
+---
+
+## 源码构建
+
+环境要求：
 
 - Node.js `>= 22.12`
 - npm
-- macOS for the primary desktop experience; Windows/Linux builds are experimental
+- macOS（主要桌面体验）；Windows/Linux 构建为实验性
 
 ```bash
 git clone https://github.com/linfeng7z/Q-Panel.git
@@ -155,107 +147,108 @@ npm install
 npm run pack
 ```
 
-Local output:
+本地产物：
 
 ```text
 electron/release/Q-Panel-1.3.0-mac-arm64.dmg
 electron/release/mac-arm64/Q-Panel.app
 ```
 
-Development:
+开发模式：
 
 ```bash
-# terminal 1
+# 终端 1
 cd prototype
 npm install
 npm run dev
 
-# terminal 2
+# 终端 2
 cd electron
 npm install
 npm run dev
 ```
 
-Useful `electron` scripts:
+`electron` 构建脚本：
 
 ```text
-npm run pack        macOS arm64 (local quick build)
+npm run pack        macOS arm64（本地快速构建）
 npm run pack:mac    macOS arm64 + x64
-npm run pack:win    Windows x64 (experimental)
-npm run pack:linux  Linux x64 AppImage (experimental)
+npm run pack:win    Windows x64（实验性）
+npm run pack:linux  Linux x64 AppImage（实验性）
 ```
 
 ---
 
 ## GitHub Actions
 
-`.github/workflows/build.yml` builds on GitHub-hosted runners:
+`.github/workflows/build.yml` 在 GitHub 托管 runner 上执行：
 
-- **Push a tag** like `v1.3.0` → build macOS, Windows and Linux artifacts, then create a GitHub Release with the installers.
-- **Pull request / main push** → run the same build checks without publishing a release.
-- **Manual run** → trigger the workflow from the Actions tab.
+- **推送 `v*` tag**：构建 macOS、Windows、Linux 产物，并创建 GitHub Release。
+- **Pull Request / main push**：执行构建检查，不发布 Release。
+- **手动触发**：在 Actions 页面运行。
 
-The macOS and experimental jobs are separate. A failed Windows/Linux build does not prevent the macOS release from being published; the release job uploads the artifacts that succeeded.
-
----
-
-## Data and privacy
-
-- No account and no telemetry.
-- Task, project, note and link data is stored locally at `~/Library/Application Support/Q-Panel/` on macOS.
-- Network requests only occur when you explicitly use AI, fetch link metadata, or check holiday data.
-- Screen capture, when enabled, is used only for local background ambience; it is not stored or uploaded.
-- AI API keys are encrypted via the operating system's secure storage.
-- You can export, back up or delete the workspace at any time.
-
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+macOS 与实验性平台分开构建；Windows/Linux 构建失败不会阻止 macOS Release，Release 会附带成功生成的产物。
 
 ---
 
-## Known limitations
+## 数据与隐私
 
-- Primary support is macOS; Windows/Linux artifacts are experimental.
-- macOS release is ad-hoc signed, not notarized; Gatekeeper may block first launch.
-- No cloud sync, real-time collaboration or multi-user workspace.
-- No mobile client.
-- AI requires your own OpenAI-compatible service.
-- Reminders depend on OS notification permissions and the app running; do not use Q-Panel as the only alert channel for critical work.
-- Person-day estimates are planning estimates, not productivity guarantees.
+- 无账号、无遥测。
+- 任务、项目、笔记和链接默认保存在本机；macOS 路径为 `~/Library/Application Support/Q-Panel/`。
+- 只有在你主动使用 AI、抓取链接元数据或检查节假日数据时才会联网。
+- 屏幕截图仅用于本地背景氛围，不存储、不上传。
+- AI API Key 使用系统安全存储加密。
+- 工作区可以随时导出、备份、导入或删除。
 
----
-
-## Reference project
-
-Q-Panel's product direction and some interaction ideas are inspired by [xiaopu-ai/TO-DO-Panel](https://github.com/xiaopu-ai/TO-DO-Panel), an MIT-licensed project.
-
-The reference project's copyright and MIT notice are retained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Q-Panel uses its own product name, UI, code and demo assets. If future changes directly reuse reference code or assets, the original MIT notice will continue to apply to those portions.
+安全问题请阅读 [SECURITY.md](SECURITY.md) 并私密报告。
 
 ---
 
-## Disclaimer
+## 已知限制
 
-1. **Data loss**: Q-Panel is local-first and has no cloud backup. Deleting the workspace, backups, app data or the machine's disk can cause permanent data loss. Keep your own backups.
-2. **Reminders**: Notifications depend on OS permissions, app state and scheduling. Do not rely on Q-Panel as the sole reminder for medical, financial, production or other high-risk events.
-3. **AI output**: AI-generated plans and suggestions may be inaccurate or inappropriate. Review before using; you are responsible for decisions.
-4. **Estimates**: Person-day capacity, progress and completion are estimates, not commitments.
-5. **No professional advice**: Q-Panel does not provide legal, tax, financial, medical, security-compliance or HR advice.
-6. **Third-party services**: AI providers and link metadata services are governed by their own terms and privacy policies.
-7. **No warranty**: The software is provided **“AS IS”**, without warranties of any kind, express or implied.
-8. **Limitation of liability**: To the maximum extent permitted by law, the author and contributors are not liable for any direct, indirect, incidental or consequential damages from using or being unable to use Q-Panel.
-9. **Unsigned builds**: macOS builds are ad-hoc signed and not notarized. Only use official Releases or build from source.
+- macOS 是主要支持平台；Windows/Linux 产物为实验性。
+- macOS 版本为 ad-hoc 签名、未公证；Gatekeeper 可能拦截首次启动。
+- 英文界面为 Beta，覆盖核心导航、季度规划、本周安排和项目页；部分高级设置与边缘提示仍为中文。
+- 没有云同步、实时协作或多用户工作区。
+- 没有移动端客户端。
+- AI 需要你自己的 OpenAI 兼容服务。
+- 提醒依赖系统通知权限和应用运行状态；不要把 Q-Panel 作为关键场景的唯一提醒渠道。
+- 人日容量是规划估算，不是生产率承诺。
 
 ---
 
-## Contributing
+## 参考项目
 
-Issues, design feedback, documentation fixes and code contributions are welcome.
+Q-Panel 的产品方向和部分交互思路参考了 [xiaopu-ai/TO-DO-Panel](https://github.com/xiaopu-ai/TO-DO-Panel)，该项目以 MIT License 发布。
 
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
-- Report security issues privately via [SECURITY.md](SECURITY.md).
-- Never include API keys, personal tasks, logs or private screenshots in an issue.
-- For capacity, week-scheduling or project-sync changes, describe the semantic change and migration impact in the PR.
+参考项目的版权和 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。Q-Panel 使用自己的产品名、UI、代码和演示素材；如果未来直接复用参考项目的代码或资产，原 MIT 声明会继续适用于对应部分。
 
-If Q-Panel helps your work, a Star ⭐ helps more people find it.
+---
+
+## 免责声明
+
+1. **数据安全**：Q-Panel 是本地工具，不提供云备份。删除工作区、备份、应用数据或磁盘损坏都可能造成永久数据丢失，请自行备份。
+2. **提醒**：通知依赖系统权限、应用状态和调度。不要把 Q-Panel 作为医疗、财务、生产或其他高风险事件的唯一提醒方式。
+3. **AI 输出**：AI 生成的计划和建议可能不准确或不适用，请在采用前自行判断，最终决策由你负责。
+4. **估算**：人日容量、进度和完成度都是估算，不是承诺。
+5. **不提供专业建议**：Q-Panel 不提供法律、税务、财务、医疗、安全合规或人力资源建议。
+6. **第三方服务**：AI 服务商和链接元数据服务适用各自的服务条款与隐私政策。
+7. **无担保**：软件按 **“AS IS”** 提供，不附带任何明示或暗示担保。
+8. **责任限制**：在适用法律允许的最大范围内，作者和贡献者不对使用或无法使用本软件造成的任何直接、间接、附带或后果性损失承担责任。
+9. **未签名构建**：macOS 构建为 ad-hoc 签名、未公证；请只使用官方 Releases 或自行从源码构建。
+
+---
+
+## 贡献
+
+欢迎 issue、设计建议、文档修正和代码贡献。
+
+- 提交 PR 前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+- 安全问题请通过 [SECURITY.md](SECURITY.md) 私密报告。
+- 不要在 issue 中粘贴 API Key、私人任务、日志或含隐私的截图。
+- 修改容量、周排期或项目同步逻辑时，请在 PR 中说明口径变化和迁移影响。
+
+如果 Q-Panel 对你有帮助，欢迎点一个 Star ⭐。
 
 ---
 
