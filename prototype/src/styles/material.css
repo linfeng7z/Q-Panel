@@ -80,6 +80,13 @@
   background: rgba(var(--material-rgb), 0.94);
 }
 
+.qp-root.electron-mode .content {
+  /* The page header and whitespace are text-bearing too, not just cards. Keep
+     them on a dark material so a white external document cannot wash them out. */
+  background: rgba(var(--material-rgb), 0.8);
+  border-left: 1px solid var(--line-soft);
+}
+
 .qp-root.electron-mode .topbar {
   background: rgba(var(--material-rgb), 0.88);
 }

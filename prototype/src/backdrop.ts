@@ -10,7 +10,9 @@ export function backdropMaterial(value: number) {
     // Keep the desktop visible through most of the travel, then close the
     // material completely at 100%. This keeps the slider perceptible while the
     // reading surfaces themselves stay opaque.
-    tint: strength === 80 ? 1 : 0.34 + 0.66 * Math.pow(progress, 1.7),
+    // Keep the page readable even before max: most of the material is ink,
+    // while a low-opacity capture only supplies the frosted color underneath.
+    tint: strength === 80 ? 1 : 0.62 + 0.38 * Math.pow(progress, 1.15),
     percent: Math.round(progress * 100),
   }
 }
