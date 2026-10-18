@@ -2850,3 +2850,198 @@
   font-size: 8.5px;
   white-space: nowrap;
 }
+
+/* Project header: one quiet title block, one plan strip. */
+.project-detail-head {
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.project-head-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.project-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.project-title-row .page-title {
+  margin: 0;
+}
+
+.project-subline {
+  margin: 3px 0 0;
+  color: var(--text-3);
+  font-size: 9.5px;
+  letter-spacing: 0.01em;
+}
+
+.project-plan-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 780px;
+  margin-top: 10px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: var(--surface-inset);
+}
+
+.project-plan-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 330px;
+}
+
+.project-plan-reminder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.project-plan-label {
+  flex: 0 0 auto;
+  color: var(--text-3);
+  font-size: 8.5px;
+  font-weight: 600;
+}
+
+.project-plan-main .date-range-field {
+  min-width: 0;
+}
+
+.project-plan-main .date-range-trigger {
+  height: 29px;
+  padding: 0 7px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.project-plan-main .date-range-trigger:hover,
+.project-plan-main .date-range-trigger.open {
+  border-color: var(--line-soft);
+  background: var(--surface-1);
+}
+
+.project-plan-reminder .reminder-fields {
+  width: auto;
+}
+
+.project-plan-reminder .reminder-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-plan-reminder .reminder-choice {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.project-plan-reminder .reminder-choice > span {
+  display: none;
+}
+
+.project-plan-reminder .reminder-choice .select {
+  width: 104px;
+  height: 29px;
+  padding-left: 8px;
+  padding-right: 22px;
+  font-size: 10px;
+  background-position: calc(100% - 12px) 12px, calc(100% - 8px) 12px;
+}
+
+.project-plan-reminder .hour-select {
+  height: 29px;
+}
+
+.project-detail-head .head-actions {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+/* Workplan: the schedule column is a real calendar control. */
+.workplan-row {
+  grid-template-columns: minmax(0, 1fr) 190px 82px 66px 26px;
+  gap: 8px;
+}
+
+.workitem-calendar {
+  min-width: 0;
+}
+
+.workitem-calendar .date-range-field.compact .date-range-trigger {
+  height: 26px;
+  padding: 0 6px;
+  border-color: var(--line-soft);
+  background: var(--surface-inset);
+  font-size: 9px;
+}
+
+.workitem-calendar .date-range-field.compact .date-range-trigger:hover,
+.workitem-calendar .date-range-field.compact .date-range-trigger.open {
+  border-color: var(--line-strong);
+  background: var(--surface-1);
+}
+
+/* Reminder segmented control. */
+.reminder-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--surface-inset);
+}
+
+.reminder-segmented button {
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--text-3);
+  font-size: 9.5px;
+}
+
+.reminder-segmented button.active {
+  background: var(--surface-2);
+  color: var(--text-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hour-select {
+  position: relative;
+}
+
+.hour-select select {
+  appearance: none;
+  padding-right: 12px;
+}
+
+.hour-select-caret {
+  margin-left: -8px;
+  color: var(--text-4);
+  pointer-events: none;
+}
+
+.reminder-fields {
+  align-items: flex-start;
+}
+
+.reminder-segmented {
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
+}
+
+.reminder-segmented button {
+  min-width: 64px;
+  text-align: center;
+}

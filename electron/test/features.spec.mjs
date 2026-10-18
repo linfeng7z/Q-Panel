@@ -125,7 +125,7 @@ test.describe('Q-Panel feature regression', () => {
       await modal.locator('.input').first().fill('时间段编辑验证事项')
       await chooseDateRange(page, modal, '2026-10-17', '2026-10-18')
       await expect(modal.locator('.date-range-trigger .date-range-total')).toContainText('2 天')
-      await modal.locator('select[aria-label="提醒规则"]').selectOption('custom')
+      await modal.getByRole('button', { name: '自定义', exact: true }).click()
       await modal.locator('select[aria-label="提前量"]').selectOption('2')
       await modal.locator('select[aria-label="提醒小时"]').selectOption('14')
       await modal.locator('.modal-foot .btn.primary').click()
@@ -194,7 +194,7 @@ test.describe('Q-Panel feature regression', () => {
 
       await page.locator('.nav-item:has-text("项目")').click()
       await page.locator('.project-overview-row').first().click()
-      const range = page.locator('.project-meta-grid')
+      const range = page.locator('.project-plan-strip')
       await expect(range.locator('.date-range-trigger')).toHaveCount(1)
       await chooseDateRange(page, range, '2026-09-01', '2026-12-30')
       await expect(range.locator('.date-range-trigger')).toContainText('12.30')
@@ -469,7 +469,7 @@ test.describe('Q-Panel feature regression', () => {
       await page.locator('.nav-item:has-text("项目")').click()
       await page.locator('.project-overview-row').first().click()
       await expect(page.locator('.project-detail-view')).toBeVisible()
-      await expect(page.locator('.project-scope-line')).toContainText('本季度')
+      await expect(page.locator('.project-subline')).toContainText('本季')
 
       await page.locator('.icon-btn[title="设置"]').click()
       await expect(page.locator('.settings-modal')).toBeVisible()

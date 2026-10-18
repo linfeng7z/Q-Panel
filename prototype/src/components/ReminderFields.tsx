@@ -25,23 +25,24 @@ export function ReminderFields({
   return (
     <div className={cn('reminder-fields', compact && 'compact')}>
       {!hideMode ? (
-        <select
-          className="select reminder-mode"
-          value={mode}
-          onChange={(event) =>
-            onChange({
-              mode: event.target.value as 'default' | 'custom',
-              offsetDays,
-              time,
-            })
-          }
-          aria-label="提醒规则"
-        >
-          <option value="default">
-            跟随全局 · {formatReminder(defaults.offsetDays, defaults.time)}
-          </option>
-          <option value="custom">自定义提醒</option>
-        </select>
+        <div className="reminder-segmented" role="group" aria-label="提醒规则">
+          <button
+            type="button"
+            className={mode === 'default' ? 'active' : ''}
+            onClick={() => onChange({ mode: 'default', offsetDays: defaults.offsetDays, time: defaults.time })}
+            aria-pressed={mode === 'default'}
+          >
+            跟随全局
+          </button>
+          <button
+            type="button"
+            className={mode === 'custom' ? 'active' : ''}
+            onClick={() => onChange({ mode: 'custom', offsetDays, time })}
+            aria-pressed={mode === 'custom'}
+          >
+            自定义
+          </button>
+        </div>
       ) : null}
 
       {mode === 'custom' || hideMode ? (
@@ -64,7 +65,7 @@ export function ReminderFields({
             </select>
           </label>
           <label className="reminder-choice reminder-choice-time">
-            <span>时间</span>
+            <span>时刻</span>
             <HourSelect
               value={time}
               onChange={(nextTime) => onChange({ mode, offsetDays, time: nextTime })}
@@ -74,7 +75,7 @@ export function ReminderFields({
         </div>
       ) : (
         <div className="reminder-follow-note">
-          使用全局默认提醒，保存后仍可在项目或事项里单独调整。
+          当前使用全局提醒 · {formatReminder(defaults.offsetDays, defaults.time)}
         </div>
       )}
     </div>

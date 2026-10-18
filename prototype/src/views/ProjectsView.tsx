@@ -14,7 +14,6 @@ import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
 import { CATEGORIES, CURRENT_WEEK_KEY, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
 import {
   cn,
-  fmtDateTime,
   fmtDays,
   fmtRange,
   parseReminder,
@@ -320,7 +319,6 @@ function ProjectDetail({
   const doneDays = doneItems.reduce((sum, item) => sum + item.plannedDays, 0)
   const over = decomposed > project.plannedDays
   const crossQuarter = projectCrossQuarter(project, year, quarter)
-  const atRisk = crossQuarter || project.status === 'risk'
   const quarterLabel = `Q${quarter}`
   const weekGroups = WEEK_ORDER.map((key) => ({
     key,
@@ -328,10 +326,6 @@ function ProjectDetail({
     items: project.workItems.filter((item) => item.weekKey === key),
   })).filter((group) => group.items.length > 0)
 
-  const projectWeekOptions = WEEK_ORDER.filter(
-    (key) => WEEKS[key].end >= project.startDate && WEEKS[key].start <= project.endDate,
-  )
-  const weekOptions = projectWeekOptions.length > 0 ? projectWeekOptions : [CURRENT_WEEK_KEY]
 
   const updateItem = (id: string, patch: Partial<ProjectWorkItem>) => {
     onChange({
@@ -403,19 +397,19 @@ function ProjectDetail({
       </button>
 
       <div className="page-head project-detail-head">
-        <div>
-                    <h1 className="page-title">{project.title}</h1>
-          <p className="page-sub">
-            全局项目 · {projectDoneCount(project)}/{project.milestones.length} 里程碑 ·{' '}
-            {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
-            {fmtDays(quarterDays)} 人日
+        <div className="project-head-copy">
+          <div className="project-title-row">
+            <h1 className="page-title">{project.title}</h1>
+            {crossQuarter ? <span className="tag risk-tag">跨季度</span> : null}
+            {project.status === 'risk' ? <span className="tag risk-tag">有风险</span> : null}
+          </div>
+          <p className="project-subline">
+            本季 {quarterLabel} 排期 {fmtDays(quarterDays)} 人日 · {project.workItems.length} 个工作项 ·{' '}
+            {projectDoneCount(project)}/{project.milestones.length} 里程碑
           </p>
-          <div className="project-meta-grid">
-            <div className="project-meta-block">
-              <div className="project-meta-head">
-                <span>项目周期</span>
-                <span className="project-meta-hint">按自然日</span>
-              </div>
+          <div className="project-plan-strip">
+            <div className="project-plan-main">
+              <span className="project-plan-label">项目周期</span>
               <DateRangeField
                 startDate={project.startDate}
                 endDate={project.endDate}
@@ -430,11 +424,9 @@ function ProjectDetail({
                 }
               />
             </div>
-            <div className="project-meta-block">
-              <div className="project-meta-head">
-                <span>结束提醒</span>
-                <span className="project-meta-hint">24 小时制整点</span>
-              </div>
+            <span className="project-plan-divider" />
+            <div className="project-plan-reminder">
+              <span className="project-plan-label">结束提醒</span>
               <ReminderFields
                 hideMode
                 compact
@@ -447,13 +439,6 @@ function ProjectDetail({
                 }
               />
             </div>
-          </div>
-          <div className="project-scope-line">
-            {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
-            <span>
-              全局规划 {project.plannedDays} 人日 · 本季度只看 {quarterLabel} 排期{' '}
-              {fmtDays(quarterDays)} 人日
-            </span>
           </div>
         </div>
         <div className="head-actions">
@@ -478,17 +463,6 @@ function ProjectDetail({
           </button>
         </div>
       </div>
-
-      {atRisk ? (
-        <div className="warn-banner project-risk-banner">
-          <WarningCircle size={14} style={{ flex: '0 0 14px', marginTop: 1 }} />
-          <span>
-            {crossQuarter
-              ? `项目计划结束 ${fmtDateTime(project.endDate, project.endTime)}，超出当前季度；本季度只计 ${quarterLabel} 排期 ${fmtDays(quarterDays)} 人日，其余属于后续季度，已标记有风险。`
-              : '项目状态为有风险，请关注当前季度排期与里程碑。'}
-          </span>
-        </div>
-      ) : null}
 
       <div className="project-summary">
         <Card>
@@ -562,29 +536,27 @@ function ProjectDetail({
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
-              <span>工作项 / 时间段</span>
+              <span>工作项</span>
+              <span>排期日历</span>
               <span>规划人日</span>
-              <span>排期周</span>
               <span>状态</span>
               <span />
             </div>
             {project.workItems.map((item) => (
               <div className="workplan-row" key={item.id}>
-                <div className="workitem-main">
-                  <input
-                    className="workitem-title"
-                    value={item.title}
-                    onChange={(event) => updateItem(item.id, { title: event.target.value })}
+                <input
+                  className="workitem-title"
+                  value={item.title}
+                  onChange={(event) => updateItem(item.id, { title: event.target.value })}
+                />
+                <div className="workitem-calendar">
+                  <DateRangeField
+                    compact
+                    startDate={item.startDate ?? WEEKS[item.weekKey]?.start ?? project.startDate}
+                    endDate={item.endDate ?? WEEKS[item.weekKey]?.end ?? project.endDate}
+                    onChange={(nextStart, nextEnd) => updateItem(item.id, { startDate: nextStart, endDate: nextEnd })}
+                    label="工作项开展时间段"
                   />
-                  <div className="workitem-range">
-                    <DateRangeField
-                      compact
-                      startDate={item.startDate ?? WEEKS[item.weekKey]?.start ?? project.startDate}
-                      endDate={item.endDate ?? WEEKS[item.weekKey]?.end ?? project.endDate}
-                      onChange={(nextStart, nextEnd) => updateItem(item.id, { startDate: nextStart, endDate: nextEnd })}
-                      label="工作项开展时间段"
-                    />
-                  </div>
                 </div>
                 <div className="hours-edit compact">
                   <input
@@ -601,9 +573,6 @@ function ProjectDetail({
                   />
                   <span>人日</span>
                 </div>
-                <span className="workitem-week-badge">
-                  {weekLabel(item.weekKey)}
-                </span>
                 <button
                   type="button"
                   className={cn('workitem-status', item.status === 'done' && 'done')}

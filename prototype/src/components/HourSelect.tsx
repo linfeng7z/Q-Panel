@@ -1,4 +1,4 @@
-import { Clock } from '@phosphor-icons/react'
+import { CaretDown, Clock } from '@phosphor-icons/react'
 
 interface HourSelectProps {
   value: string
@@ -18,6 +18,7 @@ export function HourSelect({ value, onChange, label = '提醒小时' }: HourSele
           return <option key={item} value={item}>{item}:00</option>
         })}
       </select>
+      <CaretDown size={9} className="hour-select-caret" />
       <span className="hour-select-unit">24H</span>
     </label>
   )

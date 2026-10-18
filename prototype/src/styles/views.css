@@ -2665,10 +2665,10 @@
 
 .workplan-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 80px 128px 68px 24px;
+  grid-template-columns: minmax(0, 1fr) 190px 82px 66px 26px;
   align-items: center;
-  gap: 7px;
-  min-height: 39px;
+  gap: 8px;
+  min-height: 43px;
   padding: 3px 6px;
   border-radius: 7px;
 }
