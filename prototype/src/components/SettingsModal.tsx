@@ -222,6 +222,48 @@ export function SettingsModal({
                     </div>
 
                     <div className="settings-section">
+                      <div className="settings-section-label">背景</div>
+                      <div className="settings-range-row">
+                        <div>
+                          <div className="settings-label">背景模糊度</div>
+                          <div className="settings-help">数值越大，后方窗口越模糊；文字更容易聚焦。</div>
+                        </div>
+                        <div className="settings-range-control">
+                          <input
+                            className="settings-range"
+                            type="range"
+                            min="0"
+                            max="80"
+                            step="2"
+                            value={preferences.blurStrength}
+                            onChange={(event) => updatePreferences({ blurStrength: Number(event.target.value) })}
+                            aria-label="背景模糊度"
+                          />
+                          <span className="settings-range-value">{preferences.blurStrength}px</span>
+                        </div>
+                      </div>
+                      <div className="settings-range-row">
+                        <div>
+                          <div className="settings-label">背景遮罩</div>
+                          <div className="settings-help">给面板叠加一层深色遮罩，降低背后内容对文字的干扰。</div>
+                        </div>
+                        <div className="settings-range-control">
+                          <input
+                            className="settings-range"
+                            type="range"
+                            min="0"
+                            max="60"
+                            step="2"
+                            value={preferences.panelTint}
+                            onChange={(event) => updatePreferences({ panelTint: Number(event.target.value) })}
+                            aria-label="背景遮罩"
+                          />
+                          <span className="settings-range-value">{preferences.panelTint}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
                       <div className="settings-section-label">启动</div>
                       <div className="settings-row">
                         <div>

@@ -30,8 +30,14 @@ let reminderStateStore = null
 let lastWorkspace = null
 let aiConfigStore = null
 
-const NOTCH_WIDTH = 210
+// Matches the physical MacBook notch / menu-bar height; the collapsed window
+// is a transparent click target so it does not add a second visible pill.
+const NOTCH_WIDTH = 200
 const NOTCH_HEIGHT = 38
+const PANEL_WIDTH = 1280
+const PANEL_HEIGHT = 760
+let activeNativeDialogs = 0
+let blurHideTimer = null
 
 function rendererUrl() {
   if (isDev) {
@@ -64,9 +70,12 @@ function showWindow() {
   hideNotch()
   if (!mainWindow) {
     createWindow()
+    mainWindow?.once('ready-to-show', showWindow)
     return
   }
   if (mainWindow.isMinimized()) mainWindow.restore()
+  placePanelOnDisplay()
+  mainWindow.setAlwaysOnTop(true, 'screen-saver')
   mainWindow.show()
   mainWindow.focus()
 }
@@ -80,6 +89,34 @@ function toggleWindow() {
   if (!mainWindow) return
   if (mainWindow.isVisible()) hideWindow()
   else showWindow()
+}
+
+function targetDisplay() {
+  return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) ?? screen.getPrimaryDisplay()
+}
+
+function placePanelOnDisplay() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const display = targetDisplay()
+  const width = Math.min(PANEL_WIDTH, Math.max(980, display.workArea.width - 80))
+  const height = Math.min(PANEL_HEIGHT, Math.max(620, display.workArea.height - 48))
+  const x = Math.round(display.workArea.x + (display.workArea.width - width) / 2)
+  const y = Math.round(display.workArea.y)
+  mainWindow.setBounds({ x, y, width, height })
+}
+
+async function withNativeDialog(task) {
+  activeNativeDialogs += 1
+  try {
+    return await task()
+  } finally {
+    activeNativeDialogs -= 1
+    if (activeNativeDialogs === 0) {
+      setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) mainWindow.focus()
+      }, 30)
+    }
+  }
 }
 
 function reminderPreferences() {
@@ -183,8 +220,8 @@ function syncReminders(workspace) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 760,
+    width: PANEL_WIDTH,
+    height: PANEL_HEIGHT,
     minWidth: 980,
     minHeight: 620,
     show: false,
@@ -193,6 +230,12 @@ function createWindow() {
     backgroundColor: '#00000000',
     hasShadow: true,
     resizable: true,
+    movable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    hiddenInMissionControl: true,
+    acceptFirstMouse: true,
+    roundedCorners: false,
     fullscreenable: false,
     title: 'Q-Panel',
     webPreferences: {
@@ -204,8 +247,34 @@ function createWindow() {
     },
   })
 
+  mainWindow.setAlwaysOnTop(true, 'screen-saver')
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show()
+    if (process.env.Q_PANEL_START_EXPANDED === '1') showWindow()
+  })
+
+  mainWindow.on('blur', () => {
+    if (blurHideTimer) clearTimeout(blurHideTimer)
+    blurHideTimer = setTimeout(() => {
+      if (
+        mainWindow &&
+        !mainWindow.isDestroyed() &&
+        mainWindow.isVisible() &&
+        !mainWindow.isFocused() &&
+        activeNativeDialogs === 0 &&
+        !mainWindow.webContents.isDevToolsOpened()
+      ) {
+        hideWindow()
+      }
+    }, 120)
+  })
+
+  mainWindow.on('focus', () => {
+    if (blurHideTimer) {
+      clearTimeout(blurHideTimer)
+      blurHideTimer = null
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -230,6 +299,8 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+
+  placePanelOnDisplay()
 
   const devUrl = rendererUrl()
   if (devUrl) mainWindow.loadURL(devUrl)
@@ -264,6 +335,8 @@ function createNotchWindow() {
     fullscreenable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
+    acceptFirstMouse: true,
+    roundedCorners: false,
     focusable: true,
     title: 'Q-Panel',
     webPreferences: {
@@ -275,11 +348,16 @@ function createNotchWindow() {
     },
   })
 
-  notchWindow.setAlwaysOnTop(true, 'floating')
+  notchWindow.setAlwaysOnTop(true, 'screen-saver')
+  notchWindow.setIgnoreMouseEvents(false)
   notchWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
   notchWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)
     return { action: 'deny' }
+  })
+
+  notchWindow.once('ready-to-show', () => {
+    if (process.env.Q_PANEL_START_EXPANDED !== '1') showNotch()
   })
 
   notchWindow.on('closed', () => {
@@ -306,8 +384,9 @@ function createNotchWindow() {
 function createTray() {
   const iconPath = path.join(__dirname, 'assets', 'trayTemplate.png')
   const icon = nativeImage.createFromPath(iconPath)
+  if (process.platform === 'darwin') icon.setTemplateImage(true)
   tray = new Tray(icon.resize({ width: 18, height: 18 }))
-  tray.setToolTip('Q-Panel')
+  tray.setToolTip('Q-Panel · 点击刘海或 ⌥ Space 打开')
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: '显示 Q-Panel', click: showWindow },
@@ -330,6 +409,7 @@ function registerIpc() {
     await syncReminders(normalized.data)
     if (
       app.isPackaged &&
+      process.env.Q_PANEL_DISABLE_AUTO_LAUNCH !== '1' &&
       normalized.data.preferences &&
       typeof normalized.data.preferences.autoLaunch === 'boolean'
     ) {
@@ -351,11 +431,11 @@ function registerIpc() {
     const testPath = process.env.Q_PANEL_TEST_EXPORT_PATH
     let destination = testPath
     if (!destination) {
-      const result = await dialog.showSaveDialog(mainWindow ?? undefined, {
+      const result = await withNativeDialog(() => dialog.showSaveDialog(mainWindow ?? undefined, {
         title: '导出 Q-Panel 工作区',
         defaultPath: path.join(app.getPath('documents'), `q-panel-workspace-${new Date().toISOString().slice(0, 10)}.json`),
         filters: [{ name: 'Q-Panel workspace', extensions: ['json'] }],
-      })
+      }))
       if (result.canceled || !result.filePath) return { ok: false, canceled: true }
       destination = result.filePath
     }
@@ -367,11 +447,11 @@ function registerIpc() {
     const testPath = process.env.Q_PANEL_TEST_IMPORT_PATH
     let source = testPath
     if (!source) {
-      const result = await dialog.showOpenDialog(mainWindow ?? undefined, {
+      const result = await withNativeDialog(() => dialog.showOpenDialog(mainWindow ?? undefined, {
         title: '导入 Q-Panel 工作区',
         properties: ['openFile'],
         filters: [{ name: 'Q-Panel workspace', extensions: ['json'] }],
-      })
+      }))
       if (result.canceled || result.filePaths.length === 0) return { ok: false, canceled: true }
       source = result.filePaths[0]
     }
@@ -444,7 +524,19 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:set-window-blur', (_event, strength) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return { ok: false, error: 'no_window' }
+    const numeric = Number(strength)
+    const vibrancy = numeric <= 8 ? null : numeric < 32 ? 'hud' : 'under-window'
+    try {
+      mainWindow.setVibrancy(vibrancy)
+    } catch {
+      return { ok: false, error: 'vibrancy_unavailable' }
+    }
+    return { ok: true, vibrancy }
+  })
   ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
+    if (process.env.Q_PANEL_DISABLE_AUTO_LAUNCH === '1') return { ok: true, skipped: 'disabled-by-env' }
     if (!app.isPackaged) return { ok: true, skipped: 'development' }
     app.setLoginItemSettings({ openAtLogin: Boolean(enabled) })
     return { ok: true, openAtLogin: app.getLoginItemSettings().openAtLogin }

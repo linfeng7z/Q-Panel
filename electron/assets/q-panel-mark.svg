@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="96" x2="880" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171b26"/>
+      <stop offset="0.55" stop-color="#0c0e15"/>
+      <stop offset="1" stop-color="#07080c"/>
+    </linearGradient>
+    <linearGradient id="check" x1="380" y1="650" x2="690" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8fb1ff"/>
+      <stop offset="1" stop-color="#67e0bd"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="200" y1="60" x2="800" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.35" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="968" height="968" rx="228" fill="url(#bg)"/>
+  <rect x="28.75" y="28.75" width="966.5" height="966.5" rx="227.25" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1.5"/>
+  <rect x="28" y="28" width="968" height="968" rx="228" fill="url(#sheen)"/>
+  <path d="M300 288H368C388 326 430 350 512 350C594 350 636 326 656 288H724C766 288 792 314 792 356V744C792 786 766 812 724 812H300C258 812 232 786 232 744V356C232 314 258 288 300 288Z" fill="none" stroke="#f2f5ff" stroke-width="46" stroke-linejoin="round"/>
+  <path d="M382 568L474 660L656 478" fill="none" stroke="url(#check)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

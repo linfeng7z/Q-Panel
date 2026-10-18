@@ -1,8 +1,8 @@
-# Q-Panel v1.0.0 验收记录
+# Q-Panel v1.1.0 验收记录
 
 验收日期：2026-10-18  
 环境：macOS Apple Silicon，Electron 44.9.0，Playwright Electron，Chrome（原型回归）  
-交付：`electron/release/Q-Panel-1.0.0-arm64.dmg`（ad-hoc 签名，arm64）
+交付：`electron/release/Q-Panel-1.1.0-arm64.dmg`（ad-hoc 签名，arm64）
 
 ## 自动化结果
 
@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 原型日历引擎 | `cd prototype && npm run test:calendar` | 5/5 |
 | Electron 单元 | `cd electron && npm run test:unit` | 12/12 |
-| Electron E2E | `cd electron && npm test` | 13/13 |
+| Electron E2E | `cd electron && npm test` | 14/14 |
 | 原型构建 | `cd prototype && npm run build` | 通过 |
 | 原型 lint | `cd prototype && npm run lint` | 0 error（1 条既有 fast-refresh warning） |
 | 原型交互回归 | `cd prototype && node scripts/interact.mjs` | 0 console error |
@@ -19,10 +19,11 @@
 ## 功能验收
 
 ### 原生壳
-- [x] 无模拟桌面，面板 1280×760 原生窗口；
-- [x] 刘海折叠/展开、置顶、菜单栏托盘、`⌥ Space`；
+- [x] 无模拟桌面，面板 1280×760 原生窗口；启动仅显示与物理刘海等大的透明点击热区；
+- [x] 点击真实刘海热区展开、失焦/点击空白收起、面板始终置顶、菜单栏托盘、`⌥ Space`；
 - [x] 单实例、本地持久化、原子写、每日备份；
-- [x] 四套皮肤热切换并持久化。
+- [x] 四套皮肤热切换并持久化；新增待办勾选面板 Logo 与新 App 图标；
+- [x] 可调背景模糊/遮罩，默认更强的可读性；滑块值持久化。
 
 ### 规划与容量
 - [x] 2026 Q4：62 个工作日 / 60 人日可用；

@@ -140,6 +140,8 @@ test('persists user preferences across an app restart', async () => {
     await autoLaunch.click()
     await expect(autoLaunch).toHaveAttribute('aria-checked', 'false')
     await page.locator('.settings-row', { hasText: '默认展开页' }).locator('select').selectOption('week')
+    await page.locator('input[aria-label="背景模糊度"]').fill('72')
+    await page.locator('input[aria-label="背景遮罩"]').fill('34')
     await page.locator('.settings-modal .modal-close').click()
     await expect.poll(async () => Number(await page.locator('.qp-root').getAttribute('data-save-seq'))).toBeGreaterThan(startSeq)
     await expect.poll(async () => {
@@ -156,8 +158,61 @@ test('persists user preferences across an app restart', async () => {
     await secondPage.locator('.icon-btn[title="设置"]').click()
     await expect(secondPage.locator('.settings-row', { hasText: '开机自动启动' }).locator('.toggle')).toHaveAttribute('aria-checked', 'false')
     await expect(secondPage.locator('.settings-row', { hasText: '默认展开页' }).locator('select')).toHaveValue('week')
+    await expect(secondPage.locator('input[aria-label="背景模糊度"]')).toHaveValue('72')
+    await expect(secondPage.locator('input[aria-label="背景遮罩"]')).toHaveValue('34')
+    await expect(secondPage.locator('.qp-root')).toHaveAttribute('style', /--panel-blur: 72px/)
   } finally {
     if (app) await closeApp(app, userData)
     else await fs.rm(userData, { recursive: true, force: true })
+  }
+})
+
+test('starts collapsed on the notch, expands on click and hides on blur', async () => {
+  const userData = await createUserData()
+  const { app } = await launchApp(userData, { Q_PANEL_START_EXPANDED: '0' })
+  try {
+    await expect.poll(async () => {
+      return app.evaluate(({ BrowserWindow }) => {
+        const windows = BrowserWindow.getAllWindows()
+        const main = windows.find((window) => !window.webContents.getURL().includes('notch=1'))
+        const notch = windows.find((window) => window.webContents.getURL().includes('notch=1'))
+        return {
+          mainVisible: Boolean(main?.isVisible()),
+          notchVisible: Boolean(notch?.isVisible()),
+          notchBounds: notch?.getBounds(),
+          notchTop: notch?.isAlwaysOnTop(),
+        }
+      })
+    }).toMatchObject({
+      mainVisible: false,
+      notchVisible: true,
+      notchBounds: { width: 200, height: 38 },
+      notchTop: true,
+    })
+
+    const notchPage = app.windows().find((page) => page.url().includes('notch=1'))
+    expect(notchPage).toBeTruthy()
+    await notchPage.locator('.notch').click()
+    await expect.poll(async () => {
+      return app.evaluate(({ BrowserWindow }) => {
+        const main = BrowserWindow.getAllWindows().find((window) => !window.webContents.getURL().includes('notch=1'))
+        return { visible: Boolean(main?.isVisible()), top: main?.isAlwaysOnTop() }
+      })
+    }).toMatchObject({ visible: true, top: true })
+
+    await app.evaluate(({ BrowserWindow }) => {
+      const main = BrowserWindow.getAllWindows().find((window) => !window.webContents.getURL().includes('notch=1'))
+      main?.blur()
+    })
+    await expect.poll(async () => {
+      return app.evaluate(({ BrowserWindow }) => {
+        const windows = BrowserWindow.getAllWindows()
+        const main = windows.find((window) => !window.webContents.getURL().includes('notch=1'))
+        const notch = windows.find((window) => window.webContents.getURL().includes('notch=1'))
+        return { mainVisible: Boolean(main?.isVisible()), notchVisible: Boolean(notch?.isVisible()) }
+      })
+    }).toMatchObject({ mainVisible: false, notchVisible: true })
+  } finally {
+    await closeApp(app, userData)
   }
 })

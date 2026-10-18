@@ -2355,3 +2355,38 @@
 .settings-ai-status.ok {
   color: var(--good);
 }
+
+/* appearance sliders */
+
+.settings-range-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 178px;
+  gap: 18px;
+  align-items: center;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.settings-range-row:first-of-type {
+  border-top: 0;
+}
+
+.settings-range-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-range {
+  flex: 1;
+  accent-color: var(--info);
+  cursor: pointer;
+}
+
+.settings-range-value {
+  width: 42px;
+  text-align: right;
+  font-size: 9.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}

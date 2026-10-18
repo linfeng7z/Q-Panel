@@ -22,6 +22,7 @@ export async function launchApp(userData, extraEnv = {}) {
       Q_PANEL_USER_DATA: userData,
       Q_PANEL_NO_NOTIFICATIONS: '1',
       Q_PANEL_NOW: '2026-10-17T19:22:00+08:00',
+      Q_PANEL_START_EXPANDED: '1',
       ...extraEnv,
     },
     timeout: 60_000,

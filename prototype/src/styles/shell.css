@@ -179,7 +179,8 @@
   overflow: hidden;
   border-radius: 0 0 calc(var(--r-panel) - 1px) calc(var(--r-panel) - 1px);
   background: var(--panel);
-  backdrop-filter: blur(46px) saturate(1.35);
+  backdrop-filter: blur(var(--panel-blur, 56px)) saturate(1.35);
+  box-shadow: inset 0 0 0 999px rgba(4, 5, 9, var(--panel-tint, 0.18));
 }
 
 .panel::before {

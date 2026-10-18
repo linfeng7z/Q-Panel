@@ -158,6 +158,8 @@ export interface UserPreferences {
   confirmAiWrites: boolean
   aiScope: 'minimal' | 'summary' | 'all'
   backupDays: number
+  blurStrength: number
+  panelTint: number
 }
 
 export interface AiConfigPublic {

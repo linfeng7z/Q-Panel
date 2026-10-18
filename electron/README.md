@@ -78,11 +78,11 @@ npm run pack
 产物：
 
 ```text
-release/Q-Panel-1.0.0-arm64.dmg
+release/Q-Panel-1.1.0-arm64.dmg
 release/mac-arm64/Q-Panel.app
 ```
 
-当前为 ad-hoc 签名构建，供本机安装测试；Developer ID 签名/公证步骤见 `docs/SIGNING.md`。
+当前为 ad-hoc 签名构建，供本机安装测试；Developer ID 签名/公证步骤见 `docs/SIGNING.md`。启动只显示与物理刘海等大的不可见点击热区，面板始终置顶，失焦自动收起。
 
 ## 目录
 

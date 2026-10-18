@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import type { CSSProperties } from 'react'
 import type {
   AiConfigPublic,
   AiGenerateResult,
@@ -352,6 +353,11 @@ export default function App() {
     if (!electronMode) return
     void window.qpanel?.app.setAutoLaunch(preferences.autoLaunch)
   }, [electronMode, preferences.autoLaunch])
+
+  useEffect(() => {
+    if (!electronMode) return
+    void window.qpanel?.app.setWindowBlur(preferences.blurStrength)
+  }, [electronMode, preferences.blurStrength])
 
   useEffect(() => {
     if (!electronMode) return
@@ -970,6 +976,10 @@ export default function App() {
       data-hydrated={hydrated ? 'true' : 'false'}
       data-save-state={saveState}
       data-save-seq={saveSequence}
+      style={{
+        '--panel-blur': `${preferences.blurStrength}px`,
+        '--panel-tint': String(preferences.panelTint / 100),
+      } as CSSProperties}
     >
       {!electronMode ? (
         <>
