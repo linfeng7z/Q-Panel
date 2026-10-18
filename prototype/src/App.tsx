@@ -990,17 +990,22 @@ export default function App() {
   }
 
   const moveOverdue = (ids: string[]) => {
-    const weekEnd = WEEKS[weekKey]?.end ?? WEEKS[CURRENT_WEEK_KEY].end
+    const targetWeek = WEEKS[weekKey]
+    const weekEnd = targetWeek?.end ?? WEEKS[CURRENT_WEEK_KEY].end
+    const weekStart = targetWeek?.start ?? weekEnd
+    // A task moved into the current week must not immediately look overdue
+    // again when the move happens after the default 18:00 reminder hour.
+    const dueTime = weekEnd <= TODAY ? '23:59' : '18:00'
     setTasks((value) =>
       value.map((task) =>
         ids.includes(task.id)
           ? {
               ...task,
               weekKey,
-              startDate: WEEKS[weekKey]?.start ?? weekEnd,
+              startDate: weekStart,
               endDate: weekEnd,
               dueDate: weekEnd,
-              dueTime: '18:00',
+              dueTime,
             }
           : task,
       ),

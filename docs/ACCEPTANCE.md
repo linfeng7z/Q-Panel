@@ -1,8 +1,8 @@
-# Q-Panel v1.1.36 验收记录
+# Q-Panel v1.1.37 验收记录
 
 验收日期：2026-10-18  
 环境：macOS Apple Silicon，Electron 44.9.0，Playwright Electron，Chrome（原型回归）  
-交付：`electron/release/Q-Panel-1.1.36-arm64.dmg`（ad-hoc 签名，arm64）
+交付：`electron/release/Q-Panel-1.1.37-arm64.dmg`（ad-hoc 签名，arm64）
 
 ## 自动化结果
 
@@ -10,10 +10,10 @@
 | --- | --- | --- |
 | 日历 / 背景合成 | `cd prototype && npm test` | 7/7 |
 | Electron 单元 | `cd electron && npm run test:unit` | 14/14 |
-| Electron E2E | `cd electron && npm test` | 39/39（含自定义下拉、编辑关联项目、周分类筛选、容量口径、里程碑、输入法与快捷键回归） |
+| Electron E2E | `cd electron && npm test` | 40/40（含自定义下拉、编辑关联项目、周分类筛选、容量口径、里程碑、输入法与快捷键回归） |
 | 原型构建 | `cd prototype && npm run build` | 通过 |
 | 原型 lint | `cd prototype && npm run lint` | 0 error（2 条既有 warning：fast-refresh / yearOptions effect） |
-| 打包版原生画面 | `cd electron && npm run verify:material`（指定打包可执行文件） | 1.1.36 高对比背景、轮廓截图、41 次滑块采样通过 |
+| 打包版原生画面 | `cd electron && npm run verify:material`（指定打包可执行文件） | 1.1.37 高对比背景、轮廓截图、41 次滑块采样通过 |
 | 打包 | `cd electron && npm run pack` | 通过 |
 
 ## 功能验收
@@ -67,7 +67,8 @@
 - [x] 工作项按日期范围自动拆分到所有重叠周，完成状态同步；
 - [x] 某周手动删除自动排期后不再同步回该周，其他周和后续编辑继续同步；
 - [x] 周安排中的项目自动排期与手动事项统一归入「本周必做」，不再分成两套事项；
-- [x] 自动排期行和侧栏项目卡片互相悬停时恢复关系线/高亮动效。
+- [x] 自动排期行和侧栏项目卡片互相悬停时恢复关系线/高亮动效；
+- [x] 上周逾期事项移入本周后，逾期横幅立即消失，任务不再马上被判为逾期。
 - [x] 笔记、收藏链接、自定义集合/分类、搜索；
 - [x] 链接标题/描述安全自动识别（SSRF 防护）。
 
@@ -93,7 +94,7 @@
 - [x] 偏好、主题、分类、日历调整、AI 配置（独立文件）持久化；
 - [x] 导出文件不包含 API Key 明文。
 
-## v1.1.36 背景专项实测
+## v1.1.37 背景专项实测
 
 - 打包版设置 0 / 25 / 50 / 75 / 100%，后方使用密集黑白大字与高饱和彩条，不使用用户桌面内容作验收素材。
 - 100% 时反转后方原生测试窗口，面板内部截屏（排除原生圆角边缘）的平均通道差为 **0**；同时自动化比较不同截图背景，最高档像素差 <0.1，最低/最高档差 >1。

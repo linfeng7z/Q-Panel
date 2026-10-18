@@ -287,6 +287,26 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('clears the overdue strip after moving tasks into the current week', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("本周安排")').click()
+      await page.getByRole('button', { name: '新建事项' }).click()
+      const modal = page.locator('.create-modal')
+      await modal.locator('.input').first().fill('上期逾期回归')
+      await chooseDateRange(page, modal, '2026-10-01', '2026-10-02')
+      await modal.locator('.modal-foot .btn.primary').click()
+      const strip = page.locator('.overdue-strip')
+      await expect(strip).toContainText('上期有')
+      await strip.locator('.btn').click()
+      await expect(strip).toHaveCount(0)
+      await expect(page.locator('.task-row').filter({ hasText: '上期逾期回归' })).toHaveCount(1)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps week category filters contained when categories grow', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

@@ -137,7 +137,10 @@ export function WeekView({
   const doneDays = doneDaysOf(weekTasks) + autoDoneDays
   const available = meta.workdays - meta.leaveDays
   const remaining = available - planned
-  const overdue = meta.end <= '2026-12-31' ? tasks.filter(isOverdue) : []
+  const overdue =
+    meta.end <= '2026-12-31'
+      ? tasks.filter((task) => !task.done && task.dueDate < meta.start && isOverdue(task))
+      : []
   const days = Array.from({ length: 7 }, (_, index) => addDays(meta.start, index))
   const linkedObjectiveIds = Array.from(
     new Set([
