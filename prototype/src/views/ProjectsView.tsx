@@ -10,7 +10,7 @@ import {
   Trash,
   WarningCircle,
 } from '@phosphor-icons/react'
-import type { CategoryId, CreateMode, Project, ProjectWorkItem } from '../types'
+import type { CategoryId, CreateMode, Milestone, Project, ProjectWorkItem } from '../types'
 import { CATEGORIES, CURRENT_WEEK_KEY, WEEKS, WEEK_ORDER, getCategory } from '../data/mock'
 import {
   cn,
@@ -29,7 +29,9 @@ import {
   projectScheduledDays,
 } from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
+import { DateField } from '../components/DateField'
 import { DateRangeField } from '../components/DateRangeField'
+import { DayInput } from '../components/DayInput'
 import { ReminderFields } from '../components/ReminderFields'
 
 interface ProjectsViewProps {
@@ -46,9 +48,9 @@ interface ProjectsViewProps {
   onManageCategories: () => void
 }
 
-function projectStatus(project: Project, year: number, quarter: number) {
-  if (project.status === 'risk' || projectCrossQuarter(project, year, quarter)) {
-    return { cls: 'risk', label: '有风险' }
+function projectStatus(project: Project) {
+  if (projectDecomposedDays(project) > project.plannedDays) {
+    return { cls: 'risk', label: '有延期风险' }
   }
   if (project.status === 'done') return { cls: 'done', label: '已完成' }
   return { cls: 'in_progress', label: '进行中' }
@@ -100,7 +102,7 @@ export function ProjectsView({
   const globalDays = projects.reduce((sum, project) => sum + project.plannedDays, 0)
   const crossCount = projects.filter((project) => projectCrossQuarter(project, year, quarter)).length
   const riskCount = projects.filter(
-    (project) => project.status === 'risk' || projectCrossQuarter(project, year, quarter),
+    (project) => projectDecomposedDays(project) > project.plannedDays,
   ).length
   const quarterDays = projects.reduce(
     (sum, project) => sum + projectQuarterDays(project, year, quarter),
@@ -108,7 +110,7 @@ export function ProjectsView({
   )
   const sortedProjects = [...visibleProjects].sort((a, b) => {
     const rank = (project: Project) => {
-      if (project.status === 'risk' || projectCrossQuarter(project, year, quarter)) return 0
+      if (projectDecomposedDays(project) > project.plannedDays) return 0
       return 1
     }
     return rank(a) - rank(b)
@@ -228,7 +230,7 @@ export function ProjectsView({
           </div>
           <div className="project-overview-rows">
             {sortedProjects.map((project) => {
-              const status = projectStatus(project, year, quarter)
+              const status = projectStatus(project)
               const progress = projectProgress(project)
               const next = projectNext(project)
               const cross = projectCrossQuarter(project, year, quarter)
@@ -366,6 +368,15 @@ function ProjectDetail({
     onToast('已删除工作项，本周安排已同步')
   }
 
+  const updateMilestone = (id: string, patch: Partial<Milestone>) => {
+    onChange({
+      ...project,
+      milestones: project.milestones.map((milestone) =>
+        milestone.id === id ? { ...milestone, ...patch } : milestone,
+      ),
+    })
+  }
+
   const addMilestone = () => {
     const stamp = Date.now()
     onChange({
@@ -402,7 +413,7 @@ function ProjectDetail({
           <div className="project-title-row">
             <h1 className="page-title">{project.title}</h1>
             {crossQuarter ? <span className="tag risk-tag">跨季度</span> : null}
-            {project.status === 'risk' ? <span className="tag risk-tag">有风险</span> : null}
+            {over ? <span className="tag risk-tag">有延期风险</span> : null}
           </div>
           <p className="project-subline">
             本季 {quarterLabel} 排期 {fmtDays(quarterDays)} 人日 · {project.workItems.length} 个工作项 ·{' '}
@@ -470,15 +481,14 @@ function ProjectDetail({
           <div className="project-summary-card">
             <span className="stat-label">全局总规划人日</span>
             <div className="hours-edit">
-              <input
+              <DayInput
                 className="hours-input num"
-                type="number"
-                min={0}
-                step={0.25}
                 value={project.plannedDays}
-                onChange={(event) =>
-                  onChange({ ...project, plannedDays: Math.max(0, Number(event.target.value) || 0) })
-                }
+                onChange={(plannedDays) => onChange({ ...project, plannedDays })}
+                placeholder="15"
+                min={0}
+                fallback={15}
+                label="全局总规划人日"
               />
               <span>人日</span>
             </div>
@@ -560,17 +570,14 @@ function ProjectDetail({
                   />
                 </div>
                 <div className="hours-edit compact">
-                  <input
+                  <DayInput
                     className="hours-input num"
-                    type="number"
-                    min={0}
-                    step={0.25}
                     value={item.plannedDays}
-                    onChange={(event) =>
-                      updateItem(item.id, {
-                        plannedDays: Math.max(0, Number(event.target.value) || 0),
-                      })
-                    }
+                    onChange={(plannedDays) => updateItem(item.id, { plannedDays })}
+                    placeholder="0.5"
+                    min={0}
+                    fallback={0.5}
+                    label={`${item.title}规划人日`}
                   />
                   <span>人日</span>
                 </div>
@@ -674,8 +681,25 @@ function ProjectDetail({
                     )}
                   >
                     <span className="timeline-dot" />
-                    <span className="tl-title">{milestone.title}</span>
-                    <span className="tl-date">{fmtRange(milestone.startDate ?? milestone.targetDate, milestone.endDate ?? milestone.targetDate)}</span>
+                    <input
+                      className="tl-title-input"
+                      value={milestone.title}
+                      onChange={(event) => updateMilestone(milestone.id, { title: event.target.value })}
+                      aria-label="里程碑名称"
+                    />
+                    <div className="milestone-date-edit">
+                      <DateField
+                        value={milestone.targetDate}
+                        onChange={(date) =>
+                          updateMilestone(milestone.id, {
+                            targetDate: date,
+                            startDate: date,
+                            endDate: date,
+                          })
+                        }
+                        label={`${milestone.title}日期`}
+                      />
+                    </div>
                     <button
                       type="button"
                       className="milestone-del"

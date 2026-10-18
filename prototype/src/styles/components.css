@@ -3430,3 +3430,115 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.timeline .timeline-item {
+  height: auto;
+  min-height: 31px;
+}
+
+.timeline-item .tl-title-input {
+  flex: 1;
+  min-width: 0;
+  height: 23px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-size: 9.5px;
+  outline: none;
+}
+
+.timeline-item .tl-title-input:hover,
+.timeline-item .tl-title-input:focus {
+  border-color: var(--line-soft);
+  background: var(--surface-inset);
+}
+
+.milestone-date-edit {
+  flex: 0 0 103px;
+  width: 103px;
+}
+
+.milestone-date-edit .date-field-trigger {
+  height: 23px;
+  gap: 3px;
+  padding: 0 5px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 8.5px;
+}
+
+.milestone-date-edit .date-field-trigger:hover,
+.milestone-date-edit .date-field-trigger.open {
+  border-color: var(--line-soft);
+  background: var(--surface-inset);
+}
+
+.milestone-date-edit .date-field-trigger > svg {
+  width: 9px;
+  height: 9px;
+}
+
+.milestone-date-edit .date-field-weekday {
+  display: none;
+}
+
+.global-shortcut-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.global-shortcut-record {
+  min-width: 130px;
+  justify-content: center;
+  height: 30px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-inset);
+  color: var(--text-1);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.global-shortcut-record:hover,
+.global-shortcut-record.recording {
+  border-color: color-mix(in srgb, var(--info) 55%, var(--line));
+  background: color-mix(in srgb, var(--info-soft) 40%, var(--surface-inset));
+}
+
+.global-shortcut-reset {
+  color: var(--text-3);
+  font-size: 9px;
+  padding: 4px;
+}
+
+.global-shortcut-reset:hover {
+  color: var(--text-1);
+}
+
+.global-shortcut-hint,
+.global-shortcut-error {
+  position: absolute;
+  top: 34px;
+  right: 34px;
+  font-size: 8.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.global-shortcut-error {
+  color: var(--bad);
+}
+
+.field > .field-help {
+  margin-top: 1px;
+  color: var(--text-3);
+  font-size: 8.5px;
+  line-height: 1.5;
+}
+
+.field > .select {
+  width: 100%;
+}

@@ -20,6 +20,7 @@ import { cn } from '../utils'
 import { Toggle } from './ui'
 import { HourSelect } from './HourSelect'
 import { BlurStrengthControl } from './BlurStrengthControl'
+import { GlobalShortcutField } from './GlobalShortcutField'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
@@ -46,6 +47,7 @@ interface SettingsModalProps {
   onAiModelChange: (model: string) => void
   preferences: UserPreferences
   onPreferencesChange: (preferences: UserPreferences) => void
+  onGlobalShortcutChange: (accelerator: string) => Promise<{ ok: boolean; error?: string }>
   screenPermission: string
   onOpenScreenSettings: () => void
   aiConfig: AiConfigPublic
@@ -93,6 +95,7 @@ export function SettingsModal({
   onAiModelChange,
   preferences,
   onPreferencesChange,
+  onGlobalShortcutChange,
   screenPermission,
   onOpenScreenSettings,
   aiConfig,
@@ -268,11 +271,12 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">全局快捷键</div>
-                          <div className="settings-help">唤起 / 收起顶部面板。</div>
+                          <div className="settings-help">点击后按下组合键，需包含 ⌘ / ⌃ / ⌥；Esc 取消。</div>
                         </div>
-                        <div className="settings-code" style={{ minWidth: 130, justifyContent: 'center' }}>
-                          ⌥ Space
-                        </div>
+                        <GlobalShortcutField
+                          value={preferences.globalShortcut}
+                          onChange={onGlobalShortcutChange}
+                        />
                       </div>
                       <div className="settings-row">
                         <div>
@@ -288,7 +292,6 @@ export function SettingsModal({
                           <option value="quarter">季度规划</option>
                           <option value="week">本周安排</option>
                           <option value="projects">全局项目</option>
-                          <option value="stats">容量与复盘</option>
                           <option value="notes">临时笔记</option>
                           <option value="links">收藏链接</option>
                         </select>
@@ -466,7 +469,7 @@ export function SettingsModal({
                           value={categoryName}
                           onChange={(event) => setCategoryName(event.target.value)}
                           onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
+                            if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
                               event.preventDefault()
                               addCategoryFromInput()
                             }
@@ -518,7 +521,7 @@ export function SettingsModal({
                       <div className="settings-row">
                         <div>
                           <div className="settings-label">第二组</div>
-                          <div className="settings-help">容量与复盘 / 临时笔记 / 收藏链接</div>
+                          <div className="settings-help">临时笔记 / 收藏链接</div>
                         </div>
                         <input
                           className="input sidebar-label-input"

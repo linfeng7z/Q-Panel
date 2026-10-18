@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  ArrowRight,
   CalendarBlank,
   Clock,
   FolderSimple,
@@ -56,7 +55,6 @@ interface QuarterViewProps {
   onFilter: (filter: CategoryId | 'all') => void
   onOpenCreate: (mode: CreateMode) => void
   onSelectPeriod: (year: number, quarter: number) => void
-  onOpenStats: () => void
   onManageCategories: () => void
   onEditObjective: (objective: Objective) => void
   onDeleteObjective: (id: string) => void
@@ -75,7 +73,6 @@ export function QuarterView({
   onFilter,
   onOpenCreate,
   onSelectPeriod,
-  onOpenStats,
   onManageCategories,
   onEditObjective,
   onDeleteObjective,
@@ -538,9 +535,6 @@ export function QuarterView({
                           <Target size={13} />
                           分类分配
                         </div>
-                        <button type="button" className="card-link" onClick={() => onOpenStats()}>
-                          明细 <ArrowRight size={10} />
-                        </button>
                       </div>
                       <div className="donut-wrap">
                         <Donut

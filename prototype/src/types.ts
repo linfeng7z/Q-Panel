@@ -4,7 +4,6 @@ export type ViewId =
   | 'quarter'
   | 'week'
   | 'projects'
-  | 'stats'
   | 'notes'
   | 'links'
 
@@ -171,6 +170,7 @@ export interface UserPreferences {
   aiScope: 'minimal' | 'summary' | 'all'
   backupDays: number
   blurStrength: number
+  globalShortcut: string
   yearOptions: number[]
 }
 

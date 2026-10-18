@@ -104,11 +104,16 @@ export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, o
                 <label>{kind === 'objective' ? '计划人日' : '预计人日'}</label>
                 <input
                   className="input num"
-                  type="number"
-                  min={0.25}
-                  step={0.25}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={kind === 'objective' ? '15' : '0.5'}
                   value={days}
-                  onChange={(event) => setDays(event.target.value)}
+                  onChange={(event) =>
+                    setDays(event.target.value.replace(/[^0-9.]/g, ''))
+                  }
+                  onBlur={() => {
+                    if (days.trim() === '') setDays(kind === 'objective' ? '15' : '0.5')
+                  }}
                 />
               </div>
               <div className="field">

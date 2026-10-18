@@ -32,6 +32,10 @@ contextBridge.exposeInMainWorld('qpanel', {
   metadata: {
     fetch: (url) => ipcRenderer.invoke('metadata:fetch', url),
   },
+  shortcut: {
+    get: () => ipcRenderer.invoke('shortcut:get'),
+    set: (accelerator) => ipcRenderer.invoke('shortcut:set', accelerator),
+  },
   reminders: {
     test: () => ipcRenderer.invoke('reminders:test'),
     snooze: (entry) => ipcRenderer.invoke('reminders:snooze', entry),

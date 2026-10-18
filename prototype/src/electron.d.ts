@@ -64,6 +64,10 @@ interface QPanelBridge {
       } | null) => void,
     ) => () => void
   }
+  shortcut: {
+    get: () => Promise<{ ok: boolean; accelerator?: string | null }>
+    set: (accelerator: string) => Promise<{ ok: boolean; accelerator?: string | null; error?: string }>
+  }
   ai: {
     getConfig: () => Promise<{ ok: boolean; config?: { baseUrl: string; model: string; hasKey: boolean }; error?: string }>
     saveConfig: (payload: { baseUrl: string; model: string; apiKey?: string }) => Promise<{

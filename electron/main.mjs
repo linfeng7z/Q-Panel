@@ -29,6 +29,7 @@ let reminderScheduler = null
 let reminderStateStore = null
 let lastWorkspace = null
 let lastBackdrop = null
+let activeGlobalShortcut = null
 let aiConfigStore = null
 
 // Matches the physical MacBook notch / menu-bar height; the collapsed window
@@ -297,6 +298,11 @@ let reminderSyncQueue = Promise.resolve()
 async function syncRemindersNow(workspace) {
   if (!workspace || !reminderScheduler || !reminderStateStore) return
   lastWorkspace = workspace
+  const savedShortcut = workspace.preferences?.globalShortcut
+  if (typeof savedShortcut === 'string' && savedShortcut && savedShortcut !== activeGlobalShortcut) {
+    const result = applyGlobalShortcut(savedShortcut)
+    if (!result.ok) console.error('global shortcut unavailable', result.error)
+  }
   await reminderStateStore.load()
   const result = reminderScheduler.sync(workspace, reminderStateStore.data)
   if (result.missed.length > 0) handleMissedReminders(result.missed)
@@ -497,6 +503,31 @@ function createTray() {
   tray.on('click', toggleWindow)
 }
 
+function applyGlobalShortcut(accelerator) {
+  const next = typeof accelerator === 'string' && accelerator ? accelerator : 'CommandOrControl+Shift+Space'
+  if (activeGlobalShortcut === next) return { ok: true, accelerator: next }
+  const previous = activeGlobalShortcut
+  if (previous) globalShortcut.unregister(previous)
+  let registered = false
+  try {
+    registered = globalShortcut.register(next, toggleWindow)
+  } catch {
+    registered = false
+  }
+  if (!registered) {
+    if (previous) {
+      try {
+        globalShortcut.register(previous, toggleWindow)
+      } catch {
+        // The previous shortcut may itself have become unavailable.
+      }
+    }
+    return { ok: false, error: 'shortcut_unavailable', accelerator: previous }
+  }
+  activeGlobalShortcut = next
+  return { ok: true, accelerator: next }
+}
+
 function registerIpc() {
   ipcMain.handle('workspace:load', async () => {
     if (!store) store = new WorkspaceStore(app.getPath('userData'))
@@ -628,6 +659,14 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('shortcut:get', () => ({ ok: true, accelerator: activeGlobalShortcut }))
+  ipcMain.handle('shortcut:set', (_event, accelerator) => {
+    if (typeof accelerator !== 'string' || accelerator.length < 2 || accelerator.length > 80) {
+      return { ok: false, error: 'invalid_shortcut' }
+    }
+    return applyGlobalShortcut(accelerator)
+  })
+
   ipcMain.handle('app:screen-permission', () => ({ status: screenCapturePermission() }))
   ipcMain.handle('app:open-screen-settings', async () => {
     if (process.platform !== 'darwin') return { ok: false, error: 'unsupported' }
@@ -688,7 +727,7 @@ app.whenReady().then(() => {
   createWindow()
   createNotchWindow()
   createTray()
-  globalShortcut.register('CommandOrControl+Shift+Space', toggleWindow)
+  applyGlobalShortcut('CommandOrControl+Shift+Space')
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

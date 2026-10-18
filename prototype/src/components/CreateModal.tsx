@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Check, Clock, Plus, X } from '@phosphor-icons/react'
-import type { Category, CategoryId, CreateMode, ReminderDefaults } from '../types'
+import type { Category, CategoryId, CreateMode, Objective, Project, ReminderDefaults } from '../types'
 import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
 import { DateRangeField } from './DateRangeField'
+import { DayInput } from './DayInput'
 import { ReminderFields } from './ReminderFields'
 import { formatReminder, formatReminderDate, shiftDate } from '../utils'
 
@@ -20,6 +21,7 @@ interface CreateModalProps {
     endDate: string
     dueDate: string
     dueTime: string
+    projectId?: string
     reminder?: string
   }) => void
   onCreateTask: (data: {
@@ -40,8 +42,12 @@ interface CreateModalProps {
     targetDate: string
     targetTime: string
     description: string
+    plannedDays: number
+    objectiveId?: string
     reminder?: string
   }) => void
+  quarterObjectives: Objective[]
+  projects: Project[]
   onAddCategory: (name: string, colorVar: string) => Category
   reminderDefaults: ReminderDefaults
 }
@@ -69,13 +75,17 @@ export function CreateModal({
   onCreateObjective,
   onCreateTask,
   onCreateProject,
+  quarterObjectives,
+  projects,
   onAddCategory,
   reminderDefaults,
 }: CreateModalProps) {
   const meta = TITLES[mode]
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState<CategoryId>(defaultCategory)
-  const [days, setDays] = useState(mode === 'objective' ? 15 : mode === 'task' ? 0.5 : 0)
+  const [objectiveId, setObjectiveId] = useState('')
+  const [projectId, setProjectId] = useState('')
+  const [days, setDays] = useState(mode === 'objective' ? 15 : mode === 'task' ? 0.5 : 15)
   const initialEnd = defaultDate || TODAY
   const [startDate, setStartDate] = useState(mode === 'task' ? initialEnd : TODAY)
   const [endDate, setEndDate] = useState(initialEnd)
@@ -101,6 +111,7 @@ export function CreateModal({
         endDate,
         dueDate: endDate,
         dueTime: '18:00',
+        projectId: projectId || undefined,
         reminder:
           reminderMode === 'custom'
             ? formatReminderDate(reminderDate, reminderTime)
@@ -129,6 +140,8 @@ export function CreateModal({
         targetDate: endDate,
         targetTime: '18:00',
         description: description.trim(),
+        plannedDays: Number(days) || 15,
+        objectiveId: objectiveId || undefined,
         reminder:
           reminderMode === 'custom'
             ? formatReminderDate(reminderDate, reminderTime)
@@ -175,7 +188,9 @@ export function CreateModal({
                         : '例：AI 安全治理基线'
                   }
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter') submit()
+                    if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
+                      submit()
+                    }
                   }}
                 />
               </div>
@@ -218,7 +233,7 @@ export function CreateModal({
                         setCategoryError('')
                       }}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
+                        if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
                           event.preventDefault()
                           const name = newCategoryName.trim()
                           if (!name) {
@@ -286,6 +301,44 @@ export function CreateModal({
 
               {mode === 'project' ? (
                 <div className="field">
+                  <label>关联季度规划</label>
+                  <select
+                    className="select"
+                    value={objectiveId}
+                    onChange={(event) => setObjectiveId(event.target.value)}
+                    aria-label="关联季度规划"
+                  >
+                    <option value="">不关联，按独立项目占用容量</option>
+                    {quarterObjectives.map((objective) => (
+                      <option value={objective.id} key={objective.id}>
+                        {objective.title} · {objective.plannedDays} 人日
+                      </option>
+                    ))}
+                  </select>
+                  <div className="field-help">关联后项目工作项视为该季度任务的拆解，不重复占用容量。</div>
+                </div>
+              ) : mode === 'objective' ? (
+                <div className="field">
+                  <label>关联项目</label>
+                  <select
+                    className="select"
+                    value={projectId}
+                    onChange={(event) => setProjectId(event.target.value)}
+                    aria-label="关联项目"
+                  >
+                    <option value="">不关联，作为独立季度任务</option>
+                    {projects.map((project) => (
+                      <option value={project.id} key={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="field-help">关联后该项目的工作项归入此季度任务，不再重复占用容量。</div>
+                </div>
+              ) : null}
+
+              {mode === 'project' ? (
+                <div className="field">
                   <label>项目说明</label>
                   <textarea
                     className="textarea"
@@ -296,20 +349,18 @@ export function CreateModal({
                 </div>
               ) : null}
 
-              {mode !== 'project' ? (
-                <div className="field">
-                  <label>{mode === 'objective' ? '计划人日' : '预计人日'}</label>
-                  <input
-                    className="input num"
-                    type="number"
-                    min={0.25}
-                    max={200}
-                    step={0.25}
-                    value={days}
-                    onChange={(event) => setDays(Number(event.target.value))}
-                  />
-                </div>
-              ) : null}
+              <div className="field">
+                <label>{mode === 'objective' ? '计划人日' : mode === 'task' ? '预计人日' : '总规划人日'}</label>
+                <DayInput
+                  className="input num"
+                  value={days}
+                  onChange={setDays}
+                  placeholder={mode === 'task' ? '0.5' : '15'}
+                  min={0.25}
+                  fallback={mode === 'task' ? 0.5 : 15}
+                  label={mode === 'objective' ? '计划人日' : mode === 'task' ? '预计人日' : '总规划人日'}
+                />
+              </div>
               <div className="field">
                 <label>{mode === 'project' ? '项目开展时间段' : '开展时间段'}</label>
                 <DateRangeField

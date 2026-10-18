@@ -62,11 +62,10 @@ import { Logo } from './components/Logo'
 import { QuarterView } from './views/QuarterView'
 import { WeekView } from './views/WeekView'
 import { ProjectsView } from './views/ProjectsView'
-import { StatsView } from './views/StatsView'
 import { NotesView } from './views/NotesView'
 import { LinksView } from './views/LinksView'
 
-const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'stats', 'notes', 'links']
+const VIEWS: ViewId[] = ['quarter', 'week', 'projects', 'notes', 'links']
 const THEMES: ThemeId[] = ['noir', 'ops', 'aurora', 'ember']
 const DEFAULT_SIDEBAR_LABELS: SidebarLabels = { plan: '规划与推进', archive: '其它' }
 
@@ -302,7 +301,9 @@ export default function App() {
       applyCalendarAdjustments(adjustments)
     }
     if (isRecord(data.preferences)) {
-      setPreferences({ ...DEFAULT_PREFERENCES, ...data.preferences })
+      const loadedPreferences = { ...DEFAULT_PREFERENCES, ...data.preferences }
+      if ((loadedPreferences.defaultView as string) === 'stats') loadedPreferences.defaultView = 'quarter'
+      setPreferences(loadedPreferences)
     }
     return true
   }, [])
@@ -635,6 +636,21 @@ export default function App() {
     if (next.defaultView !== previousDefault) setView(next.defaultView)
   }
 
+  const changeGlobalShortcut = async (accelerator: string) => {
+    if (!electronMode || !window.qpanel?.shortcut) {
+      updatePreferences({ ...preferences, globalShortcut: accelerator })
+      return { ok: true }
+    }
+    const result = await window.qpanel.shortcut.set(accelerator)
+    if (!result?.ok) {
+      showToast(result?.error === 'shortcut_unavailable' ? '该快捷键已被占用，请换一个' : '快捷键保存失败')
+      return { ok: false, error: result?.error }
+    }
+    updatePreferences({ ...preferences, globalShortcut: accelerator })
+    showToast('全局快捷键已更新')
+    return { ok: true }
+  }
+
   const updateCalendarAdjustments = (next: CalendarAdjustment[]) => {
     const sorted = [...next].sort((a, b) => a.date.localeCompare(b.date))
     setCalendarAdjustments(sorted)
@@ -827,6 +843,7 @@ export default function App() {
     endDate: string
     dueDate: string
     dueTime: string
+    projectId?: string
     reminder?: string
   }) => {
     const key = quarterKey(year, quarter)
@@ -841,10 +858,30 @@ export default function App() {
       endDate: data.endDate,
       dueDate: data.endDate,
       dueTime: data.dueTime,
+      projectId: data.projectId || undefined,
       reminder:
         data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
     }
-    setObjectives((value) => ({ ...value, [key]: [...(value[key] ?? []), objective] }))
+    setObjectives((value) => {
+      const cleared = data.projectId
+        ? Object.fromEntries(
+            Object.entries(value).map(([period, list]) => [
+              period,
+              list.map((item) =>
+                item.projectId === data.projectId ? { ...item, projectId: undefined } : item,
+              ),
+            ]),
+          )
+        : value
+      return { ...cleared, [key]: [...(cleared[key] ?? []), objective] }
+    })
+    if (data.projectId) {
+      setProjects((value) =>
+        value.map((project) =>
+          project.id === data.projectId ? { ...project, objectiveId: objective.id } : project,
+        ),
+      )
+    }
     showToast('已创建季度任务，容量已重新计算')
   }
 
@@ -856,6 +893,8 @@ export default function App() {
     targetDate: string
     targetTime: string
     description: string
+    plannedDays: number
+    objectiveId?: string
     reminder?: string
   }) => {
     const project: Project = {
@@ -870,7 +909,8 @@ export default function App() {
       reminder:
         data.reminder ?? formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       status: 'active',
-      plannedDays: 0,
+      plannedDays: data.plannedDays,
+      objectiveId: data.objectiveId || undefined,
       workItems: [],
       milestones: [
         {
@@ -884,7 +924,30 @@ export default function App() {
         },
       ],
     }
-    setProjects((value) => [...value, project])
+    setProjects((value) => {
+      const cleared = data.objectiveId
+        ? value.map((item) =>
+            item.objectiveId === data.objectiveId ? { ...item, objectiveId: undefined } : item,
+          )
+        : value
+      return [...cleared, project]
+    })
+    if (data.objectiveId) {
+      setObjectives((value) =>
+        Object.fromEntries(
+          Object.entries(value).map(([period, list]) => [
+            period,
+            list.map((objective) =>
+              objective.id === data.objectiveId
+                ? { ...objective, projectId: project.id }
+                : objective.projectId === project.id
+                  ? { ...objective, projectId: undefined }
+                  : objective,
+            ),
+          ]),
+        ),
+      )
+    }
     showToast('已创建长期项目')
   }
 
@@ -1017,7 +1080,6 @@ export default function App() {
               setYear(nextYear)
               setQuarter(nextQuarter)
             }}
-            onOpenStats={() => setView('stats')}
             onManageCategories={manageCategories}
             onEditObjective={(item) => setEditingItem({ kind: 'objective', item })}
             onDeleteObjective={deleteObjective}
@@ -1061,10 +1123,6 @@ export default function App() {
             }}
             onManageCategories={manageCategories}
           />
-        )
-      case 'stats':
-        return (
-          <StatsView year={year} quarter={quarter} projects={projects} />
         )
       case 'notes':
         return <NotesView notes={notes} onChange={setNotes} onToast={showToast} />
@@ -1263,6 +1321,7 @@ export default function App() {
           onAiModelChange={changeAiModel}
           preferences={preferences}
           onPreferencesChange={updatePreferences}
+          onGlobalShortcutChange={changeGlobalShortcut}
           screenPermission={screenPermission}
           onOpenScreenSettings={() => void window.qpanel?.app.openScreenSettings()}
           aiConfig={aiConfig}
@@ -1311,6 +1370,8 @@ export default function App() {
           onCreateObjective={createObjective}
           onCreateTask={createTask}
           onCreateProject={createProject}
+          quarterObjectives={periodObjectives}
+          projects={projects}
           onAddCategory={handleAddCategory}
           reminderDefaults={reminderDefaults}
         />

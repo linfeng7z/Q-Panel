@@ -56,7 +56,7 @@ async function chooseDateRange(page, container, startISO, endISO) {
 }
 
 test.describe('Q-Panel feature regression', () => {
-  test('navigates all six views, all skins and the command palette', async () => {
+  test('navigates all five views, all skins and the command palette', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)
     const errors = collectPageErrors(page)
@@ -64,7 +64,6 @@ test.describe('Q-Panel feature regression', () => {
       const expected = [
         ['本周安排', '第 42 周'],
         ['项目', '全局项目'],
-        ['容量与复盘', '容量与复盘'],
         ['临时笔记', '临时笔记'],
         ['收藏链接', '收藏链接'],
         ['季度规划', '季度规划'],
@@ -282,6 +281,137 @@ test.describe('Q-Panel feature regression', () => {
       expect(layout?.contained).toBe(true)
       expect(Math.abs((layout?.titleLeft ?? 0) - (layout?.headLeft ?? 0))).toBeLessThan(20)
       expect((layout?.headRight ?? 0) <= (layout?.cardRight ?? 0) + 1).toBe(true)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('keeps an empty person-day field empty while typing', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.getByRole('button', { name: '新建项目' }).click()
+      const field = page.locator('.create-modal input[aria-label="总规划人日"]')
+      await expect(field).toHaveValue('15')
+      await field.fill('')
+      await expect(field).toHaveValue('')
+      await expect(field).toHaveAttribute('placeholder', '15')
+      await field.fill('20')
+      await expect(field).toHaveValue('20')
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('edits a milestone name and date inline', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.locator('.project-overview-row').first().click()
+      const milestone = page.locator('.timeline-item').first()
+      await milestone.scrollIntoViewIfNeeded()
+      const title = milestone.locator('.tl-title-input')
+      await title.fill('资产盘点完成')
+      await expect(title).toHaveValue('资产盘点完成')
+      await chooseSingleDate(page, milestone.locator('.milestone-date-edit'), '2026-12-15')
+      await expect(milestone.locator('.date-field-trigger')).toContainText('2026.12.15')
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('creates a project linked to a quarter objective', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.getByRole('button', { name: '新建项目' }).click()
+      const modal = page.locator('.create-modal')
+      await modal.locator('.input').first().fill('关联季度项目验证')
+      await modal.locator('select[aria-label="关联季度规划"]').selectOption({ value: 'o2' })
+      await modal.locator('.modal-foot .btn.primary').click()
+      await page.waitForTimeout(900)
+      const workspace = await page.evaluate(() => window.qpanel?.workspace.load())
+      const project = workspace?.data?.projects?.find((item) => item.title === '关联季度项目验证')
+      expect(project?.objectiveId).toBe('o2')
+      const objective = workspace?.data?.objectives?.['2026-Q4']?.find((item) => item.id === 'o2')
+      expect(objective?.projectId).toBe(project?.id)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('creates a quarter objective linked to a project', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("季度规划")').click()
+      await page.getByRole('button', { name: '新建任务' }).click()
+      const modal = page.locator('.create-modal')
+      await modal.locator('.input').first().fill('关联项目规划验证')
+      await modal.locator('select[aria-label="关联项目"]').selectOption({ value: 'p5' })
+      await modal.locator('.modal-foot .btn.primary').click()
+      await page.waitForTimeout(900)
+      const workspace = await page.evaluate(() => window.qpanel?.workspace.load())
+      const objective = workspace?.data?.objectives?.['2026-Q4']?.find((item) => item.title === '关联项目规划验证')
+      expect(objective?.projectId).toBe('p5')
+      const project = workspace?.data?.projects?.find((item) => item.id === 'p5')
+      expect(project?.objectiveId).toBe(objective?.id)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('does not submit a new item on an IME composing Enter', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("本周安排")').click()
+      await page.getByRole('button', { name: '新建事项' }).click()
+      const modal = page.locator('.create-modal')
+      const title = modal.locator('.input').first()
+      await title.fill('输入法组合测试')
+      await title.evaluate((element) => {
+        element.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Enter', code: 'Enter', bubbles: true, cancelable: true, isComposing: true,
+        }))
+      })
+      await expect(modal).toBeVisible()
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('marks a project at risk only when work exceeds the plan', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.locator('.project-overview-row').first().click()
+      const total = page.locator('.project-summary .hours-input').first()
+      await total.fill('1')
+      await total.press('Tab')
+      await expect(page.locator('.project-title-row').getByText('有延期风险')).toBeVisible()
+      await total.fill('20')
+      await total.press('Tab')
+      await expect(page.locator('.project-title-row').getByText('有延期风险')).toHaveCount(0)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
+  test('records a custom global shortcut', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.icon-btn[title="设置"]').click()
+      const shortcut = page.locator('.global-shortcut-record')
+      await expect(shortcut).toContainText('⌘ ⇧ Space')
+      await shortcut.click()
+      await page.keyboard.press('Control+Shift+K')
+      await expect(shortcut).toContainText('⌃ ⇧ K')
     } finally {
       await closeApp(app, userData)
     }

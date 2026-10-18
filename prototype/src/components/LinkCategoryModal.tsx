@@ -90,7 +90,7 @@ export function LinkCategoryModal({
                     setError('')
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter') submit()
+                    if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) submit()
                   }}
                   placeholder="例如：设计系统"
                   autoFocus
