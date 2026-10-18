@@ -182,9 +182,12 @@ export function SettingsModal({
                 <div className="modal-title">设置</div>
                 <div className="modal-sub">所有配置只保存在本机 · 自动写入本地工作区</div>
               </div>
-              <button type="button" className="modal-close" onClick={onClose} aria-label="关闭设置">
-                <X size={16} />
-              </button>
+              <div className="settings-head-right">
+                <span className="settings-builder">开发人员 · linfeng7z</span>
+                <button type="button" className="modal-close" onClick={onClose} aria-label="关闭设置">
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="settings-layout">
@@ -298,6 +301,17 @@ export function SettingsModal({
                           style={{ width: 120 }}
                           menuWidth={140}
                         />
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">关于</div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">系统开发人员</div>
+                          <div className="settings-help">Q-Panel 的开发与维护者</div>
+                        </div>
+                        <span className="developer-mark">linfeng7z</span>
                       </div>
                     </div>
                   </>

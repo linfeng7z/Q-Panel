@@ -16,7 +16,6 @@ import {
   CURRENT_QUARTER,
   CURRENT_WEEK_KEY,
   CURRENT_YEAR,
-  OBJECTIVES,
   QUARTER_STATS,
   WEEK_ORDER,
   WEEKS,
@@ -26,11 +25,12 @@ import {
 import { Logo } from './Logo'
 import { quarterLoad } from '../utils'
 import { cn } from '../utils'
-import type { Project, ViewId } from '../types'
+import type { Objective, Project, ViewId } from '../types'
 
 interface TopBarProps {
   onToggleTheme: () => void
   projects: Project[]
+  objectives: Record<string, Objective[]>
   year: number
   quarter: number
   view: ViewId
@@ -52,6 +52,7 @@ interface TopBarProps {
 export function TopBar({
   onToggleTheme,
   projects,
+  objectives,
   year,
   quarter,
   view,
@@ -273,10 +274,10 @@ export function TopBar({
                 {[1, 2, 3, 4].map((q) => {
                   const key = quarterKey(year, q)
                   const stats = QUARTER_STATS[key]
-                  const objectives = OBJECTIVES[key] ?? []
+                  const periodObjectives = objectives[key] ?? []
                   const available = stats ? stats.workdays - stats.leaveDays : null
                   const load = stats
-                    ? quarterLoad(objectives, projects, year, q, available ?? 0)
+                    ? quarterLoad(periodObjectives, projects, year, q, available ?? 0)
                     : null
                   const allocated = load?.committedDays ?? 0
                   const completion = load?.completion ?? 0
@@ -415,7 +416,7 @@ export function TopBar({
           <Sparkle size={14} weight="fill" className="spark" />
           AI
         </button>
-        <button type="button" className="icon-btn" onClick={onOpenReminder} title="提醒演示">
+        <button type="button" className="icon-btn" onClick={onOpenReminder} title="测试提醒">
           <Bell size={16} />
           {bellCount > 0 ? <span className="ping" /> : null}
         </button>

@@ -716,6 +716,13 @@ app.whenReady().then(() => {
     app.setActivationPolicy('accessory')
     if (process.env.Q_PANEL_HIDE_DOCK !== '0') app.dock?.hide()
   }
+  app.setAboutPanelOptions({
+    applicationName: 'Q-Panel',
+    applicationVersion: app.getVersion(),
+    version: app.getVersion(),
+    copyright: 'Copyright © 2026 linfeng7z',
+    credits: '系统开发人员：linfeng7z',
+  })
   installApplicationMenu()
   aiConfigStore = createAiConfigStore(path.join(app.getPath('userData'), 'ai-config.json'), safeStorage)
   reminderStateStore = new ReminderStateStore(app.getPath('userData'))

@@ -1,9 +1,9 @@
 {
   "name": "q-panel",
-  "version": "1.1.39",
+  "version": "1.2.0",
   "private": true,
   "description": "Q-Panel personal daily workbench — quarterly capacity, weekly plan, projects and links.",
-  "author": "Q-Panel",
+  "author": "linfeng7z",
   "type": "module",
   "main": "main.mjs",
   "scripts": {
@@ -11,16 +11,11 @@
     "dev": "Q_PANEL_DEV_URL=http://127.0.0.1:5178 electron .",
     "build:renderer": "npm --prefix ../prototype run build",
     "build": "npm run build:renderer",
-    "pack": "npm run build:renderer && electron-builder --mac --arm64",
-    "test": "npm run build:renderer && npm run test:unit && playwright test --config test/playwright.config.mjs",
-    "test:unit": "node --test test/reminders.test.mjs test/workspace-io.test.mjs test/metadata.test.mjs test/ai.test.mjs",
-    "verify:material": "node scripts/verify-material.mjs"
+    "pack": "npm run build:renderer && electron-builder --mac --arm64"
   },
   "devDependencies": {
     "electron": "^44.9.0",
-    "electron-builder": "^26.15.3",
-    "playwright": "^1.64.1",
-    "@playwright/test": "^1.64.1"
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "app.qpanel.panel",
@@ -64,6 +59,7 @@
         "LSUIElement": true
       }
     },
-    "afterPack": "scripts/after-pack.cjs"
+    "afterPack": "scripts/after-pack.cjs",
+    "copyright": "Copyright © 2026 linfeng7z"
   }
 }

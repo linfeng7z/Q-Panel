@@ -205,7 +205,10 @@ export default function App() {
   ).length
   const periodObjectives = objectives[quarterKey(year, quarter)] ?? []
   const currentQuarterKey = `${chinaYear(NOW)}-Q${chinaQuarter(NOW)}`
-  const reminderObjective = (objectives[currentQuarterKey] ?? []).find((objective) => objective.id === 'o1')
+  const reminderObjective =
+    (objectives[currentQuarterKey] ?? []).find(
+      (objective) => objective.status !== 'done' && Boolean(objective.reminder),
+    ) ?? (objectives[currentQuarterKey] ?? []).find((objective) => objective.status !== 'done')
 
   const changeWeek = (key: string) => {
     setWeekKey(key)
@@ -355,15 +358,15 @@ export default function App() {
         const result = await window.qpanel?.workspace.load()
         if (cancelled) return
         if (!result?.ok) {
-          showToast(result?.error === 'invalid_workspace' ? '工作区文件损坏，已载入示例数据' : '工作区读取失败，使用示例数据')
+          showToast(result?.error === 'invalid_workspace' ? '工作区文件损坏，已创建空白工作区' : '工作区读取失败，已创建空白工作区')
         } else if (result.data) {
           if (result.migrated) showToast('旧版工作区已自动迁移')
           if (!applyWorkspace(result.data)) {
-            showToast('工作区格式不兼容，已载入示例数据')
+            showToast('工作区格式不兼容，已创建空白工作区')
           }
         }
       } catch {
-        if (!cancelled) showToast('工作区读取失败，使用示例数据')
+        if (!cancelled) showToast('工作区读取失败，已创建空白工作区')
       } finally {
         if (!cancelled) setHydrated(true)
       }
@@ -721,21 +724,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [aiOpen, commandOpen, createMode, electronMode, expanded, reminderOpen, settingsOpen])
 
-  useEffect(() => {
-    if (params.get('collapsed') === '1' || params.get('noreminder') === '1') return
-    const forced = params.get('reminder') === '1'
-    const seen = window.sessionStorage.getItem('qpanel-reminder-seen')
-    if (!forced && seen) return
-    const timer = window.setTimeout(
-      () => {
-        setReminderOpen(true)
-        window.sessionStorage.setItem('qpanel-reminder-seen', '1')
-      },
-      forced ? 600 : 5000,
-    )
-    return () => window.clearTimeout(timer)
-  }, [params])
-
   const runViewTransition = (update: () => void) => {
     const doc = document as Document & {
       startViewTransition?: (callback: () => void) => { finished: Promise<void> }
@@ -1014,13 +1002,14 @@ export default function App() {
   }
 
   const completeReminder = () => {
+    if (!reminderObjective) return
     setObjectives((value) => ({
       ...value,
       [currentQuarterKey]: (value[currentQuarterKey] ?? []).map((objective) =>
-        objective.id === 'o1' ? { ...objective, progress: 100, status: 'done' } : objective,
+        objective.id === reminderObjective.id ? { ...objective, progress: 100, status: 'done' } : objective,
       ),
     }))
-    showToast('已标记完成：等保 2.0 差距分析闭环')
+    showToast(`已标记完成：${reminderObjective.title}`)
   }
 
   const testReminder = async () => {
@@ -1210,6 +1199,7 @@ export default function App() {
                 ) : null}
                 <TopBar
                   projects={projects}
+                  objectives={objectives}
                   onToggleTheme={() =>
                     changeTheme(THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length])
                   }
@@ -1458,9 +1448,10 @@ export default function App() {
           onComplete={completeReminder}
           onSnooze={() => showToast('已稍后提醒：10 分钟后再弹一次')}
           onOpen={() => {
+            const dueDate = reminderObjective.dueDate
             setView('quarter')
-            setYear(2026)
-            setQuarter(4)
+            setYear(Number(dueDate.slice(0, 4)))
+            setQuarter(Math.floor((Number(dueDate.slice(5, 7)) - 1) / 3) + 1)
           }}
         />
       ) : null}

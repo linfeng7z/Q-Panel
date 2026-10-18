@@ -153,10 +153,7 @@ export const CHINA_MAKEUP_DAYS: Record<string, string> = {
 }
 
 /** Personal leave / capacity adjustments. */
-export const CALENDAR_ADJUSTMENTS: CalendarAdjustment[] = [
-  { date: '2026-10-20', kind: 'leave', days: 1, label: '年假' },
-  { date: '2026-10-21', kind: 'leave', days: 1, label: '年假' },
-]
+export const CALENDAR_ADJUSTMENTS: CalendarAdjustment[] = []
 
 let adjustmentMap = new Map(CALENDAR_ADJUSTMENTS.map((item) => [item.date, item]))
 

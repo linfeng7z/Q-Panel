@@ -6,8 +6,8 @@ import {
   Sparkle,
   X,
 } from '@phosphor-icons/react'
-import type { AiGenerateResult, AiProposalTask, CategoryId } from '../types'
-import { TODAY, getCategory } from '../data/mock'
+import type { AiGenerateResult, AiProposalTask } from '../types'
+import { getCategory } from '../data/mock'
 import { fmtDue } from '../utils'
 import { catStyle } from './ui'
 
@@ -33,25 +33,13 @@ interface Message {
 }
 
 const SUGGESTS = [
-  '把 Q4 应用安全任务拆成本周 3 件事',
+  '把当前季度任务拆成本周事项',
   '汇总本周进展，生成周报',
-  '新建长期项目：AI 安全治理',
+  '根据本周容量调整计划',
 ]
 
 function newId(): string {
   return `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-}
-
-function proposalTask(
-  title: string,
-  categoryId: CategoryId,
-  dueDate: string,
-  dueTime: string | undefined,
-  estimateDays: number,
-  objectiveId: string,
-  projectId: string,
-): AiProposalTask {
-  return { title, categoryId, dueDate, dueTime: dueTime ?? '18:00', estimateDays, objectiveId, projectId }
 }
 
 export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, contextLabel, onGenerate }: AIDrawerProps) {
@@ -60,7 +48,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, con
       id: 'hello',
       role: 'bot',
       text:
-        '晚上好，Huihui。我可以帮你把季度任务拆成本周事项、创建长期项目、调整提醒。\n所有写入都会先给你预览，你确认后才会落库。',
+        '你好，我是 Q-Panel AI 助手。可以帮你拆解季度任务、创建项目、汇总本周进展。\n所有写入都会先给你预览，确认后才会保存。',
     },
   ])
   const [input, setInput] = useState('')
@@ -78,46 +66,11 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, con
     return id
   }
 
-  const runDemo = (text: string) => {
+  const runDemo = () => {
     setThinking(false)
-    if (text.includes('拆') || text.includes('本周')) {
-      const id = newId()
-      setMessages((value) => [
-        ...value,
-        {
-          id,
-          role: 'bot',
-          text:
-            '尚未配置 AI Key，先用本地示例演示。配置后会由模型根据当前季度和项目上下文生成建议。\n建议把「等保 2.0 差距分析闭环」拆成 3 条本周事项，并关联到项目「等保 2.0 整改」。',
-          proposal: {
-            title: '变更提案 · 创建 3 条周事项',
-            tasks: [
-              proposalTask('输出等保差距分析初稿', 'appsec', TODAY, '23:30', 0.75, 'o1', 'p1'),
-              proposalTask('对齐 12 个系统负责人访谈', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
-              proposalTask('整理差距分析证据清单', 'appsec', '2026-10-18', undefined, 0.5, 'o1', 'p1'),
-            ],
-          },
-        },
-      ])
-      return
-    }
-    if (text.includes('周报') || text.includes('汇总')) {
-      pushBot({
-        text:
-          '本周进展摘要：\n• 等保：系统边界梳理完成，差距分析初稿进行中\n• SOC：降噪规则 v2 已评审，等待灰度\n• 红蓝：攻击面初筛进行中\n• 风险：制度修订尚未启动，建议下周排入\n需要我把它整理成可直接发给领导的周报吗？',
-      })
-      return
-    }
-    if (text.includes('项目') || text.includes('治理')) {
-      pushBot({
-        text:
-          '创建长期项目会走同一套确认流程：项目名、分类、目标日期，以及 3 个里程碑。\n配置 AI 后我会生成项目 + 里程碑的提案卡，你确认后一次性写入。',
-      })
-      return
-    }
     pushBot({
       text:
-        '尚未配置 AI Key，当前是本地演示模式。\n可在「设置 → AI 助手」填写 Base URL、模型和 API Key，然后让我从当前季度、项目和本周事项生成真实建议。',
+        '尚未配置 AI Key。\n可在「设置 → AI 助手」填写 Base URL、模型和 API Key，然后让我根据当前季度、项目和本周事项生成真实建议。',
     })
   }
 
@@ -129,7 +82,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, con
     setThinking(true)
 
     if (!hasAiKey) {
-      window.setTimeout(() => runDemo(text), 700)
+      window.setTimeout(runDemo, 700)
       return
     }
 
@@ -164,7 +117,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, con
       ),
     )
     pushBot({
-      text: `已创建 ${message.proposal.tasks.length} 条本周必做，并关联到「等保 2.0 差距分析闭环」。提醒已按提前 2 天自动继承。`,
+      text: `已创建 ${message.proposal.tasks.length} 条本周必做。提醒已按默认提前量自动继承。`,
     })
     onToast(`AI 已创建 ${message.proposal.tasks.length} 条事项`)
   }
@@ -199,7 +152,7 @@ export function AIDrawer({ onClose, onCreateTasks, onToast, model, hasAiKey, con
           </div>
           <div className="ai-context">
             <span className="tag">{contextLabel}</span>
-            <span className="tag">{hasAiKey ? '已连接模型' : '本地演示'}</span>
+            <span className="tag">{hasAiKey ? '已连接模型' : '未配置模型'}</span>
             <span className="tag">上下文：摘要</span>
           </div>
         </div>

@@ -183,7 +183,7 @@ export function CreateModal({
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder={
                     mode === 'objective'
-                      ? '例：等保 2.0 差距分析闭环'
+                      ? '例：完成季度目标拆解'
                       : mode === 'task'
                         ? '例：输出差距分析初稿'
                         : '例：AI 安全治理基线'
