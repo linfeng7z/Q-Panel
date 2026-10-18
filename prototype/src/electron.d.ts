@@ -48,6 +48,8 @@ interface QPanelBridge {
   }
   app: {
     version: () => Promise<string>
+    screenPermission: () => Promise<{ status: 'granted' | 'denied' | 'restricted' | 'not-determined' | 'unknown' }>
+    openScreenSettings: () => Promise<{ ok: boolean; error?: string }>
     setAutoLaunch: (enabled: boolean) => Promise<{ ok: boolean; openAtLogin?: boolean }>
     getBackdrop: () => Promise<{
       image: string

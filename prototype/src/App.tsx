@@ -181,6 +181,7 @@ export default function App() {
   const [commandOpen, setCommandOpen] = useState(params.get('cmd') === '1')
   const [aiOpen, setAiOpen] = useState(params.get('ai') === '1')
   const [settingsOpen, setSettingsOpen] = useState(params.get('settings') === '1')
+  const [screenPermission, setScreenPermission] = useState<string>('unknown')
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('general')
   const [categoryVersion, setCategoryVersion] = useState(0)
   const [reminderOpen, setReminderOpen] = useState(false)
@@ -401,6 +402,13 @@ export default function App() {
       unsubscribe?.()
     }
   }, [electronMode, notchMode])
+
+  useEffect(() => {
+    if (!electronMode) return
+    void window.qpanel?.app.screenPermission().then((result) => {
+      if (result?.status) setScreenPermission(result.status)
+    })
+  }, [electronMode, settingsOpen])
 
   useEffect(() => {
     setPreferences((prev) => {
@@ -1255,6 +1263,8 @@ export default function App() {
           onAiModelChange={changeAiModel}
           preferences={preferences}
           onPreferencesChange={updatePreferences}
+          screenPermission={screenPermission}
+          onOpenScreenSettings={() => void window.qpanel?.app.openScreenSettings()}
           aiConfig={aiConfig}
           onAiConfigSave={saveAiConfig}
           onAiTest={testAiConfig}

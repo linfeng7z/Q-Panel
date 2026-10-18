@@ -48,6 +48,8 @@ contextBridge.exposeInMainWorld('qpanel', {
   },
   app: {
     version: () => ipcRenderer.invoke('app:version'),
+    screenPermission: () => ipcRenderer.invoke('app:screen-permission'),
+    openScreenSettings: () => ipcRenderer.invoke('app:open-screen-settings'),
     setAutoLaunch: (enabled) => ipcRenderer.invoke('app:set-auto-launch', enabled),
     getBackdrop: () => ipcRenderer.invoke('app:get-backdrop'),
     onBackdrop: (callback) => {

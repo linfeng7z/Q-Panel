@@ -46,6 +46,8 @@ interface SettingsModalProps {
   onAiModelChange: (model: string) => void
   preferences: UserPreferences
   onPreferencesChange: (preferences: UserPreferences) => void
+  screenPermission: string
+  onOpenScreenSettings: () => void
   aiConfig: AiConfigPublic
   onAiConfigSave: (payload: { baseUrl: string; model: string; apiKey?: string }) => Promise<{ ok: boolean; error?: string }>
   onAiTest: () => Promise<{ ok: boolean; error?: string; status?: number }>
@@ -91,6 +93,8 @@ export function SettingsModal({
   onAiModelChange,
   preferences,
   onPreferencesChange,
+  screenPermission,
+  onOpenScreenSettings,
   aiConfig,
   onAiConfigSave,
   onAiTest,
@@ -239,6 +243,17 @@ export function SettingsModal({
                           onCommit={(blurStrength) => updatePreferences({ blurStrength })}
                         />
                       </div>
+                      {screenPermission !== 'granted' && screenPermission !== 'unknown' ? (
+                        <div className="settings-permission-note">
+                          <div>
+                            <b>桌面背景模糊未生效</b>
+                            <span>需要 macOS 屏幕录制权限；应用签名更新后系统会重新询问，授权后重启 Q-Panel。</span>
+                          </div>
+                          <button type="button" className="btn ghost sm" onClick={onOpenScreenSettings}>
+                            打开系统设置
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="settings-section">

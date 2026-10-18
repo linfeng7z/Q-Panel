@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Notification, Tray, desktopCapturer, dialog, globalShortcut, ipcMain, nativeImage, safeStorage, screen, shell } from 'electron'
+import { app, BrowserWindow, Menu, Notification, Tray, desktopCapturer, dialog, globalShortcut, ipcMain, nativeImage, safeStorage, screen, shell, systemPreferences } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { callAiGeneration, createAiConfigStore, testAiConnection } from './lib/ai.mjs'
@@ -201,6 +201,11 @@ async function withNativeDialog(task) {
       }, 30)
     }
   }
+}
+
+function screenCapturePermission() {
+  if (process.platform !== 'darwin') return 'granted'
+  return systemPreferences.getMediaAccessStatus('screen')
 }
 
 function reminderPreferences() {
@@ -623,6 +628,12 @@ function registerIpc() {
     return { ok: true, until: until.toISOString() }
   })
   ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:screen-permission', () => ({ status: screenCapturePermission() }))
+  ipcMain.handle('app:open-screen-settings', async () => {
+    if (process.platform !== 'darwin') return { ok: false, error: 'unsupported' }
+    await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture')
+    return { ok: true }
+  })
   ipcMain.handle('app:set-auto-launch', (_event, enabled) => {
 
     if (process.env.Q_PANEL_DISABLE_AUTO_LAUNCH === '1') return { ok: true, skipped: 'disabled-by-env' }
