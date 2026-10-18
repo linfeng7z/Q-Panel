@@ -113,7 +113,7 @@ Download the latest installer from [GitHub Releases](https://github.com/linfeng7
 - macOS Apple Silicon: `Q-Panel-1.3.0-mac-arm64.dmg`
 - macOS Intel: `Q-Panel-1.3.0-mac-x64.dmg`
 - Windows x64 (experimental): `Q-Panel-1.3.0-win-x64-setup.exe`
-- Linux x64 (experimental): `Q-Panel-1.3.0-linux-x64.AppImage`
+- Linux x64 (experimental): `Q-Panel-1.3.0-linux-x86_64.AppImage`
 
 ### macOS first launch
 

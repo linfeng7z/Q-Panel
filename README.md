@@ -113,7 +113,7 @@ macOS 是唯一正式支持的目标。Windows/Linux 产物用于评估和反馈
 - macOS Apple Silicon：`Q-Panel-1.3.0-mac-arm64.dmg`
 - macOS Intel：`Q-Panel-1.3.0-mac-x64.dmg`
 - Windows x64（实验性）：`Q-Panel-1.3.0-win-x64-setup.exe`
-- Linux x64（实验性）：`Q-Panel-1.3.0-linux-x64.AppImage`
+- Linux x64（实验性）：`Q-Panel-1.3.0-linux-x86_64.AppImage`
 
 ### macOS 首次打开
 
