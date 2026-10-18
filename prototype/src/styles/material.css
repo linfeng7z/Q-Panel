@@ -32,7 +32,11 @@
 .qp-root.electron-mode .panel-backdrop {
   /* One ambient layer for the whole panel. It is behind every existing surface;
      no sidebar/topbar/content child gets its own color treatment. */
+  position: absolute;
+  z-index: 0;
   inset: auto;
+  background-repeat: no-repeat;
+  pointer-events: none;
   top: -192px;
   left: -192px;
   width: calc(25% + 96px);
@@ -46,6 +50,10 @@
 }
 
 .qp-root.electron-mode .panel-backdrop-shade {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
   background: rgba(var(--material-rgb), var(--material-tint, 0.34));
   transition: none;
 }

@@ -56,6 +56,16 @@ test('highest material setting excludes desktop letterforms and keeps native out
     const dark = await fixtureImage(page, true)
     await sendBackdrop(app, bright)
     await expect(page.locator('.panel-backdrop')).toHaveCount(1)
+    await expect(page.locator('.panel-backdrop')).toHaveCSS('position', 'absolute')
+    const layout = await page.evaluate(() => {
+      const panel = document.querySelector('.panel').getBoundingClientRect()
+      const topbar = document.querySelector('.topbar').getBoundingClientRect()
+      const body = document.querySelector('.panel-body').getBoundingClientRect()
+      return { topbarTop: topbar.top - panel.top, bodyTop: body.top - panel.top, panelHeight: panel.height }
+    })
+    expect(layout.topbarTop).toBeLessThan(2)
+    expect(layout.bodyTop).toBeLessThan(70)
+    expect(layout.panelHeight).toBeGreaterThan(700)
     await page.waitForTimeout(100)
     const a = await page.screenshot({ omitBackground: true })
     await sendBackdrop(app, dark)
@@ -123,6 +133,12 @@ test('slider previews within a frame and visibly changes the material before sav
     })
     expect(result.map((x) => x.tint)).toEqual(result.map((x) => x.value === 80 ? 1 : 0.34 + 0.66 * Math.pow(x.value / 80, 1.25)))
     expect(Math.max(...result.map((x) => x.elapsed))).toBeLessThan(150)
+    const topAfterSlider = await page.evaluate(() => {
+      const panel = document.querySelector('.panel').getBoundingClientRect()
+      const body = document.querySelector('.panel-body').getBoundingClientRect()
+      return body.top - panel.top
+    })
+    expect(topAfterSlider).toBeLessThan(70)
     await expect(page.locator('.settings-range-value')).toHaveText('100%')
     await page.mouse.click(20, 20)
     await expect(page.locator('.qp-root')).toHaveAttribute('style', /--panel-blur: 80px/)
