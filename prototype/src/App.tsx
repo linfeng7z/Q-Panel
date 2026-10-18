@@ -1273,6 +1273,10 @@ export default function App() {
           item={editingItem.item}
           reminderDefaults={reminderDefaults}
           onClose={() => setEditingItem(null)}
+          onDelete={(id) => {
+            if (editingItem.kind === 'objective') deleteObjective(id)
+            else deleteTask(id)
+          }}
           onSave={(next) => {
             if (editingItem.kind === 'objective') {
               setObjectives((value) => {

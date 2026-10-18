@@ -2708,3 +2708,145 @@
 .milestone-add {
   margin-top: 8px;
 }
+
+/* Clean reminder editor shared by create/edit/project panels. */
+.reminder-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.reminder-fields .reminder-mode {
+  width: 100%;
+  height: 33px;
+}
+
+.reminder-rule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.reminder-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 8.5px;
+  color: var(--text-3);
+}
+
+.reminder-choice .select,
+.reminder-choice .hour-select {
+  width: 100%;
+  height: 32px;
+}
+
+.reminder-follow-note {
+  padding: 1px 1px 0;
+  font-size: 8.5px;
+  line-height: 1.5;
+  color: var(--text-4);
+}
+
+.reminder-fields.compact {
+  gap: 0;
+}
+
+.reminder-fields.compact .reminder-rule-row {
+  gap: 7px;
+}
+
+.hour-select {
+  white-space: nowrap;
+}
+
+.hour-select select {
+  min-width: 48px;
+}
+
+/* Project header meta strip. */
+.project-meta-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.9fr);
+  gap: 9px;
+  max-width: 860px;
+  margin-top: 10px;
+}
+
+.project-meta-block {
+  min-width: 0;
+  padding: 8px 10px 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-inset);
+}
+
+.project-meta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: var(--text-3);
+  font-size: 8.5px;
+  font-weight: 620;
+  letter-spacing: 0.03em;
+}
+
+.project-meta-hint {
+  color: var(--text-4);
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.project-meta-block .date-range-trigger {
+  height: 29px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.project-meta-block .date-range-trigger:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.project-meta-block .date-range-trigger.open {
+  border-color: transparent;
+  background: transparent;
+}
+
+.project-meta-block .reminder-choice > span {
+  display: none;
+}
+
+.project-meta-block .reminder-choice .select,
+.project-meta-block .reminder-choice .hour-select {
+  height: 29px;
+}
+
+.project-meta-block .hour-select {
+  padding: 0 5px;
+}
+
+/* Workplan rows: one clear line per item, dates drive the week automatically. */
+.workplan-row {
+  grid-template-columns: minmax(0, 1fr) 82px 72px 66px 26px;
+  align-items: center;
+  min-height: 48px;
+}
+
+.workitem-week-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 23px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--surface-inset);
+  color: var(--text-3);
+  font-size: 8.5px;
+  white-space: nowrap;
+}

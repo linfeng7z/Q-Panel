@@ -10,9 +10,8 @@ interface HourSelectProps {
 export function HourSelect({ value, onChange, label = '提醒小时' }: HourSelectProps) {
   const hour = String(Math.min(23, Math.max(0, Number((value || '09:00').split(':')[0]) || 0))).padStart(2, '0')
   return (
-    <label className="hour-select">
-      <Clock size={11} />
-      <span>{label}</span>
+    <label className="hour-select" title={label}>
+      <Clock size={10} />
       <select value={hour} onChange={(event) => onChange(`${event.target.value}:00`)} aria-label={label}>
         {Array.from({ length: 24 }, (_, index) => {
           const item = String(index).padStart(2, '0')

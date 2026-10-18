@@ -194,7 +194,7 @@ test.describe('Q-Panel feature regression', () => {
 
       await page.locator('.nav-item:has-text("项目")').click()
       await page.locator('.project-overview-row').first().click()
-      const range = page.locator('.project-date-editor')
+      const range = page.locator('.project-meta-grid')
       await expect(range.locator('.date-range-trigger')).toHaveCount(1)
       await chooseDateRange(page, range, '2026-09-01', '2026-12-30')
       await expect(range.locator('.date-range-trigger')).toContainText('12.30')

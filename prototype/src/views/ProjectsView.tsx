@@ -17,7 +17,6 @@ import {
   fmtDateTime,
   fmtDays,
   fmtRange,
-  formatReminder,
   parseReminder,
   fmtDue,
   projectCrossQuarter,
@@ -31,7 +30,7 @@ import {
 } from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
 import { DateRangeField } from '../components/DateRangeField'
-import { HourSelect } from '../components/HourSelect'
+import { ReminderFields } from '../components/ReminderFields'
 
 interface ProjectsViewProps {
   projects: Project[]
@@ -364,7 +363,7 @@ function ProjectDetail({
       status: 'todo',
     }
     onChange({ ...project, workItems: [...project.workItems, item] })
-    onToast('已添加工作项，按安排周自动进入本周安排')
+    onToast('已添加工作项，按时间段自动进入本周安排')
   }
 
   const removeItem = (id: string) => {
@@ -407,54 +406,50 @@ function ProjectDetail({
         <div>
                     <h1 className="page-title">{project.title}</h1>
           <p className="page-sub">
-            {fmtRange(project.startDate, project.endDate)} · 全局项目 ·{' '}
-            {projectDoneCount(project)}/{project.milestones.length}{' '}
-            里程碑 · {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
+            全局项目 · {projectDoneCount(project)}/{project.milestones.length} 里程碑 ·{' '}
+            {project.workItems.length} 个工作项 · 本季度 {quarterLabel} 排期{' '}
             {fmtDays(quarterDays)} 人日
           </p>
-          <div className="project-date-editor">
-            <DateRangeField
-              startDate={project.startDate}
-              endDate={project.endDate}
-              label="项目开展时间段"
-              onChange={(nextStart, nextEnd) =>
-                onChange({
-                  ...project,
-                  startDate: nextStart,
-                  endDate: nextEnd,
-                  span: `${nextStart.slice(0, 4)}.${nextStart.slice(5, 7)} – ${nextEnd.slice(0, 4)}.${nextEnd.slice(5, 7)}`,
-                })
-              }
-            />
-          </div>
-          <div className="project-reminder-editor">
-            <span>提醒</span>
-            <select
-              className="select"
-              value={reminderRule.offsetDays}
-              onChange={(event) =>
-                onChange({
-                  ...project,
-                  reminder: formatReminder(Number(event.target.value), reminderRule.time),
-                })
-              }
-              aria-label="项目提前量"
-            >
-              <option value={0}>当天</option>
-              <option value={1}>提前 1 天</option>
-              <option value={2}>提前 2 天</option>
-              <option value={3}>提前 3 天</option>
-              <option value={7}>提前 1 周</option>
-            </select>
-            <HourSelect
-              value={reminderRule.time}
-              label="项目提醒小时"
-              onChange={(time) => onChange({ ...project, reminder: formatReminder(reminderRule.offsetDays, time) })}
-            />
+          <div className="project-meta-grid">
+            <div className="project-meta-block">
+              <div className="project-meta-head">
+                <span>项目周期</span>
+                <span className="project-meta-hint">按自然日</span>
+              </div>
+              <DateRangeField
+                startDate={project.startDate}
+                endDate={project.endDate}
+                label="项目开展时间段"
+                onChange={(nextStart, nextEnd) =>
+                  onChange({
+                    ...project,
+                    startDate: nextStart,
+                    endDate: nextEnd,
+                    span: `${nextStart.slice(0, 4)}.${nextStart.slice(5, 7)} – ${nextEnd.slice(0, 4)}.${nextEnd.slice(5, 7)}`,
+                  })
+                }
+              />
+            </div>
+            <div className="project-meta-block">
+              <div className="project-meta-head">
+                <span>结束提醒</span>
+                <span className="project-meta-hint">24 小时制整点</span>
+              </div>
+              <ReminderFields
+                hideMode
+                compact
+                mode="custom"
+                offsetDays={reminderRule.offsetDays}
+                time={reminderRule.time}
+                defaults={{ offsetDays: 2, time: '09:00' }}
+                onChange={(next) =>
+                  onChange({ ...project, reminder: `${next.offsetDays === 0 ? '当天' : next.offsetDays === 7 ? '提前 1 周' : `提前 ${next.offsetDays} 天`} · ${next.time}` })
+                }
+              />
+            </div>
           </div>
           <div className="project-scope-line">
             {crossQuarter ? <span className="tag risk-tag">跨季度 · 有风险</span> : null}
-            {project.reminder ? <span className="tag">提醒 {project.reminder}</span> : null}
             <span>
               全局规划 {project.plannedDays} 人日 · 本季度只看 {quarterLabel} 排期{' '}
               {fmtDays(quarterDays)} 人日
@@ -560,17 +555,16 @@ function ProjectDetail({
               工作规划
               <span className="list-count num">{project.workItems.length}</span>
             </div>
-            <span className="auto-label">设置安排周 → 自动进入本周安排</span>
+            <span className="auto-label">设置时间段 → 自动进入本周安排</span>
           </div>
           <div className="workplan-note">
-            工作项会按「安排周」自动出现在对应周的「项目自动排期」中，并计入当周已排人日；
-            修改人日或周次会实时同步。
+            设置工作项的时间段后，会按开始日自动归入对应周并进入本周安排，计入当周已排人日。
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
               <span>工作项 / 时间段</span>
               <span>规划人日</span>
-              <span>安排周</span>
+              <span>排期周</span>
               <span>状态</span>
               <span />
             </div>
@@ -607,17 +601,9 @@ function ProjectDetail({
                   />
                   <span>人日</span>
                 </div>
-                <select
-                  className="workitem-week"
-                  value={item.weekKey}
-                  onChange={(event) => updateItem(item.id, { weekKey: event.target.value })}
-                >
-                  {weekOptions.map((key) => (
-                    <option value={key} key={key}>
-                      {weekLabel(key)} · {WEEKS[key].range}
-                    </option>
-                  ))}
-                </select>
+                <span className="workitem-week-badge">
+                  {weekLabel(item.weekKey)}
+                </span>
                 <button
                   type="button"
                   className={cn('workitem-status', item.status === 'done' && 'done')}
@@ -687,7 +673,7 @@ function ProjectDetail({
                 </div>
               ) : null}
               <div className="auto-note">
-                修改安排周后，对应本周安排会自动更新，不需要手动搬事项。
+                修改时间段后，对应本周安排会自动更新，不需要手动搬事项。
               </div>
             </div>
           </Card>

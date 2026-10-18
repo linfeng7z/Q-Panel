@@ -4,7 +4,7 @@ import type { Category, CategoryId, CreateMode, ReminderDefaults } from '../type
 import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
 import { DateRangeField } from './DateRangeField'
-import { HourSelect } from './HourSelect'
+import { ReminderFields } from './ReminderFields'
 import { formatReminder } from '../utils'
 
 interface CreateModalProps {
@@ -328,43 +328,21 @@ export function CreateModal({
 
               <div className="field reminder-field">
                 <label>提醒</label>
-                <div className="reminder-config">
-                  <select
-                    className="select"
-                    value={reminderMode}
-                    onChange={(event) => {
-                      const next = event.target.value as 'default' | 'custom'
-                      setReminderMode(next)
-                      if (next === 'custom') {
-                        setReminderOffset(reminderDefaults.offsetDays)
-                        setReminderTime(reminderDefaults.time)
-                      }
-                    }}
-                    aria-label="提醒规则"
-                  >
-                    <option value="default">
-                      跟随全局 · {formatReminder(reminderDefaults.offsetDays, reminderDefaults.time)}
-                    </option>
-                    <option value="custom">自定义提醒</option>
-                  </select>
-                  {reminderMode === 'custom' ? (
-                    <>
-                      <select
-                        className="select"
-                        value={reminderOffset}
-                        onChange={(event) => setReminderOffset(Number(event.target.value))}
-                        aria-label="提前量"
-                      >
-                        <option value={0}>当天</option>
-                        <option value={1}>提前 1 天</option>
-                        <option value={2}>提前 2 天</option>
-                        <option value={3}>提前 3 天</option>
-                        <option value={7}>提前 1 周</option>
-                      </select>
-                      <HourSelect value={reminderTime} onChange={setReminderTime} />
-                    </>
-                  ) : null}
-                </div>
+                <ReminderFields
+                  mode={reminderMode}
+                  offsetDays={reminderOffset}
+                  time={reminderTime}
+                  defaults={reminderDefaults}
+                  onChange={(next) => {
+                    if (next.mode === 'custom' && reminderMode === 'default') {
+                      setReminderOffset(reminderDefaults.offsetDays)
+                      setReminderTime(reminderDefaults.time)
+                    }
+                    setReminderMode(next.mode)
+                    setReminderOffset(next.offsetDays)
+                    setReminderTime(next.time)
+                  }}
+                />
               </div>
             </div>
 
