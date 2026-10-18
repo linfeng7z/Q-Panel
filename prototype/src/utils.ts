@@ -231,6 +231,13 @@ export function fmtRange(start?: string, end?: string): string {
   return `${fmtDate(start)} – ${fmtDate(end ?? start)}`
 }
 
+export function shiftDate(iso: string, amount: number): string {
+  const date = new Date(`${iso}T12:00:00+08:00`)
+  if (Number.isNaN(date.getTime())) return iso
+  date.setDate(date.getDate() + amount)
+  return date.toISOString().slice(0, 10)
+}
+
 export function parseReminder(value: string | undefined, defaults: { offsetDays: number; time: string }) {
   const text = value ?? ''
   const sameDay = text.match(/当天\s*·\s*(\d{1,2}):(\d{2})/)
@@ -241,6 +248,42 @@ export function parseReminder(value: string | undefined, defaults: { offsetDays:
     offsetDays: Number(match[1]) * (match[2] === '周' ? 7 : 1),
     time: `${match[3].padStart(2, '0')}:${match[4].padStart(2, '0')}`,
   }
+}
+
+export interface ReminderValue {
+  mode: 'absolute' | 'relative'
+  date: string
+  time: string
+  offsetDays: number
+}
+
+/** Resolve a stored reminder rule to an actual calendar date for the picker. */
+export function resolveReminder(
+  value: string | undefined,
+  endDate: string,
+  defaults: { offsetDays: number; time: string },
+): ReminderValue {
+  const text = value ?? ''
+  const absolute = text.match(/^(?:指定\s*)?(\d{4}-\d{2}-\d{2})\s*·\s*(\d{1,2}):(\d{2})/)
+  if (absolute) {
+    return {
+      mode: 'absolute',
+      date: absolute[1],
+      time: `${absolute[2].padStart(2, '0')}:${absolute[3].padStart(2, '0')}`,
+      offsetDays: defaults.offsetDays,
+    }
+  }
+  const relative = parseReminder(value, defaults)
+  return {
+    mode: 'relative',
+    date: shiftDate(endDate, -relative.offsetDays),
+    time: relative.time,
+    offsetDays: relative.offsetDays,
+  }
+}
+
+export function formatReminderDate(date: string, time: string): string {
+  return `${date} · ${time}`
 }
 
 export function formatReminder(offsetDays: number, time: string): string {

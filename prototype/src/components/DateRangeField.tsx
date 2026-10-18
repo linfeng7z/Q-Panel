@@ -139,12 +139,12 @@ export function DateRangeField({ startDate, endDate, onChange, compact = false }
           aria-label="选择开展时间段"
         >
           <div className="date-range-summary">
-            <div>
+            <div className="date-range-summary-endpoint">
               <span>开始</span>
               <b>{displayDate(startDate)}</b>
             </div>
             <div className="date-range-summary-arrow">→</div>
-            <div>
+            <div className="date-range-summary-endpoint end">
               <span>结束</span>
               <b>{selectingEnd ? '请选择' : displayDate(endDate)}</b>
             </div>
@@ -226,9 +226,15 @@ export function DateRangeField({ startDate, endDate, onChange, compact = false }
         aria-label="选择开展时间段"
       >
         <CalendarBlank size={compact ? 10 : 13} />
-        <span className="date-range-value">{compact ? displayDate(startDate).slice(5) : displayDate(startDate)}</span>
-        <span className="date-range-sep">→</span>
-        <span className="date-range-value">{compact ? displayDate(endDate).slice(5) : displayDate(endDate)}</span>
+        <span className="date-range-endpoint">
+          {!compact ? <span className="date-range-endpoint-label">开始</span> : null}
+          <span className="date-range-value">{compact ? displayDate(startDate).slice(5) : displayDate(startDate)}</span>
+        </span>
+        <span className="date-range-rail">→</span>
+        <span className="date-range-endpoint end">
+          {!compact ? <span className="date-range-endpoint-label">结束</span> : null}
+          <span className="date-range-value">{compact ? displayDate(endDate).slice(5) : displayDate(endDate)}</span>
+        </span>
         {!compact ? <span className="date-range-total">{rangeDays(startDate, endDate)} 天</span> : null}
       </button>
       {popover}

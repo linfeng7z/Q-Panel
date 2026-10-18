@@ -16,7 +16,8 @@ import {
   cn,
   fmtDays,
   fmtRange,
-  parseReminder,
+  formatReminderDate,
+  resolveReminder,
   fmtDue,
   projectCrossQuarter,
   projectDecomposedDays,
@@ -310,7 +311,7 @@ function ProjectDetail({
   onToast: (message: string) => void
   onDeleteProject: (id: string) => void
 }) {
-  const reminderRule = parseReminder(project.reminder, { offsetDays: 2, time: '09:00' })
+  const reminderRule = resolveReminder(project.reminder, project.endDate, { offsetDays: 2, time: '09:00' })
   const decomposed = projectDecomposedDays(project)
   const scheduled = projectScheduledDays(project)
   const quarterDays = projectQuarterDays(project, year, quarter)
@@ -431,11 +432,11 @@ function ProjectDetail({
                 hideMode
                 compact
                 mode="custom"
-                offsetDays={reminderRule.offsetDays}
+                date={reminderRule.date}
                 time={reminderRule.time}
                 defaults={{ offsetDays: 2, time: '09:00' }}
                 onChange={(next) =>
-                  onChange({ ...project, reminder: `${next.offsetDays === 0 ? '当天' : next.offsetDays === 7 ? '提前 1 周' : `提前 ${next.offsetDays} 天`} · ${next.time}` })
+                  onChange({ ...project, reminder: formatReminderDate(next.date, next.time) })
                 }
               />
             </div>

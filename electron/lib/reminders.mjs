@@ -4,6 +4,10 @@ export function parseReminderRule(text) {
   if (typeof text !== 'string') return null
   const value = text.trim()
   if (!value || value.includes('无提醒')) return null
+  const absolute = value.match(/^(?:指定\s*)?(\d{4}-\d{2}-\d{2})\s*·\s*(\d{1,2}):(\d{2})/)
+  if (absolute) {
+    return { date: absolute[1], time: `${absolute[2].padStart(2, '0')}:${absolute[3]}` }
+  }
   const sameDay = value.match(/当天\s*·\s*(\d{1,2}):(\d{2})/)
   if (sameDay) return { daysBefore: 0, time: `${sameDay[1].padStart(2, '0')}:${sameDay[2]}` }
   const match = value.match(/提前\s*(\d+)\s*(天|周)\s*·\s*(\d{1,2}):(\d{2})/)
@@ -28,10 +32,16 @@ export function collectReminderEntries(workspace) {
     const rule = parseReminderRule(reminder)
     const dueAt = parseChinaDateTime(dueDate, dueTime ?? '18:00')
     if (!rule || !dueAt) return
-    const remindAt = new Date(dueAt.getTime())
-    remindAt.setDate(remindAt.getDate() - rule.daysBefore)
-    const [hours, minutes] = rule.time.split(':').map(Number)
-    remindAt.setHours(hours, minutes, 0, 0)
+    let remindAt
+    if (rule.date) {
+      remindAt = parseChinaDateTime(rule.date, rule.time)
+    } else {
+      remindAt = new Date(dueAt.getTime())
+      remindAt.setDate(remindAt.getDate() - rule.daysBefore)
+      const [hours, minutes] = rule.time.split(':').map(Number)
+      remindAt.setHours(hours, minutes, 0, 0)
+    }
+    if (!remindAt || Number.isNaN(remindAt.getTime())) return
     entries.push({
       key: `${kind}:${item.id}`,
       id: item.id,

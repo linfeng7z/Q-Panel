@@ -3,7 +3,7 @@ import { Check, Trash, X } from '@phosphor-icons/react'
 import type { CategoryId, Objective, ReminderDefaults, WeekTask } from '../types'
 import { CATEGORIES } from '../data/mock'
 import { cn } from '../utils'
-import { fmtRange, formatReminder, parseReminder, rangeDays } from '../utils'
+import { fmtRange, formatReminder, formatReminderDate, rangeDays, resolveReminder } from '../utils'
 import { DateRangeField } from './DateRangeField'
 import { ReminderFields } from './ReminderFields'
 import { catStyle } from './ui'
@@ -25,21 +25,21 @@ function isObjective(item: EditableItem): item is Objective {
 }
 
 export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, onDelete }: ItemEditModalProps) {
-  const initialReminder = parseReminder(item.reminder, reminderDefaults)
+  const initialReminder = resolveReminder(item.reminder, item.endDate ?? item.dueDate, reminderDefaults)
   const [title, setTitle] = useState(item.title)
   const [categoryId, setCategoryId] = useState<CategoryId>(item.categoryId)
   const [days, setDays] = useState(String(isObjective(item) ? item.plannedDays : item.estimateDays))
   const [startDate, setStartDate] = useState(item.startDate ?? item.dueDate)
   const [endDate, setEndDate] = useState(item.endDate ?? item.dueDate)
   const [customReminder, setCustomReminder] = useState(Boolean(item.reminder))
-  const [reminderOffset, setReminderOffset] = useState(initialReminder.offsetDays)
+  const [reminderDate, setReminderDate] = useState(initialReminder.date)
   const [reminderHour, setReminderHour] = useState(initialReminder.time)
   const valid = title.trim().length > 0 && endDate >= startDate
 
   const submit = () => {
     if (!valid) return
     const reminder = customReminder
-      ? formatReminder(reminderOffset, reminderHour)
+      ? formatReminderDate(reminderDate, reminderHour)
       : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time)
     const common = {
       title: title.trim(),
@@ -122,16 +122,15 @@ export function ItemEditModal({ kind, item, reminderDefaults, onClose, onSave, o
                 <label>提醒</label>
                 <ReminderFields
                   mode={customReminder ? 'custom' : 'default'}
-                  offsetDays={reminderOffset}
+                  date={reminderDate}
                   time={reminderHour}
                   defaults={reminderDefaults}
                   onChange={(next) => {
                     if (next.mode === 'custom' && !customReminder) {
-                      setReminderOffset(reminderDefaults.offsetDays)
                       setReminderHour(reminderDefaults.time)
                     }
                     setCustomReminder(next.mode === 'custom')
-                    setReminderOffset(next.offsetDays)
+                    setReminderDate(next.date)
                     setReminderHour(next.time)
                   }}
                 />

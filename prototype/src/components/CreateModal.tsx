@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_COLORS, TODAY } from '../data/mock'
 import { catStyle } from './ui'
 import { DateRangeField } from './DateRangeField'
 import { ReminderFields } from './ReminderFields'
-import { formatReminder } from '../utils'
+import { formatReminder, formatReminderDate, shiftDate } from '../utils'
 
 interface CreateModalProps {
   mode: CreateMode
@@ -85,7 +85,7 @@ export function CreateModal({
   const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0].value)
   const [categoryError, setCategoryError] = useState('')
   const [reminderMode, setReminderMode] = useState<'default' | 'custom'>('default')
-  const [reminderOffset, setReminderOffset] = useState(reminderDefaults.offsetDays)
+  const [reminderDate, setReminderDate] = useState(() => shiftDate(initialEnd, -reminderDefaults.offsetDays))
   const [reminderTime, setReminderTime] = useState(reminderDefaults.time)
 
   const valid = title.trim().length > 0 && Boolean(startDate) && Boolean(endDate) && endDate >= startDate
@@ -103,7 +103,7 @@ export function CreateModal({
         dueTime: '18:00',
         reminder:
           reminderMode === 'custom'
-            ? formatReminder(reminderOffset, reminderTime)
+            ? formatReminderDate(reminderDate, reminderTime)
             : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     } else if (mode === 'task') {
@@ -117,7 +117,7 @@ export function CreateModal({
         estimateDays: Number(days) || 0.5,
         reminder:
           reminderMode === 'custom'
-            ? formatReminder(reminderOffset, reminderTime)
+            ? formatReminderDate(reminderDate, reminderTime)
             : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     } else {
@@ -131,7 +131,7 @@ export function CreateModal({
         description: description.trim(),
         reminder:
           reminderMode === 'custom'
-            ? formatReminder(reminderOffset, reminderTime)
+            ? formatReminderDate(reminderDate, reminderTime)
             : formatReminder(reminderDefaults.offsetDays, reminderDefaults.time),
       })
     }
@@ -330,16 +330,16 @@ export function CreateModal({
                 <label>提醒</label>
                 <ReminderFields
                   mode={reminderMode}
-                  offsetDays={reminderOffset}
+                  date={reminderDate}
                   time={reminderTime}
                   defaults={reminderDefaults}
                   onChange={(next) => {
                     if (next.mode === 'custom' && reminderMode === 'default') {
-                      setReminderOffset(reminderDefaults.offsetDays)
+                      setReminderDate(shiftDate(endDate, -reminderDefaults.offsetDays))
                       setReminderTime(reminderDefaults.time)
                     }
                     setReminderMode(next.mode)
-                    setReminderOffset(next.offsetDays)
+                    setReminderDate(next.date)
                     setReminderTime(next.time)
                   }}
                 />

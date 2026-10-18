@@ -14,6 +14,22 @@ function collectPageErrors(page) {
   return errors
 }
 
+async function chooseSingleDate(page, container, iso) {
+  await container.locator('.date-field-trigger').click()
+  const pop = page.locator('.date-field-pop')
+  await expect(pop).toBeVisible()
+  const [year, month] = iso.split('-').map(Number)
+  for (let i = 0; i < 36; i += 1) {
+    const text = await pop.locator('.dt-month').innerText()
+    const match = text.match(/(\d+) 年 (\d+) 月/)
+    const current = match ? [Number(match[1]), Number(match[2])] : [0, 0]
+    if (current[0] === year && current[1] === month) break
+    await pop.locator('.dt-nav').nth(current[0] === year && current[1] > month ? 0 : 1).click()
+  }
+  await pop.locator('.dt-day').filter({ hasText: new RegExp(`^${Number(iso.slice(8, 10))}$`) }).click()
+  await pop.locator('.dt-pop-foot .btn.primary').click()
+}
+
 async function chooseDateRange(page, container, startISO, endISO) {
   await container.locator('.date-range-trigger').click()
   const pop = page.locator('.date-range-pop')
@@ -126,13 +142,13 @@ test.describe('Q-Panel feature regression', () => {
       await chooseDateRange(page, modal, '2026-10-17', '2026-10-18')
       await expect(modal.locator('.date-range-trigger .date-range-total')).toContainText('2 天')
       await modal.getByRole('button', { name: '自定义', exact: true }).click()
-      await modal.locator('select[aria-label="提前量"]').selectOption('2')
+      await chooseSingleDate(page, modal, '2026-10-16')
       await modal.locator('select[aria-label="提醒小时"]').selectOption('14')
       await modal.locator('.modal-foot .btn.primary').click()
       const row = page.locator('.task-row').filter({ hasText: '时间段编辑验证事项' })
       await expect(row).toBeVisible()
       await expect(row).toContainText('10/17 – 10/18')
-      await expect(row).toContainText('提前 2 天 · 14:00')
+      await expect(row).toContainText('2026-10-16 · 14:00')
       await row.hover()
       await row.locator('.task-edit-btn[title="编辑事项"]').click()
       const edit = page.locator('.modal-layer').filter({ hasText: '编辑本周事项' })
@@ -140,7 +156,7 @@ test.describe('Q-Panel feature regression', () => {
       await chooseDateRange(page, edit, '2026-10-17', '2026-10-19')
       await edit.locator('.modal-foot .btn.primary').click()
       await expect(page.locator('.task-row').filter({ hasText: '时间段编辑验证事项' })).toContainText('10/17 – 10/19')
-      await expect(page.locator('.task-row').filter({ hasText: '时间段编辑验证事项' })).toContainText('提前 2 天 · 14:00')
+      await expect(page.locator('.task-row').filter({ hasText: '时间段编辑验证事项' })).toContainText('2026-10-16 · 14:00')
     } finally {
       await closeApp(app, userData)
     }

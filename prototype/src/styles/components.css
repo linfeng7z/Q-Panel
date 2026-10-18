@@ -3045,3 +3045,156 @@
   min-width: 64px;
   text-align: center;
 }
+
+/* Range trigger: two equal endpoints, never crowded at the left edge. */
+.date-range-trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 10px;
+}
+
+.date-range-trigger > svg {
+  display: none;
+}
+
+.date-range-endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.date-range-endpoint.end {
+  align-items: flex-start;
+}
+
+.date-range-endpoint-label {
+  color: var(--text-4);
+  font-size: 7.5px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+
+.date-range-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-range-rail {
+  color: var(--text-4);
+  font-size: 10px;
+  text-align: center;
+}
+
+.date-range-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-range-summary-endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.date-range-summary-endpoint.end {
+  align-items: flex-start;
+}
+
+.date-range-field.compact .date-range-trigger {
+  grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr);
+  column-gap: 3px;
+  padding: 0 5px;
+}
+
+.date-range-field.compact .date-range-trigger > svg {
+  display: none;
+}
+
+.date-range-field.compact .date-range-endpoint-label {
+  display: none;
+}
+
+.date-range-field.compact .date-range-total {
+  display: none;
+}
+
+/* Single-date picker for custom reminders. */
+.date-field {
+  min-width: 0;
+}
+
+.date-field-trigger {
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-inset);
+  color: var(--text-1);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.date-field-trigger:hover,
+.date-field-trigger.open {
+  border-color: var(--line-strong);
+  background: var(--surface-1);
+}
+
+.date-field-trigger > svg {
+  color: var(--text-3);
+}
+
+.date-field-weekday {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 8.5px;
+}
+
+.date-field-pop {
+  width: 300px;
+  padding: 11px;
+}
+
+.date-field-current {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.date-field-current span {
+  color: var(--text-3);
+  font-size: 8px;
+}
+
+.date-field-current b {
+  color: var(--text-1);
+  font-size: 11px;
+  font-weight: 560;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-field-current em {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: 8.5px;
+  font-style: normal;
+}
+
+.date-range-rule-row .date-field {
+  width: 100%;
+}

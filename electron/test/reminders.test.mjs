@@ -96,3 +96,24 @@ test('uses the day-range end date and the selected whole hour for reminders', ()
   assert.equal(entry.reminder, '提前 2 天 · 14:00')
   assert.equal(entry.remindAt, '2026-10-21T06:00:00.000Z')
 })
+
+test('supports an absolute custom reminder date from the date picker', () => {
+  assert.deepEqual(parseReminderRule('2026-10-20 · 14:00'), { date: '2026-10-20', time: '14:00' })
+  const [entry] = collectReminderEntries({
+    tasks: [
+      {
+        id: 'absolute-task',
+        title: 'Absolute',
+        startDate: '2026-10-18',
+        endDate: '2026-10-23',
+        dueDate: '2026-10-23',
+        reminder: '2026-10-20 · 14:00',
+        categoryId: 'appsec',
+      },
+    ],
+    objectives: {},
+    projects: [],
+  })
+  assert.equal(entry.dueDate, '2026-10-23')
+  assert.equal(entry.remindAt, '2026-10-20T06:00:00.000Z')
+})
