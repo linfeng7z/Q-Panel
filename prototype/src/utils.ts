@@ -46,28 +46,110 @@ export function projectNext(project: Project): Project['milestones'][number] | u
 
 export interface ProjectWeekItem extends ProjectWorkItem {
   project: Project
+  /** 本周实际分摊的人日；工作项跨周时小于总规划人日。 */
+  weekDays: number
+}
+
+export interface ProjectWorkItemWeekSlice {
+  weekKey: string
+  days: number
 }
 
 export function projectDecomposedDays(project: Project): number {
   return project.workItems.reduce((sum, item) => sum + item.plannedDays, 0)
 }
 
+function dateWeekdayCount(start: string, end: string): number {
+  let count = 0
+  const cursor = new Date(`${start}T12:00:00+08:00`)
+  const last = new Date(`${end}T12:00:00+08:00`)
+  while (cursor.getTime() <= last.getTime()) {
+    const day = cursor.getDay()
+    if (day !== 0 && day !== 6) count += 1
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return count
+}
+
+function dateCalendarDays(start: string, end: string): number {
+  const first = new Date(`${start}T12:00:00+08:00`).getTime()
+  const last = new Date(`${end}T12:00:00+08:00`).getTime()
+  return Math.max(1, Math.round((last - first) / 86400000) + 1)
+}
+
+/**
+ * A work item scheduled over several weeks is split across exactly those weeks.
+ * Workdays are the weight, so 10 person-days over three full weeks become
+ * 3.33 / 3.33 / 3.34 instead of booking the full total in each week.
+ */
+export function projectWorkItemWeekSlices(item: ProjectWorkItem): ProjectWorkItemWeekSlice[] {
+  const fallback = WEEKS[item.weekKey]
+  const rawStart = item.startDate ?? fallback?.start ?? item.endDate ?? TODAY
+  const rawEnd = item.endDate ?? fallback?.end ?? rawStart
+  const start = rawStart <= rawEnd ? rawStart : rawEnd
+  const end = rawStart <= rawEnd ? rawEnd : rawStart
+  const skipped = new Set(item.skippedWeeks ?? [])
+  const weeks = Object.values(WEEKS)
+    .filter((week) => week.end >= start && week.start <= end)
+    .sort((a, b) => a.start.localeCompare(b.start))
+
+  if (weeks.length === 0) {
+    return skipped.has(item.weekKey) ? [] : [{ weekKey: item.weekKey, days: roundDays(item.plannedDays) }]
+  }
+
+  const overlaps = weeks.map((week) => {
+    const overlapStart = start > week.start ? start : week.start
+    const overlapEnd = end < week.end ? end : week.end
+    return {
+      weekKey: week.key,
+      workdays: dateWeekdayCount(overlapStart, overlapEnd),
+      calendarDays: dateCalendarDays(overlapStart, overlapEnd),
+    }
+  })
+  const useWorkdays = overlaps.some((entry) => entry.workdays > 0)
+  const weights = overlaps.map((entry) => (useWorkdays ? entry.workdays : entry.calendarDays))
+  const totalWeight = weights.reduce((sum, value) => sum + value, 0)
+  const days = weights.map((weight) => (totalWeight > 0 ? roundDays(item.plannedDays * weight / totalWeight) : 0))
+  const drift = roundDays(item.plannedDays - days.reduce((sum, value) => sum + value, 0))
+  if (days.length > 0) days[days.length - 1] = roundDays(days[days.length - 1] + drift)
+
+  return overlaps
+    .map((entry, index) => ({ weekKey: entry.weekKey, days: Math.max(0, days[index] ?? 0) }))
+    .filter((entry) => !skipped.has(entry.weekKey) && entry.days > 0)
+}
+
 export function projectScheduledDays(project: Project): number {
-  return project.workItems
-    .filter((item) => Boolean(item.weekKey))
-    .reduce((sum, item) => sum + item.plannedDays, 0)
+  return roundDays(
+    project.workItems.reduce(
+      (sum, item) => sum + projectWorkItemWeekSlices(item).reduce((inner, slice) => inner + slice.days, 0),
+      0,
+    ),
+  )
 }
 
 export function projectWorkItemsForWeek(projects: Project[], weekKey: string): ProjectWeekItem[] {
   return projects.flatMap((project) =>
-    project.workItems
-      .filter((item) => item.weekKey === weekKey)
-      .map((item) => ({ ...item, project })),
+    project.workItems.flatMap((item) =>
+      projectWorkItemWeekSlices(item)
+        .filter((slice) => slice.weekKey === weekKey)
+        .map((slice) => ({
+          ...item,
+          weekKey,
+          project,
+          weekDays: slice.days,
+        })),
+    ),
   )
 }
 
 export function projectWorkItemDays(items: ProjectWeekItem[]): number {
-  return items.reduce((sum, item) => sum + item.plannedDays, 0)
+  return roundDays(items.reduce((sum, item) => sum + (item.weekDays ?? item.plannedDays), 0))
+}
+
+export function projectWeekSlicesForProject(project: Project): Array<{ item: ProjectWorkItem; weekKey: string; days: number }> {
+  return project.workItems.flatMap((item) =>
+    projectWorkItemWeekSlices(item).map((slice) => ({ item, weekKey: slice.weekKey, days: slice.days })),
+  )
 }
 
 export function weightedCompletion(objectives: Objective[]): number {
@@ -147,10 +229,14 @@ export function projectWorkItemsInQuarter(
 ): ProjectWorkItem[] {
   const start = quarterStartISO(year, quarter)
   const end = quarterEndISO(year, quarter)
-  return project.workItems.filter((item) => {
-    const week = WEEKS[item.weekKey]
-    return Boolean(week && week.end >= start && week.end <= end)
-  })
+  return project.workItems.flatMap((item) =>
+    projectWorkItemWeekSlices(item)
+      .filter((slice) => {
+        const week = WEEKS[slice.weekKey]
+        return Boolean(week && week.end >= start && week.end <= end)
+      })
+      .map((slice) => ({ ...item, weekKey: slice.weekKey, plannedDays: slice.days })),
+  )
 }
 
 export function projectQuarterDays(project: Project, year: number, quarter: number): number {

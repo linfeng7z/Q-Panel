@@ -27,6 +27,7 @@ import {
   projectQuarterDays,
   projectQuarterDoneDays,
   projectScheduledDays,
+  projectWorkItemWeekSlices,
 } from '../utils'
 import { Card, EmptyState, Progress, catStyle } from '../components/ui'
 import { DateField } from '../components/DateField'
@@ -318,11 +319,18 @@ function ProjectDetail({
   const over = decomposed > project.plannedDays
   const crossQuarter = projectCrossQuarter(project, year, quarter)
   const quarterLabel = `Q${quarter}`
-  const weekGroups = WEEK_ORDER.map((key) => ({
-    key,
-    meta: WEEKS[key],
-    items: project.workItems.filter((item) => item.weekKey === key),
-  })).filter((group) => group.items.length > 0)
+  const weekGroups = WEEK_ORDER.map((key) => {
+    const items = project.workItems.flatMap((item) => {
+      const slice = projectWorkItemWeekSlices(item).find((entry) => entry.weekKey === key)
+      return slice ? [{ ...item, weekKey: key, weekDays: slice.days }] : []
+    })
+    return {
+      key,
+      meta: WEEKS[key],
+      items,
+      days: items.reduce((sum, item) => sum + item.weekDays, 0),
+    }
+  }).filter((group) => group.items.length > 0)
 
 
   const updateItem = (id: string, patch: Partial<ProjectWorkItem>) => {
@@ -538,7 +546,7 @@ function ProjectDetail({
             <span className="auto-label">设置时间段 → 自动进入本周安排</span>
           </div>
           <div className="workplan-note">
-            设置工作项的时间段后，会按开始日自动归入对应周并进入本周安排，计入当周已排人日。
+            设置工作项的时间段后，会按工作日自动拆分到涉及的每一周，并进入对应周的本周安排。
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
@@ -548,7 +556,9 @@ function ProjectDetail({
               <span>状态</span>
               <span />
             </div>
-            {project.workItems.map((item) => (
+            {project.workItems.map((item) => {
+              const itemSlices = projectWorkItemWeekSlices(item)
+              return (
               <div className="workplan-row" key={item.id}>
                 <input
                   className="workitem-title"
@@ -563,6 +573,15 @@ function ProjectDetail({
                     onChange={(nextStart, nextEnd) => updateItem(item.id, { startDate: nextStart, endDate: nextEnd })}
                     label="工作项开展时间段"
                   />
+                  {itemSlices.length > 0 ? (
+                    <div className="workitem-week-tags">
+                      {itemSlices.map((slice) => (
+                        <span key={slice.weekKey} className="workitem-week-tag">
+                          W{WEEKS[slice.weekKey]?.num ?? slice.weekKey.slice(-2)} · {fmtDays(slice.days)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="hours-edit compact">
                   <DayInput
@@ -597,7 +616,8 @@ function ProjectDetail({
                   <Trash size={13} />
                 </button>
               </div>
-            ))}
+              )
+            })}
             {project.workItems.length === 0 ? (
               <div className="task-empty" style={{ padding: '18px 10px' }}>
                 还没有工作项。先把项目拆成可排进本周安排的小块。
@@ -634,7 +654,7 @@ function ProjectDetail({
                     <span>{group.meta.range}</span>
                   </span>
                   <span className="week-plan-meta">
-                    {group.items.length} 项 · {fmtDays(group.items.reduce((sum, item) => sum + item.plannedDays, 0))} 人日
+                    {group.items.length} 项 · {fmtDays(group.days)} 人日
                   </span>
                   <ArrowRight size={10} />
                 </button>

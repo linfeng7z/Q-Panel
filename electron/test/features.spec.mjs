@@ -323,6 +323,46 @@ test.describe('Q-Panel feature regression', () => {
     }
   })
 
+  test('splits a project work item across every overlapping week and respects manual removal', async () => {
+    const userData = await createUserData()
+    const { app, page } = await launchApp(userData)
+    try {
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.locator('.project-overview-row').first().click()
+      const workItem = page.locator('.workplan-row').nth(1)
+      await chooseDateRange(page, workItem.locator('.workitem-calendar'), '2026-10-12', '2026-10-31')
+      await expect(workItem.locator('.workitem-week-tag')).toHaveCount(3)
+      await expect(workItem.locator('.workitem-week-tag').nth(0)).toContainText('W42')
+      await expect(page.locator('.week-plan-row').filter({ hasText: '第 42 周' })).toHaveCount(1)
+      await expect(page.locator('.week-plan-row').filter({ hasText: '第 43 周' })).toHaveCount(1)
+      await expect(page.locator('.week-plan-row').filter({ hasText: '第 44 周' })).toHaveCount(1)
+
+      await page.locator('.nav-item:has-text("本周安排")').click()
+      const w42Row = page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })
+      await expect(w42Row).toHaveCount(1)
+      await expect(w42Row).toContainText('总 0.5 人日')
+
+      await page.locator('[aria-label="下一周"]').click()
+      const w43Row = page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })
+      await expect(w43Row).toHaveCount(1)
+      await w43Row.hover()
+      await w43Row.locator('.auto-remove-btn').click()
+      await expect(page.locator('.auto-row').filter({ hasText: '差距分析证据清单' })).toHaveCount(0)
+
+      await page.locator('.nav-item:has-text("项目")').click()
+      await page.locator('.project-overview-row').first().click()
+      await expect(page.locator('.workplan-row').nth(1).locator('.workitem-week-tag')).toHaveCount(2)
+      await expect(page.locator('.workplan-row').nth(1).locator('.workitem-week-tag').nth(0)).toContainText('W42')
+      await expect(page.locator('.workplan-row').nth(1).locator('.workitem-week-tag').nth(1)).toContainText('W44')
+      await page.locator('.workitem-title').first().fill('差距分析证据清单 v2')
+      await page.locator('.nav-item:has-text("本周安排")').click()
+      await page.locator('[aria-label="下一周"]').click()
+      await expect(page.locator('.auto-row').filter({ hasText: '差距分析证据清单 v2' })).toHaveCount(1)
+    } finally {
+      await closeApp(app, userData)
+    }
+  })
+
   test('keeps an empty person-day field empty while typing', async () => {
     const userData = await createUserData()
     const { app, page } = await launchApp(userData)

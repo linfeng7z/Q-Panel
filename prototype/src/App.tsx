@@ -768,6 +768,24 @@ export default function App() {
     setAiOpen(false)
   }
 
+  const skipProjectItemWeek = (projectId: string, itemId: string, weekKey: string) => {
+    setProjects((value) =>
+      value.map((project) =>
+        project.id === projectId
+          ? {
+              ...project,
+              workItems: project.workItems.map((item) =>
+                item.id === itemId
+                  ? { ...item, skippedWeeks: Array.from(new Set([...(item.skippedWeeks ?? []), weekKey])) }
+                  : item,
+              ),
+            }
+          : project,
+      ),
+    )
+    showToast('已从本周移除，该项目事项不再自动同步到这一周')
+  }
+
   const deleteTask = (id: string) => {
     setTasks((value) => value.filter((task) => task.id !== id))
     showToast('已删除本周事项')
@@ -1100,6 +1118,7 @@ export default function App() {
             onOpenQuarter={() => setView('quarter')}
             onOpenProjects={() => setView('projects')}
             onToggleWorkItem={toggleProjectWorkItem}
+            onSkipProjectItem={skipProjectItemWeek}
             onManageCategories={manageCategories}
             onEditTask={(item) => setEditingItem({ kind: 'task', item })}
             onDeleteTask={deleteTask}

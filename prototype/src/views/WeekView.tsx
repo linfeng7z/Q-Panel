@@ -5,6 +5,7 @@ import {
   FolderSimple,
   Plus,
   Target,
+  Trash,
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
@@ -43,6 +44,7 @@ interface WeekViewProps {
   onOpenQuarter: () => void
   onOpenProjects: () => void
   onToggleWorkItem: (projectId: string, itemId: string) => void
+  onSkipProjectItem: (projectId: string, itemId: string, weekKey: string) => void
   onManageCategories: () => void
 }
 
@@ -70,6 +72,7 @@ export function WeekView({
   onOpenQuarter,
   onOpenProjects,
   onToggleWorkItem,
+  onSkipProjectItem,
   onManageCategories,
 }: WeekViewProps) {
   const [activeDay, setActiveDay] = useState<string | null>(null)
@@ -112,7 +115,7 @@ export function WeekView({
   const autoPlanned = projectWorkItemDays(autoItems)
   const autoDone = autoItems
     .filter((item) => item.status === 'done')
-    .reduce((sum, item) => sum + item.plannedDays, 0)
+    .reduce((sum, item) => sum + item.weekDays, 0)
   const planned = daysOf(weekTasks) + autoPlanned
   const doneDays = doneDaysOf(weekTasks) + autoDone
   const available = meta.workdays - meta.leaveDays
@@ -145,7 +148,7 @@ export function WeekView({
       daysOf(weekTasks.filter((task) => task.categoryId === category.id)) +
       autoItems
         .filter((item) => item.project.categoryId === category.id)
-        .reduce((sum, item) => sum + item.plannedDays, 0),
+        .reduce((sum, item) => sum + item.weekDays, 0),
   })).filter((segment) => segment.days > 0)
   const totalItems = weekTasks.length + autoItems.length
   const totalDone =
@@ -400,7 +403,7 @@ export function WeekView({
                 <div className="section-label auto-section-label">
                   <FolderSimple size={10} />
                   项目自动排期 · {visibleAutoItems.length} 项 ·{' '}
-                  {fmtDays(visibleAutoItems.reduce((sum, item) => sum + item.plannedDays, 0))} 人日
+                  {fmtDays(visibleAutoItems.reduce((sum, item) => sum + item.weekDays, 0))} 人日
                   <span className="auto-section-hint">来自全局项目规划</span>
                 </div>
                 <div className="task-rows">
@@ -430,13 +433,24 @@ export function WeekView({
                             </span>
                             <span className="auto-tag">自动排期</span>
                             <span className="meta-item">第 {meta.num} 周</span>
+                            {item.weekDays !== item.plannedDays ? (
+                              <span className="meta-item">总 {fmtDays(item.plannedDays)} 人日</span>
+                            ) : null}
                           </div>
                         </div>
                         <div className={cn('task-hours', item.status === 'done' && 'done')}>
-                          <b>{fmtDays(item.plannedDays)}</b>
+                          <b>{fmtDays(item.weekDays)}</b>
                           <span>人日</span>
                         </div>
-                        <span className="auto-row-pad" />
+                        <button
+                          type="button"
+                          className="auto-remove-btn"
+                          title="从本周移除，不再自动同步"
+                          aria-label={`从本周移除 ${item.title}`}
+                          onClick={() => onSkipProjectItem(item.project.id, item.id, weekKey)}
+                        >
+                          <Trash size={11} />
+                        </button>
                       </div>
                     )
                   })}

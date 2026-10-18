@@ -68,6 +68,8 @@ export interface ProjectWorkItem {
   endDate?: string
   status: WorkItemStatus
   milestoneId?: string
+  /** 用户从某周手动移除后，不再自动同步到这些周；其他变化仍自动同步。 */
+  skippedWeeks?: string[]
 }
 
 export interface Project {
