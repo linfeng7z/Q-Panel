@@ -1,6 +1,7 @@
 import type { UserPreferences } from './types'
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
+  language: 'zh',
   autoLaunch: true,
   nativeNotifications: true,
   reminderPopup: true,

@@ -55,6 +55,7 @@ import { chinaQuarter, chinaYear } from './clock'
 import type { CalendarAdjustment } from './calendar'
 import { CALENDAR_ADJUSTMENTS } from './calendar'
 import { DEFAULT_PREFERENCES } from './preferences'
+import { setLanguage, t } from './i18n'
 import { backdropVariables, backdropImageStyle } from './backdrop'
 import type { DesktopBackdrop } from './backdrop'
 import { hasWorkspaceShape, isRecord, WORKSPACE_SCHEMA_VERSION } from './workspace'
@@ -135,6 +136,7 @@ export default function App() {
   const [reminderDefaults, setReminderDefaults] = useState<ReminderDefaults>({ offsetDays: 2, time: '09:00' })
   const [calendarAdjustments, setCalendarAdjustments] = useState<CalendarAdjustment[]>(CALENDAR_ADJUSTMENTS)
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
+  setLanguage(preferences.language ?? 'zh')
   const [backdrop, setBackdrop] = useState<DesktopBackdrop | null>(null)
   const yearOptions = useMemo(() => {
     const values = [CURRENT_YEAR, year, ...(preferences.yearOptions ?? [])].filter(
@@ -1230,14 +1232,14 @@ export default function App() {
                   aiOpen={aiOpen}
                   bellCount={bellCount}
                 />
-                <div className="panel-body">
+                <div className="panel-body" key={preferences.language}>
                   <Sidebar
                     view={view}
                     onView={navigate}
                     weekCount={weekCount}
                     weekPlanned={weekPlanned}
                     weekAvailable={weekAvailable}
-                    weekLabel={view === 'week' ? `第 ${sideWeekMeta.num} 周容量` : '本周容量'}
+                    weekLabel={view === 'week' ? t('第 {n} 周', { n: sideWeekMeta.num }) : t('本周容量')}
                     groupLabels={sidebarLabels}
                   />
                   <div className="content">

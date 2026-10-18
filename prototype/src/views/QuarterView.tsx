@@ -45,6 +45,7 @@ import {
   catStyle,
 } from '../components/ui'
 import { CountUp } from '../components/CountUp'
+import { getLanguage, t } from '../i18n'
 
 interface QuarterViewProps {
   year: number
@@ -61,6 +62,9 @@ interface QuarterViewProps {
 }
 
 function monthName(month: number): string {
+  if (getLanguage() === 'en') {
+    return new Date(2026, month - 1, 1).toLocaleString('en-US', { month: 'short' })
+  }
   return `${month} 月`
 }
 
@@ -152,19 +156,27 @@ export function QuarterView({
                     <h1 className="page-title">
             {yearOverview ? (
               <>
-                {year} <span className="light">年度总览</span>
+                {year} <span className="light">{t('年度总览')}</span>
               </>
             ) : (
               <>
                 <span className="q-num">Q{quarter}</span>
-                <span className="light">季度规划</span>
+                <span className="light">{t('季度规划')}</span>
               </>
             )}
           </h1>
           <p className="page-sub">
             {yearOverview
-              ? `${year} 年 · 已录入 ${yearWorkdays} 个工作日 · ${yearAvailable} 人日可用 · 点击季度卡片跳转`
-              : `${quarterRange(year, quarter)} · ${stats ? `${stats.workdays} 个工作日 · 本季度 ${available} 人日 · 全局项目 ${fmtDays(globalProjectDays)} 人日（${crossQuarterProjects} 个跨季度，只计本季排期）` : '该季度尚未规划'}`}
+              ? t('{year} 年 · 已录入 {workdays} 个工作日 · {available} 人日可用 · 点击季度卡片跳转', { year, workdays: yearWorkdays, available: yearAvailable })
+              : stats
+                ? t('{range} · {workdays} 个工作日 · 本季度 {available} 人日 · 全局项目 {global} 人日（{cross} 个跨季度，只计本季排期）', {
+                    range: quarterRange(year, quarter),
+                    workdays: stats.workdays,
+                    available,
+                    global: fmtDays(globalProjectDays),
+                    cross: crossQuarterProjects,
+                  })
+                : t('该季度尚未规划')}
           </p>
         </div>
         <div className="head-actions">
@@ -174,13 +186,13 @@ export function QuarterView({
             onClick={() => setYearOverview((value) => !value)}
           >
             <SquaresFour size={14} />
-            {yearOverview ? '返回季度' : '年度总览'}
+            {yearOverview ? t('返回季度') : t('年度总览')}
           </button>
           <button type="button" className="btn primary" onClick={() => onOpenCreate('objective')}>
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
             </span>
-            新建任务
+            {t('新建任务')}
           </button>
         </div>
       </div>
@@ -210,26 +222,26 @@ export function QuarterView({
                 <div className="year-stats">
                   <div className="year-stat">
                     <b className="num">{item.stats?.workdays ?? '—'}</b>
-                    <span>工作日</span>
+                    {t('工作日')}
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.available || '—'}</b>
-                    <span>可用人日</span>
+                    {t('可用人日')}
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.allocated}</b>
-                    <span>已占人日</span>
+                    {t('已占用')}
                   </div>
                   <div className="year-stat">
                     <b className="num">{item.completion}%</b>
-                    <span>完成度</span>
+                    {t('完成度')}
                   </div>
                 </div>
                 <div className="year-bar">
                   <Progress value={item.available ? (item.allocated / item.available) * 100 : 0} />
                 </div>
                 <div className="year-foot">
-                  <span>{item.count} 项任务</span>
+                  <span>{item.count} {t('项任务')}</span>
                   <span>{item.available ? pct((item.allocated / item.available) * 100) : '—'} 容量占用</span>
                 </div>
               </Card>
@@ -246,7 +258,7 @@ export function QuarterView({
                 sub="先建一项季度任务，或者切换到其他季度看看。"
                 action={
                   <button type="button" className="btn primary sm" onClick={() => onOpenCreate('objective')}>
-                    <Plus size={12} /> 新建任务
+                    <Plus size={12} /> {t('新建任务')}
                   </button>
                 }
               />
@@ -257,59 +269,59 @@ export function QuarterView({
                 <div className="capacity-head">
                   <div className="capacity-title">
                     <Target size={14} />
-                    本季度容量与分配
+                    {t('本季度容量与分配')}
                   </div>
                   <span className={cn('capacity-badge', usedPercent > 100 ? 'bad' : usedPercent > 85 ? 'warn' : '')}>
-                    {usedPercent > 100 ? `超载 ${usedPercent - 100}%` : `已用 ${usedPercent}%`}
+                    {usedPercent > 100 ? t('超载 {n}%', { n: usedPercent - 100 }) : t('已用 {n}%', { n: usedPercent })}
                   </span>
                 </div>
                 <div className="capacity-stats">
                   <div className="capacity-stat stat">
-                    <span className="stat-label">可用人日</span>
+                    <span className="stat-label">{t('可用人日')}</span>
                     <span className="stat-value num">
                       <CountUp value={available} />
-                      <small>人日</small>
+                      <small>{t('人日')}</small>
                     </span>
                     <span className="stat-foot">
-                      {stats.workdays} 个工作日 − {stats.leaveDays} 天请假
+                      {t('{workdays} 个工作日 − {leave} 天请假', { workdays: stats.workdays, leave: stats.leaveDays })}
                     </span>
                   </div>
                   <div className="capacity-stat stat">
                     <span
                       className="stat-label"
-                      title="已占用 = 季度任务人日 + 未关联季度任务的项目本季工作项人日；关联项目的工作项属于任务拆解，不重复计算。"
+                      title={t('已占用 = 季度任务人日 + 未关联季度任务的项目本季工作项人日；关联项目的工作项属于任务拆解，不重复计算。')}
                     >
-                      已占用
+                      {t('已占用')}
                     </span>
                     <span className="stat-value num">
                       <CountUp value={committed} decimals={Number.isInteger(committed) ? 0 : 1} />
-                      <small>人日</small>
+                      <small>{t('人日')}</small>
                     </span>
                     <span className="stat-foot">
                       {projectDays > 0
-                        ? `季度任务 ${fmtDays(taskDays)} + 独立项目 ${fmtDays(projectDays)}`
-                        : `季度任务 ${fmtDays(taskDays)} 人日`}
+                        ? t('季度任务 {task} + 独立项目 {project}', { task: fmtDays(taskDays), project: fmtDays(projectDays) })
+                        : t('季度任务 {n} 人日', { n: fmtDays(taskDays) })}
                     </span>
                   </div>
                   <div className="capacity-stat stat">
                     <span className={cn('stat-label', remaining < 0 && 'bad-text')}>
-                      {remaining < 0 ? '超载' : '剩余'}
+                      {remaining < 0 ? t('超载') : t('剩余')}
                     </span>
                     <span className={cn('stat-value num', remaining < 0 && 'negative')}>
                       <CountUp value={remaining} decimals={Number.isInteger(remaining) ? 0 : 1} />
-                      <small>人日</small>
+                      <small>{t('人日')}</small>
                     </span>
                     <span className={cn('stat-foot', remaining < 0 && 'bad-text')}>
-                      {remaining < 0 ? '负值表示已超本季度容量' : '建议保留 10% 缓冲'}
+                      {remaining < 0 ? t('负值表示已超本季度容量') : t('建议保留 10% 缓冲')}
                     </span>
                   </div>
                   <div className="capacity-stat stat">
-                    <span className="stat-label">完成度</span>
+                    <span className="stat-label">{t('完成度')}</span>
                     <span className="stat-value num">
                       <CountUp value={completion} />
                       <small>%</small>
                     </span>
-                    <span className="stat-foot">季度任务 + 独立项目</span>
+                    <span className="stat-foot">{t('季度任务 + 独立项目')}</span>
                   </div>
                 </div>
                 <div className="capacity-bar-wrap">
@@ -335,22 +347,23 @@ export function QuarterView({
                     ))}
                     <span>
                       <i style={{ background: 'var(--surface-3)' }} />
-                      {remaining < 0 ? '超载' : '剩余'} {fmtDays(Math.abs(remaining))} 人日
+                      {remaining < 0 ? t('超载') : t('剩余')} {fmtDays(Math.abs(remaining))} {t('人日')}
                     </span>
                   </div>
                 </div>
                 <div className="capacity-foot">
                   <span>
                     {stats.estimated
-                      ? '官方放假安排尚未发布，当前按周末规则估算'
-                      : `${year} Q${quarter} 已按官方节假日 + 调休补班计算`}
-                    ；本季度任务 {fmtDays(taskDays)} 人日
-                    {projectDays > 0 ? ` + 独立项目 ${fmtDays(projectDays)} 人日` : ''}，剩余 <b>{fmtDays(remaining)} 人日</b>
+                      ? t('官方放假安排尚未发布，当前按周末规则估算')
+                      : t('{year} Q{q} 已按官方节假日 + 调休补班计算', { year, q: quarter })}
+                    {t('；本季度任务 {n} 人日', { n: fmtDays(taskDays) })}
+                    {projectDays > 0 ? t(' + 独立项目 {n} 人日', { n: fmtDays(projectDays) }) : ''}
+                    {t('，剩余 {n} 人日', { n: fmtDays(remaining) })}
                   </span>
                   <span>
                     {stats.estimated
-                      ? '数据源：待国务院公告 · 可手动编辑'
-                      : `单位：人日 · 数据源：国务院办公厅 ${year} 放假安排`}
+                      ? t('数据源：待国务院公告 · 可手动编辑')
+                      : t('单位：人日 · 数据源：国务院办公厅 {year} 放假安排', { year })}
                   </span>
                 </div>
               </Card>
@@ -360,7 +373,7 @@ export function QuarterView({
                   <div className="list-head quarter-list-head">
                     <div className="quarter-list-heading">
                       <div className="list-title">
-                        季度任务
+                        {t('季度任务')}
                         <span className="list-count num">{filteredObjectives.length}</span>
                       </div>
                     </div>
@@ -370,7 +383,7 @@ export function QuarterView({
                         className={cn('chip', filter === 'all' && 'active')}
                         onClick={() => onFilter('all')}
                       >
-                        全部
+                        {t('全部')}
                       </button>
                       {CATEGORIES.map((category) => {
                         const count = objectivesOfPeriod.filter(
@@ -386,14 +399,14 @@ export function QuarterView({
                             onClick={() => onFilter(category.id)}
                           >
                             <span className="dot" />
-                            <span className="cat-name">{category.name}</span>
+                            <span className="cat-name">{t(category.name)}</span>
                             <span className="count">{count}</span>
                           </button>
                         )
                       })}
                       <button type="button" className="chip add" onClick={onManageCategories}>
                         <Plus size={10} />
-                        分类
+                        {t('分类')}
                       </button>
                     </div>
                   </div>
@@ -467,13 +480,13 @@ export function QuarterView({
                       })}
                     </div>
                     {filteredObjectives.length === 0 ? (
-                      <div className="task-empty">这个分类下还没有季度任务。</div>
+                      <div className="task-empty">{t('这个分类下还没有季度任务。')}</div>
                     ) : null}
                   </div>
                   <div className="list-foot">
                     <button type="button" className="add-row" onClick={() => onOpenCreate('objective')}>
                       <Plus size={13} />
-                      添加季度任务
+                      {t('添加季度任务')}
                     </button>
                   </div>
                 </Card>
@@ -484,10 +497,10 @@ export function QuarterView({
                       <div className="card-head">
                         <div className="card-title">
                           <CalendarBlank size={13} />
-                          本季度日历
+                          {t('本季度日历')}
                         </div>
                         <span className="card-meta">
-                          {stats.workdays} 个工作日{stats.estimated ? ' · 估算' : ''}
+                          {t('{n} 个工作日', { n: stats.workdays })}{stats.estimated ? ` · ${t('估算')}` : ''}
                         </span>
                       </div>
                       <div className="mini-months">
@@ -519,10 +532,10 @@ export function QuarterView({
                         ))}
                       </div>
                       <div className="mini-legend">
-                        <span><i style={{ background: 'color-mix(in srgb, var(--text-1) 14%, transparent)' }} />工作日</span>
-                        <span><i style={{ background: 'var(--bad-soft)' }} />法定假</span>
-                        <span><i style={{ background: 'var(--warn-soft)' }} />调休</span>
-                        <span><i style={{ background: 'var(--info-soft)' }} />请假</span>
+                        <span><i style={{ background: 'color-mix(in srgb, var(--text-1) 14%, transparent)' }} />{t('工作日')}</span>
+                        <span><i style={{ background: 'var(--bad-soft)' }} />{t('法定假')}</span>
+                        <span><i style={{ background: 'var(--warn-soft)' }} />{t('调休')}</span>
+                        <span><i style={{ background: 'var(--info-soft)' }} />{t('请假')}</span>
                       </div>
                     </div>
                   </Card>
@@ -532,7 +545,7 @@ export function QuarterView({
                       <div className="card-head">
                         <div className="card-title">
                           <Target size={13} />
-                          分类分配
+                          {t('分类分配')}
                         </div>
                       </div>
                       <div className="donut-wrap">
@@ -542,14 +555,14 @@ export function QuarterView({
                             color: `var(${segment.category.colorVar})`,
                           }))}
                           centerValue={`${usedPercent}%`}
-                          centerLabel="已分配"
+                          centerLabel={t('已分配')}
                         />
                         <div className="donut-legend">
                           {segments.map((segment) => (
                             <div className="donut-row" key={segment.category.id}>
                               <span className="dot" style={catStyle(segment.category.id)} />
-                              {segment.category.name}
-                              <b>{segment.days} 人日</b>
+                              {t(segment.category.name)}
+                              <b>{segment.days} {t('人日')}</b>
                             </div>
                           ))}
                         </div>
@@ -579,7 +592,7 @@ export function QuarterView({
                   <div>
                                         <div className="modal-title">{selectedObjective.title}</div>
                     <div className="modal-sub">
-                      {getCategory(selectedObjective.categoryId).name} · Q{quarter} {year} · 开展{' '}
+                      {t(getCategory(selectedObjective.categoryId).name)} · Q{quarter} {year} · {t('开展')}{' '}
                       {fmtRange(selectedObjective.startDate ?? selectedObjective.dueDate, selectedObjective.endDate ?? selectedObjective.dueDate)}
                     </div>
                   </div>
@@ -590,7 +603,7 @@ export function QuarterView({
                 <div className="modal-body">
                   <div className="row" style={{ justifyContent: 'space-between' }}>
                     <StatusChip status={selectedObjective.status} />
-                    <span className="card-meta">{selectedObjective.plannedDays} 人日计划</span>
+                    <span className="card-meta">{selectedObjective.plannedDays} {t('人日计划')}</span>
                   </div>
                   <div style={{ marginTop: 14 }}>
                     <div className="meter-row">
@@ -600,17 +613,17 @@ export function QuarterView({
                   </div>
                   <div className="settings-section">
                     <div className="settings-row">
-                      <div className="settings-label">关联项目</div>
+                      <div className="settings-label">{t('关联项目')}</div>
                       <div className="settings-value">
                         {projects.find((project) => project.id === selectedObjective.projectId)?.title ?? '未关联'}
                       </div>
                     </div>
                     <div className="settings-row">
-                      <div className="settings-label">默认提醒</div>
+                      <div className="settings-label">{t('默认提醒')}</div>
                       <div className="settings-value">{selectedObjective.reminder ?? '无'}</div>
                     </div>
                     <div className="settings-row">
-                      <div className="settings-label">状态</div>
+                      <div className="settings-label">{t('状态')}</div>
                       <div className="settings-value">
                         <StatusChip status={selectedObjective.status} />
                       </div>
@@ -626,11 +639,11 @@ export function QuarterView({
                       setSelectedObjective(null)
                     }}
                   >
-                    <Trash size={12} /> 删除
+                    <Trash size={12} /> {t('删除')}
                   </button>
                   <div className="modal-foot-spacer" />
                   <button type="button" className="btn ghost" onClick={() => setSelectedObjective(null)}>
-                    关闭
+                    {t('关闭')}
                   </button>
                   <button
                     type="button"
@@ -640,7 +653,7 @@ export function QuarterView({
                       setSelectedObjective(null)
                     }}
                   >
-                    <PencilSimple size={12} /> 编辑
+                    <PencilSimple size={12} /> {t('编辑')}
                   </button>
                 </div>
               </div>

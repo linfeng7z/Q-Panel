@@ -25,6 +25,7 @@ import {
 import { Logo } from './Logo'
 import { quarterLoad } from '../utils'
 import { cn } from '../utils'
+import { t } from '../i18n'
 import type { Objective, Project, ViewId } from '../types'
 
 interface TopBarProps {
@@ -357,9 +358,9 @@ export function TopBar({
                 type="button"
                 className={cn('top-week-today', weekKey === CURRENT_WEEK_KEY && 'active')}
                 onClick={() => onWeekChange(CURRENT_WEEK_KEY)}
-                title="回到本周"
+                title={t('回到本周')}
               >
-                本周
+                {t('本周')}
               </button>
 
               {weekOpen ? (
@@ -374,7 +375,7 @@ export function TopBar({
                         setWeekOpen(false)
                       }}
                     >
-                      回到本周
+                      {t('回到本周')}
                     </button>
                   </div>
                   <div className="week-pop-grid">

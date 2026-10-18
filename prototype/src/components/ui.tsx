@@ -3,6 +3,7 @@ import { Check } from '@phosphor-icons/react'
 import type { CategoryId, ObjectiveStatus } from '../types'
 import { STATUS_LABEL, getCategory } from '../data/mock'
 import { cn } from '../utils'
+import { t } from '../i18n'
 
 export function catStyle(catId: CategoryId): CSSProperties {
   const cat = getCategory(catId)
@@ -87,7 +88,7 @@ export function StatusChip({ status }: { status: ObjectiveStatus }) {
   return (
     <span className={cn('status', cls)}>
       <span className="mini-dot" />
-      {STATUS_LABEL[status]}
+      {t(STATUS_LABEL[status])}
     </span>
   )
 }

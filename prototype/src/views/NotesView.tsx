@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { t } from '../i18n'
 import type { ReactNode } from 'react'
 import {
   Eye,
@@ -148,7 +149,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
     <div className="view notes-view">
       <div className="page-head" style={{ marginBottom: 13 }}>
         <div>
-                    <h1 className="page-title">临时笔记</h1>
+                    <h1 className="page-title">{t('临时笔记')}</h1>
           <p className="page-sub">{notes.length} 条笔记 · 纯本地保存 · 自动写入工作区</p>
         </div>
         <div className="head-actions">
@@ -164,7 +165,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
       <div className="notes-layout">
         <Card className="note-list-pane">
           <div className="note-list-head">
-            <div className="note-list-title">全部笔记</div>
+            <div className="note-list-title">{t('全部笔记')}</div>
             <span className="card-meta">{filtered.length}</span>
           </div>
           <div className="note-search">
@@ -202,7 +203,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
                 </div>
               </button>
             ))}
-            {filtered.length === 0 ? <div className="task-empty">没有匹配的笔记。</div> : null}
+            {filtered.length === 0 ? <div className="task-empty">{t('没有匹配的笔记。')}</div> : null}
           </div>
         </Card>
 
@@ -266,7 +267,7 @@ export function NotesView({ notes, onChange, onToast }: NotesViewProps) {
           ) : (
             <EmptyState
               icon={<NotePencil size={20} />}
-              title="还没有笔记"
+              title="{t('还没有笔记')}"
               sub="新建一条，用来放会议纪要、汇报要点或随手想法。"
               action={
                 <button type="button" className="btn primary sm" onClick={addNote}>

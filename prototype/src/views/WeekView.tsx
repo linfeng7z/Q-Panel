@@ -28,6 +28,7 @@ import {
 import { TaskRow } from '../components/TaskRow'
 import { RelationThreads } from '../components/RelationThreads'
 import { Card, CheckBox, Progress, catStyle } from '../components/ui'
+import { getLanguage, t } from '../i18n'
 
 interface WeekViewProps {
   weekKey: string
@@ -46,6 +47,13 @@ interface WeekViewProps {
   onToggleWorkItem: (projectId: string, itemId: string) => void
   onSkipProjectItem: (projectId: string, itemId: string, weekKey: string) => void
   onManageCategories: () => void
+}
+
+function weekdayLabel(iso: string): string {
+  if (getLanguage() === 'en') {
+    return new Date(`${iso}T12:00:00+08:00`).toLocaleString('en-US', { weekday: 'short' })
+  }
+  return `周${WEEKDAY_CN[new Date(`${iso}T12:00:00+08:00`).getDay()]}`
 }
 
 function addDays(iso: string, amount: number): string {
@@ -236,9 +244,9 @@ export function WeekView({
     <div className="view week-view">
       <div className="page-head week-head">
         <div className="week-head-copy">
-          <h1 className="page-title">第 {meta.num} 周</h1>
+          <h1 className="page-title">{t('第 {n} 周', { n: meta.num })}</h1>
           <p className="page-sub">
-            {meta.workdays} 个工作日 · 可用 {available} 人日
+            {t('{workdays} 个工作日 · 可用 {available} 人日', { workdays: meta.workdays, available })}
             {meta.note ? ` · ${meta.note}` : ''}
           </p>
         </div>
@@ -247,7 +255,7 @@ export function WeekView({
             <span className="icon-circle">
               <Plus size={12} weight="bold" />
             </span>
-            新建事项
+            {t('新建事项')}
           </button>
         </div>
       </div>
@@ -256,21 +264,21 @@ export function WeekView({
         <div className="week-cap-stats">
           <div className="week-cap-stat">
             <b className="num">{fmtDays(available)}</b>
-            <span>可用人日</span>
+            <span>{t('可用人日')}</span>
           </div>
           <div className="week-cap-stat">
             <b className="num">{fmtDays(planned)}</b>
-            <span>已排人日</span>
+            <span>{t('已排人日')}</span>
           </div>
           <div className="week-cap-stat">
             <b className="num">{fmtDays(doneDays)}</b>
-            <span>已完成</span>
+            <span>{t('已完成')}</span>
           </div>
           <div className="week-cap-stat">
             <b className={cn('num', remaining < 0 && 'negative')}>
               {remaining < 0 ? `-${fmtDays(Math.abs(remaining))}` : fmtDays(remaining)}
             </b>
-            <span>{remaining < 0 ? '超载人日' : '剩余人日'}</span>
+            <span>{remaining < 0 ? t('超载人日') : t('剩余人日')}</span>
           </div>
         </div>
         <div className="week-cap-viz">
@@ -290,16 +298,16 @@ export function WeekView({
             {segments.map((segment) => (
               <span key={segment.category.id}>
                 <i style={{ background: `var(${segment.category.colorVar})` }} />
-                {segment.category.name} {segment.days} 人日
+                {t(segment.category.name)} {segment.days} {t('人日')}
               </span>
             ))}
             {autoPlanned > 0 ? (
               <span className="auto-cap-note">
-                <FolderSimple size={9} /> 项目排期 {fmtDays(autoPlanned)} 人日
+                <FolderSimple size={9} /> {t('项目排期 {n} 人日', { n: fmtDays(autoPlanned) })}
               </span>
             ) : null}
             <span style={{ marginLeft: 'auto' }}>
-              {totalDone}/{totalItems} 项完成
+              {t('{done}/{total} 项完成', { done: totalDone, total: totalItems })}
             </span>
           </div>
         </div>
@@ -323,7 +331,7 @@ export function WeekView({
             >
               {isToday ? <span className="today-pill">TODAY</span> : null}
               <span className="day-name">
-                周{WEEKDAY_CN[new Date(`${iso}T12:00:00+08:00`).getDay()]}
+                {weekdayLabel(iso)}
               </span>
               <span className="day-num">{Number(iso.slice(-2))}</span>
               <span
@@ -334,7 +342,7 @@ export function WeekView({
                   info.kind === 'leave' && 'leave',
                 )}
               >
-                {info.label ?? (info.kind === 'weekend' ? '周末' : '')}
+                {info.label ?? (info.kind === 'weekend' ? t('周末') : '')}
               </span>
               <span className="day-dots">
                 {dayTasks.slice(0, 4).map((task) => (
@@ -351,7 +359,7 @@ export function WeekView({
           <div className="list-head week-list-head">
             <div className="week-list-heading">
               <div className="list-title">
-                本周必做
+                {t('本周必做')}
                 <span className="list-count num">{visibleTasks.length + visibleAutoItems.length}</span>
               </div>
             </div>
@@ -361,7 +369,7 @@ export function WeekView({
                 className={cn('chip', filter === 'all' && 'active')}
                 onClick={() => onFilter('all')}
               >
-                全部
+                {t('全部')}
               </button>
               {CATEGORIES.map((category) => {
                 const count =
@@ -377,13 +385,13 @@ export function WeekView({
                     onClick={() => onFilter(category.id)}
                   >
                     <span className="dot" />
-                    <span className="cat-name">{category.name}</span>
+                    <span className="cat-name">{t(category.name)}</span>
                   </button>
                 )
               })}
               <button type="button" className="chip add" onClick={onManageCategories}>
                 <Plus size={10} />
-                分类
+                {t('分类')}
               </button>
             </div>
           </div>
@@ -391,7 +399,7 @@ export function WeekView({
             {overdue.length > 0 ? (
               <div className="overdue-strip">
                 <WarningCircle size={12} />
-                上期有 <b>{overdue.length}</b> 项未完成
+                {t('上期有 {n} 项未完成', { n: overdue.length })}
                 <button
                   type="button"
                   className="btn sm"
@@ -422,7 +430,7 @@ export function WeekView({
 
             {undone.length + autoUndone.length > 0 ? (
               <div className="section-label">
-                <CheckCircle size={10} /> 待完成 · {undone.length + autoUndone.length}
+                <CheckCircle size={10} /> {t('待完成 · {n}', { n: undone.length + autoUndone.length })}
               </div>
             ) : null}
             <div className="task-rows">
@@ -449,7 +457,7 @@ export function WeekView({
             {done.length + autoDone.length > 0 ? (
               <>
                 <div className="section-label">
-                  <CheckCircle size={10} /> 已完成 · {done.length + autoDone.length}
+                  <CheckCircle size={10} /> {t('已完成 · {n}', { n: done.length + autoDone.length })}
                 </div>
                 <div className="task-rows">
                   {done.map((task) => {
@@ -476,13 +484,13 @@ export function WeekView({
             ) : null}
 
             {visibleTasks.length === 0 && visibleAutoItems.length === 0 ? (
-              <div className="task-empty">这一周还没有事项。先建一件最想推进的事。</div>
+              <div className="task-empty">{t('这一周还没有事项。先建一件最想推进的事。')}</div>
             ) : null}
           </div>
           <div className="list-foot">
             <button type="button" className="add-row" onClick={() => onOpenCreate('task')}>
               <Plus size={13} />
-              添加本周必做
+              {t('添加本周必做')}
             </button>
           </div>
         </Card>
@@ -493,10 +501,10 @@ export function WeekView({
               <div className="card-head">
                 <div className="card-title">
                   <Target size={13} />
-                  关联季度任务
+                  {t('关联季度任务')}
                 </div>
                 <button type="button" className="card-link" onClick={onOpenQuarter}>
-                  季度规划 <ArrowRight size={10} />
+                  {t('季度规划')} <ArrowRight size={10} />
                 </button>
               </div>
               {sideObjectives.map((objective) => (
@@ -518,7 +526,7 @@ export function WeekView({
                 </button>
               ))}
               {sideObjectives.length === 0 ? (
-                <div className="task-empty">本周还没有关联季度任务。</div>
+                <div className="task-empty">{t('本周还没有关联季度任务。')}</div>
               ) : null}
             </div>
           </Card>
@@ -528,10 +536,10 @@ export function WeekView({
               <div className="card-head">
                 <div className="card-title">
                   <FolderSimple size={13} />
-                  项目推进
+                  {t('项目推进')}
                 </div>
                 <button type="button" className="card-link" onClick={onOpenProjects}>
-                  全部 <ArrowRight size={10} />
+                  {t('全部')} <ArrowRight size={10} />
                 </button>
               </div>
               {sideProjects.map((project) => {
@@ -550,7 +558,7 @@ export function WeekView({
                     <span className="project-mini-copy">
                       <b>{project.title}</b>
                       <span>
-                        {next ? `下一里程碑 ${fmtRange(next.startDate ?? next.targetDate, next.endDate ?? next.targetDate)}` : '全部里程碑已完成'}
+                        {next ? t('下一里程碑 {range}', { range: fmtRange(next.startDate ?? next.targetDate, next.endDate ?? next.targetDate) }) : t('全部里程碑已完成')}
                       </span>
                     </span>
                     <span className="mini-pct">{projectProgress(project)}%</span>
@@ -558,7 +566,7 @@ export function WeekView({
                 )
               })}
               {sideProjects.length === 0 ? (
-                <div className="task-empty">本周事项还没有关联项目。</div>
+                <div className="task-empty">{t('本周事项还没有关联项目。')}</div>
               ) : null}
             </div>
           </Card>

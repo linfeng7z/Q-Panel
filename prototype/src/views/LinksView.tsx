@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
@@ -134,7 +135,7 @@ export function LinksView({
     <div className="view links-view">
       <div className="page-head links-head">
         <div>
-          <h1 className="page-title">收藏链接</h1>
+          <h1 className="page-title">{t('收藏链接')}</h1>
           <p className="page-sub">
             {links.length} 条收藏 · {internalCount} 条内部链接 · {categories.length} 个集合
           </p>
@@ -152,7 +153,7 @@ export function LinksView({
       <div className="links-library">
         <aside className="link-collections">
           <div className="link-collections-head">
-            <span>收藏集合</span>
+            <span>{t('收藏集合')}</span>
             <b>{categories.length}</b>
           </div>
           <button
@@ -161,7 +162,7 @@ export function LinksView({
             onClick={() => setFilter('all')}
           >
             <FolderSimple size={13} />
-            <span>全部链接</span>
+            <span>{t('全部链接')}</span>
             <b>{links.length}</b>
           </button>
           <div className="collection-list">
@@ -242,10 +243,10 @@ export function LinksView({
               </span>
               <b>
                 {links.length === 0
-                  ? '收藏夹还是空的'
+                  ? t('收藏夹还是空的')
                   : query
-                    ? '没有匹配的链接'
-                    : '这个集合还没有链接'}
+                    ? t('没有匹配的链接')
+                    : t('这个集合还没有链接')}
               </b>
               <span>
                 {links.length === 0

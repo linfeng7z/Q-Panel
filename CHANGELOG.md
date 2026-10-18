@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- Bilingual README: Simplified Chinese and English.
+- Interface language preference with a core English UI (Beta).
+- GitHub Actions multi-platform build and tag release workflow.
+- Experimental Windows x64 and Linux x64 packaging.
+
 ## 1.2.2
 
 - GitHub Actions build and release pipeline.

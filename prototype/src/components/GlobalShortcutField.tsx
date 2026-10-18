@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { t } from '../i18n'
 
 const DEFAULT_SHORTCUT = 'CommandOrControl+Shift+Space'
 
@@ -112,11 +113,11 @@ export function GlobalShortcutField({ value, onChange }: GlobalShortcutFieldProp
           setError('')
           void onChange(DEFAULT_SHORTCUT)
         }}
-        title="恢复默认"
+        title={t('恢复默认')}
       >
-        重置
+        {t('重置')}
       </button>
-      {recording ? <span className="global-shortcut-hint">Esc 取消</span> : null}
+      {recording ? <span className="global-shortcut-hint">{t('Esc 取消')}</span> : null}
       {error ? <span className="global-shortcut-error">{error}</span> : null}
     </div>
   )

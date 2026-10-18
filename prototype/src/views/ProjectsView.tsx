@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { t } from '../i18n'
 import {
   ArrowRight,
   CalendarDots,
@@ -121,9 +122,9 @@ export function ProjectsView({
     <div className="view projects-view">
       <div className="page-head">
         <div>
-                    <h1 className="page-title">全局项目</h1>
+                    <h1 className="page-title">{t('全局项目')}</h1>
           <p className="page-sub">
-            跨季度项目按全局维度管理 · 本季度只统计 Q{quarter} 排期
+            {t('跨季度项目按全局维度管理 · 本季度只统计 Q{q} 排期', { q: quarter })}
           </p>
         </div>
         <div className="head-actions">
@@ -138,23 +139,23 @@ export function ProjectsView({
 
       <div className="global-scope-strip">
         <div>
-          <span>全局项目</span>
+          <span>{t('全局项目')}</span>
           <b>{projects.length}</b>
         </div>
         <div>
-          <span>全局规划</span>
+          <span>{t('全局规划')}</span>
           <b>{fmtDays(globalDays)} 人日</b>
         </div>
         <div>
-          <span>跨季度</span>
+          <span>{t('跨季度')}</span>
           <b>{crossCount}</b>
         </div>
         <div>
-          <span>有风险</span>
+          <span>{t('有延期风险')}</span>
           <b className="bad-text">{riskCount}</b>
         </div>
         <div>
-          <span>本季排期</span>
+          <span>{t('本季排期')}</span>
           <b>{fmtDays(quarterDays)} 人日</b>
         </div>
         <span className="scope-strip-note">本季度只计 Q{quarter} 排期</span>
@@ -183,7 +184,7 @@ export function ProjectsView({
               onClick={() => onFilter(category.id)}
             >
               <span className="dot" />
-              <span className="cat-name">{category.name}</span>
+              <span className="cat-name">{t(category.name)}</span>
               <span className="count">{count}</span>
             </button>
           )
@@ -198,8 +199,8 @@ export function ProjectsView({
         <Card>
           <EmptyState
             icon={<FolderSimple size={20} />}
-            title="这个分类下还没有项目"
-            sub="项目是全局维度，跨季度推进；可以按分类筛选。"
+            title={t('这个分类下还没有项目')}
+            sub={t('项目是全局维度，跨季度推进；可以按分类筛选。')}
             action={
               <button type="button" className="btn primary sm" onClick={() => onOpenCreate('project')}>
                 <Plus size={12} /> 新建项目
@@ -211,17 +212,17 @@ export function ProjectsView({
         <Card className="project-overview-card" innerClassName="project-overview-inner">
           <div className="project-overview-head">
             <div className="project-overview-head-main">
-              <span className="project-overview-heading">项目概览</span>
+              <span className="project-overview-heading">{t('项目概览')}</span>
               <span className="list-count num">{sortedProjects.length}</span>
-              <span className="project-overview-sort">按风险优先</span>
+              <span className="project-overview-sort">{t('按风险优先')}</span>
             </div>
             <div className="project-overview-head-metrics">
-              <span>全局规划</span>
-              <span>本季排期</span>
-              <span>已拆解</span>
-              <span>里程碑</span>
+              <span>{t('全局规划')}</span>
+              <span>{t('本季排期')}</span>
+              <span>{t('已拆解')}</span>
+              <span>{t('里程碑')}</span>
             </div>
-            <span>进度</span>
+            <span>{t('进度')}</span>
             <span />
           </div>
           <div className="project-overview-rows">
@@ -274,7 +275,7 @@ export function ProjectsView({
                   </div>
                   <div className="project-row-progress">
                     <div className="project-row-progress-top">
-                      <span>进度</span>
+                      <span>{t('进度')}</span>
                       <b>{progress}%</b>
                     </div>
                     <Progress value={progress} catId={project.categoryId} />
@@ -543,17 +544,17 @@ function ProjectDetail({
               工作规划
               <span className="list-count num">{project.workItems.length}</span>
             </div>
-            <span className="auto-label">设置时间段 → 自动进入本周安排</span>
+            <span className="auto-label">{t('设置时间段 → 自动进入本周安排')}</span>
           </div>
           <div className="workplan-note">
-            设置工作项的时间段后，会按工作日自动拆分到涉及的每一周，并进入对应周的本周安排。
+            {t('设置工作项的时间段后，会按工作日自动拆分到涉及的每一周，并进入对应周的本周安排。')}
           </div>
           <div className="workplan-table">
             <div className="workplan-row workplan-head">
-              <span>工作项</span>
-              <span>排期日历</span>
-              <span>规划人日</span>
-              <span>状态</span>
+              <span>{t('工作项')}</span>
+              <span>{t('排期日历')}</span>
+              <span>{t('规划人日')}</span>
+              <span>{t('状态')}</span>
               <span />
             </div>
             {project.workItems.map((item) => {
@@ -620,7 +621,7 @@ function ProjectDetail({
             })}
             {project.workItems.length === 0 ? (
               <div className="task-empty" style={{ padding: '18px 10px' }}>
-                还没有工作项。先把项目拆成可排进本周安排的小块。
+                {t('还没有工作项。先把项目拆成可排进本周安排的小块。')}
               </div>
             ) : null}
           </div>
@@ -640,7 +641,7 @@ function ProjectDetail({
                   <CalendarDots size={13} />
                   周排期
                 </div>
-                <span className="card-meta">自动同步</span>
+                <span className="card-meta">{t('自动同步')}</span>
               </div>
               {weekGroups.map((group) => (
                 <button
@@ -661,11 +662,11 @@ function ProjectDetail({
               ))}
               {weekGroups.length === 0 ? (
                 <div className="task-empty" style={{ padding: '12px 4px' }}>
-                  还没有安排到具体周。
+                  {t('还没有安排到具体周。')}
                 </div>
               ) : null}
               <div className="auto-note">
-                修改时间段后，对应本周安排会自动更新，不需要手动搬事项。
+                {t('修改时间段后，对应本周安排会自动更新，不需要手动搬事项。')}
               </div>
             </div>
           </Card>

@@ -23,6 +23,7 @@ import { HourSelect } from './HourSelect'
 import { BlurStrengthControl } from './BlurStrengthControl'
 import { GlobalShortcutField } from './GlobalShortcutField'
 import { SelectMenu } from './SelectMenu'
+import { t } from '../i18n'
 
 export type SettingsTab = 'general' | 'work' | 'categories' | 'sidebar' | 'reminders' | 'ai' | 'data'
 
@@ -180,8 +181,8 @@ export function SettingsModal({
           <div className="modal-inner">
             <div className="modal-head">
               <div>
-                <div className="modal-title">设置</div>
-                <div className="modal-sub">所有配置只保存在本机 · 自动写入本地工作区</div>
+                <div className="modal-title">{t('设置')}</div>
+                <div className="modal-sub">{t('所有配置只保存在本机 · 自动写入本地工作区')}</div>
               </div>
               <div className="settings-head-right">
                 <a
@@ -216,7 +217,7 @@ export function SettingsModal({
                       onClick={() => setTab(item.id)}
                     >
                       <Icon size={15} />
-                      {item.label}
+                      {t(item.label)}
                     </button>
                   )
                 })}
@@ -225,11 +226,11 @@ export function SettingsModal({
               <div className="settings-pane scroll">
                 {tab === 'general' ? (
                   <>
-                    <div className="settings-pane-title">外观与启动</div>
-                    <div className="settings-pane-sub">换皮肤不会影响数据与布局。</div>
+                    <div className="settings-pane-title">{t('外观与启动')}</div>
+                    <div className="settings-pane-sub">{t('换皮肤不会影响数据与布局。')}</div>
 
                     <div className="settings-section">
-                      <div className="settings-section-label">皮肤</div>
+                      <div className="settings-section-label">{t('皮肤')}</div>
                       <div className="theme-cards">
                         {THEME_OPTIONS.map((option) => (
                           <button
@@ -245,7 +246,7 @@ export function SettingsModal({
                               <span className="tp-dot" />
                             </div>
                             <div className="theme-name">
-                              {option.name} <span>{theme === option.id ? '当前' : option.desc}</span>
+                              {option.name} <span>{theme === option.id ? t('当前') : t(option.desc)}</span>
                             </div>
                           </button>
                         ))}
@@ -253,11 +254,11 @@ export function SettingsModal({
                     </div>
 
                     <div className="settings-section">
-                      <div className="settings-section-label">背景</div>
+                      <div className="settings-section-label">{t('背景')}</div>
                       <div className="settings-range-row">
                         <div>
-                          <div className="settings-label">背景模糊度</div>
-                          <div className="settings-help">拖动立即预览，从轻磨砂到完全隔离桌面；最高值不透出后方文字。</div>
+                          <div className="settings-label">{t('背景模糊度')}</div>
+                          <div className="settings-help">{t('拖动立即预览，从轻磨砂到完全隔离桌面；最高值不透出后方文字。')}</div>
                         </div>
                         <BlurStrengthControl
                           value={preferences.blurStrength}
@@ -267,29 +268,29 @@ export function SettingsModal({
                       {screenPermission !== 'granted' && screenPermission !== 'unknown' ? (
                         <div className="settings-permission-note">
                           <div>
-                            <b>桌面背景模糊未生效</b>
-                            <span>需要 macOS 屏幕录制权限；应用签名更新后系统会重新询问，授权后重启 Q-Panel。</span>
+                            <b>{t('桌面背景模糊未生效')}</b>
+                            <span>{t('需要 macOS 屏幕录制权限；应用签名更新后系统会重新询问，授权后重启 Q-Panel。')}</span>
                           </div>
                           <button type="button" className="btn ghost sm" onClick={onOpenScreenSettings}>
-                            打开系统设置
+                            {t('打开系统设置')}
                           </button>
                         </div>
                       ) : null}
                     </div>
 
                     <div className="settings-section">
-                      <div className="settings-section-label">启动</div>
+                      <div className="settings-section-label">{t('启动')}</div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">开机自动启动</div>
-                          <div className="settings-help">提醒依赖 App 常驻菜单栏；关闭后仅在手动打开时提醒。</div>
+                          <div className="settings-label">{t('开机自动启动')}</div>
+                          <div className="settings-help">{t('提醒依赖 App 常驻菜单栏；关闭后仅在手动打开时提醒。')}</div>
                         </div>
                         <Toggle on={preferences.autoLaunch} onChange={(value) => updatePreferences({ autoLaunch: value })} />
                       </div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">全局快捷键</div>
-                          <div className="settings-help">点击后按下组合键，需包含 ⌘ / ⌃ / ⌥；Esc 取消。</div>
+                          <div className="settings-label">{t('全局快捷键')}</div>
+                          <div className="settings-help">{t('点击后按下组合键，需包含 ⌘ / ⌃ / ⌥；Esc 取消。')}</div>
                         </div>
                         <GlobalShortcutField
                           value={preferences.globalShortcut}
@@ -298,8 +299,8 @@ export function SettingsModal({
                       </div>
                       <div className="settings-row">
                         <div>
-                          <div className="settings-label">默认展开页</div>
-                          <div className="settings-help">点击刘海展开时先看到的页面。</div>
+                          <div className="settings-label">{t('默认展开页')}</div>
+                          <div className="settings-help">{t('点击刘海展开时先看到的页面。')}</div>
                         </div>
                         <SelectMenu
                           value={preferences.defaultView}
@@ -319,7 +320,33 @@ export function SettingsModal({
                     </div>
 
                     <div className="settings-section">
-                      <div className="settings-section-label">关于</div>
+                      <div className="settings-section-label">{t('界面语言')}</div>
+                      <div className="settings-row">
+                        <div>
+                          <div className="settings-label">{t('界面语言')}</div>
+                          <div className="settings-help">{t('切换界面语言，数据不受影响。')}</div>
+                        </div>
+                        <SelectMenu
+                          value={preferences.language ?? 'zh'}
+                          onChange={(value) =>
+                            updatePreferences({
+                              ...preferences,
+                              language: value as UserPreferences['language'],
+                            })
+                          }
+                          options={[
+                            { value: 'zh', label: '简体中文' },
+                            { value: 'en', label: 'English' },
+                          ]}
+                          label={t('界面语言')}
+                          style={{ width: 126 }}
+                          menuWidth={150}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
+                      <div className="settings-section-label">{t('关于')}</div>
                       <div className="developer-card">
                         <div className="developer-main">
                           <span className="developer-avatar-lg">L7</span>

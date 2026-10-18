@@ -160,6 +160,7 @@ export interface WeekMeta {
 export type CreateMode = 'objective' | 'task' | 'project'
 
 export interface UserPreferences {
+  language: 'zh' | 'en'
   autoLaunch: boolean
   nativeNotifications: boolean
   reminderPopup: boolean

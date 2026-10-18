@@ -8,6 +8,7 @@ import {
 import type { SidebarGroupKey, SidebarLabels, ViewId } from '../types'
 import { fmtDays } from '../utils'
 import { catStyle } from './ui'
+import { t } from '../i18n'
 
 interface SidebarProps {
   view: ViewId
@@ -58,7 +59,7 @@ export function Sidebar({ view, onView, groupLabels, weekCount, weekPlanned, wee
     <aside className="sidebar">
       {navGroups.map((group) => (
         <div className="side-section" key={group.id}>
-          <div className="side-label">{groupLabels[group.id]}</div>
+          <div className="side-label">{t(groupLabels[group.id])}</div>
           <div className="side-group">
             {group.items.map((item) => {
               const Icon = item.icon
@@ -73,8 +74,8 @@ export function Sidebar({ view, onView, groupLabels, weekCount, weekPlanned, wee
                   <span className="nav-icon">
                     <Icon size={17} />
                   </span>
-                  {item.label}
-                  {item.note ? <span className="nav-note">{item.note}</span> : null}
+                  {t(item.label)}
+                  {item.note ? <span className="nav-note">{t(item.note)}</span> : null}
                   {badge ? <span className="nav-badge num">{badge}</span> : null}
                 </button>
               )
@@ -86,10 +87,10 @@ export function Sidebar({ view, onView, groupLabels, weekCount, weekPlanned, wee
       <div className="sidebar-bottom">
         <div className="side-cap" style={catStyle('appsec')}>
           <div className="side-cap-top">
-            <span>{weekLabel}</span>
+            <span>{t(weekLabel)}</span>
             <b className={over ? 'over' : undefined}>
               {fmtDays(weekPlanned)}
-              <span className="faint"> / {weekAvailable} 人日</span>
+              <span className="faint"> / {weekAvailable} {t('人日')}</span>
             </b>
           </div>
           <div className="side-cap-bar">
@@ -99,8 +100,8 @@ export function Sidebar({ view, onView, groupLabels, weekCount, weekPlanned, wee
           </div>
           <div className={`side-cap-foot${over ? ' over' : ''}`}>
             {over
-              ? `超出 ${fmtDays(weekPlanned - weekAvailable)} 人日 · 建议延期`
-              : `剩余 ${fmtDays(weekAvailable - weekPlanned)} 人日 · 按工作日计`}
+              ? t('超出 {n} 人日 · 建议延期', { n: fmtDays(weekPlanned - weekAvailable) })
+              : t('剩余 {n} 人日 · 按工作日计', { n: fmtDays(weekAvailable - weekPlanned) })}
           </div>
         </div>
       </div>
