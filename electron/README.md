@@ -48,7 +48,7 @@ cd electron && npm run dev
 npm test
 ```
 
-测试分两层（当前 Electron E2E 10/10）：
+测试分两层（当前 Electron E2E 18/18）：
 
 - `npm run test:unit`：提醒规则解析、错过/稍后调度、旧 schema 迁移、导入导出文件校验、链接元数据解析与 SSRF 防护、AI 输出解析与 OpenAI 兼容调用；
 - `npm test`：先跑单测，再跑 Playwright Electron E2E。
@@ -67,7 +67,16 @@ Electron E2E 覆盖：
 - 原生导出 JSON → 新工作区导入恢复；
 - schema v1 旧工作区加载后自动迁移到 v2；
 - 新增/删除请假 → Q4 可用人日 60 → 59 → 60 实时重算；
-- 默认打开实际当前季度/周，测试通过 `Q_PANEL_NOW` 固定。
+- 默认打开实际当前季度/周，测试通过 `Q_PANEL_NOW` 固定；
+- 密集黑白背景与反色背景：最高档截图像素差接近零、输出 alpha=255；最低/最高档有实际像素变化；无截屏权限时四皮肤底色不透明，`--text-3` 对主底色对比度 >4.5:1。
+
+macOS 真机视觉验证（使用临时工作区和自建黑白字/彩条桌面，不改真实数据；需要录屏权限及 Swift 编译工具）：
+
+```bash
+Q_PANEL_VERIFY_EXECUTABLE="$PWD/release/mac-arm64/Q-Panel.app/Contents/MacOS/Q-Panel" npm run verify:material
+```
+
+结果写入 `screenshots/material-verification/`。最高档会完全遮挡桌面；未授予录屏权限也保持可读，只是不展示桌面磨砂氛围。验证脚本支持通过 `Q_PANEL_POINTER_HELPER` 指定已有的原生鼠标辅助程序。
 
 ## 打包
 
@@ -78,7 +87,7 @@ npm run pack
 产物：
 
 ```text
-release/Q-Panel-1.1.6-arm64.dmg
+release/Q-Panel-1.1.7-arm64.dmg
 release/mac-arm64/Q-Panel.app
 ```
 
