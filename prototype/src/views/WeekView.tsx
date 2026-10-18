@@ -219,12 +219,12 @@ export function WeekView({
               <Target size={9} />
               {item.project.title}
             </span>
-            <span className="auto-tag">自动排期</span>
+            <span className="auto-tag">{t('自动排期')}</span>
           </div>
         </div>
         <div className={cn('task-hours', item.status === 'done' && 'done')}>
           <b>{fmtDays(item.weekDays)}</b>
-          <span>人日</span>
+          <span>{t('人日')}</span>
         </div>
         <button
           type="button"

@@ -3,6 +3,7 @@ import type { Objective, Project, WeekTask } from '../types'
 import { TODAY, getCategory } from '../data/mock'
 import { cn, fmtDays, fmtRange, isOverdue } from '../utils'
 import { catStyle } from './ui'
+import { t } from '../i18n'
 import { CheckBox } from './ui'
 
 interface TaskRowProps {
@@ -41,7 +42,7 @@ export function TaskRow({ task, project, objective, onToggle, onEdit, onDelete, 
         <div className="task-meta">
           <span className="meta-item">
             <span className="dot" style={{ width: 5, height: 5, flexBasis: 5 }} />
-            <span className="cat-name">{category.name}</span>
+            <span className="cat-name">{t(category.name)}</span>
           </span>
           {project ? (
             <span className="project-chip">
@@ -53,7 +54,7 @@ export function TaskRow({ task, project, objective, onToggle, onEdit, onDelete, 
           ) : null}
           <span className={cn('meta-item due', overdue && !task.done && 'late')}>
             <Clock size={9} />
-            {today ? '今天 ' : ''}
+            {today ? `${t('今天')} ` : ''}
             {dueLabel}
           </span>
           {task.reminder ? (
@@ -66,15 +67,15 @@ export function TaskRow({ task, project, objective, onToggle, onEdit, onDelete, 
       </div>
       <div className={cn('task-hours', task.done && 'done')}>
         <b>{fmtDays(task.estimateDays)}</b>
-        <span>人日</span>
+        <span>{t('人日')}</span>
       </div>
       {onEdit ? (
         <button
           type="button"
           className="task-edit-btn"
           onClick={() => onEdit(task)}
-          title="编辑事项"
-          aria-label={`编辑 ${task.title}`}
+          title={t('编辑事项')}
+          aria-label={`${t('编辑事项')} ${task.title}`}
         >
           <PencilSimple size={12} />
         </button>
@@ -84,8 +85,8 @@ export function TaskRow({ task, project, objective, onToggle, onEdit, onDelete, 
           type="button"
           className="task-edit-btn task-delete-btn"
           onClick={() => onDelete(task.id)}
-          title="删除事项"
-          aria-label={`删除 ${task.title}`}
+          title={t('删除事项')}
+          aria-label={`${t('删除事项')} ${task.title}`}
         >
           <Trash size={12} />
         </button>

@@ -15,7 +15,7 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB)
 [![Crafted by linfeng7z](https://img.shields.io/badge/crafted%20by-linfeng7z-6C5CE7?logo=github&style=flat-square)](https://github.com/linfeng7z)
 
-**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS 优先，Windows/Linux 实验性
+**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.1 · macOS 优先，Windows/Linux 实验性
 
 [桌面体验](#桌面体验) · [功能](#功能) · [下载](#下载) · [源码构建](#源码构建) · [GitHub Actions](#github-actions) · [免责声明](#免责声明)
 
@@ -23,24 +23,26 @@
 
 ## 桌面体验
 
-![Q-Panel 刘海桌面](docs/screenshots/desktop-notch.png)
+![Q-Panel 刘海桌面](docs/desktop/desktop-notch-zh.png)
 
 **点击 Mac 屏幕顶部中央的刘海，Q-Panel 会贴着屏幕顶部展开。**
 
 它不是普通窗口：平时收在菜单栏/刘海区域，不占 Dock、不进入程序坞；点击刘海热区后，面板贴着屏幕顶部与刘海下缘展开，只占屏幕顶部，始终浮在当前桌面之上。再点一次刘海、按 `Esc` 或点击面板外部即可收起。
 
-![刘海点击展开演示](docs/desktop-demo.gif)
+![刘海点击展开演示](docs/desktop/desktop-demo-zh.gif)
+
+![刘海与顶部面板特写](docs/desktop/notch-detail-zh.png)
 
 > 桌面效果示意图：系统壁纸 + Q-Panel 真实运行界面；任务内容为演示数据。
-> [观看 MP4 演示](docs/desktop-demo.mp4)
+> [观看 MP4 演示](docs/desktop/desktop-demo-zh.mp4)
 
 ## 界面细节
 
-![Q-Panel 界面演示](docs/demo.gif)
+![Q-Panel 界面演示](docs/demo-zh.gif)
 
 | 季度规划 | 本周必做 | 项目详情 |
 | --- | --- | --- |
-| ![季度规划](docs/screenshots/quarter-planning.png) | ![本周必做](docs/screenshots/week-must-do.png) | ![项目详情](docs/screenshots/project-detail.png) |
+| ![季度规划](docs/screenshots/quarter-planning-zh.png) | ![本周必做](docs/screenshots/week-must-do-zh.png) | ![项目详情](docs/screenshots/project-detail-zh.png) |
 
 ---
 
@@ -130,10 +132,10 @@ macOS 是唯一正式支持的目标。Windows/Linux 产物用于评估和反馈
 
 从 [GitHub Releases](https://github.com/linfeng7z/Q-Panel/releases/latest) 下载最新版本：
 
-- macOS Apple Silicon：`Q-Panel-1.3.0-mac-arm64.dmg`
-- macOS Intel：`Q-Panel-1.3.0-mac-x64.dmg`
-- Windows x64（实验性）：`Q-Panel-1.3.0-win-x64-setup.exe`
-- Linux x64（实验性）：`Q-Panel-1.3.0-linux-x86_64.AppImage`
+- macOS Apple Silicon：`Q-Panel-1.3.1-mac-arm64.dmg`
+- macOS Intel：`Q-Panel-1.3.1-mac-x64.dmg`
+- Windows x64（实验性）：`Q-Panel-1.3.1-win-x64-setup.exe`
+- Linux x64（实验性）：`Q-Panel-1.3.1-linux-x86_64.AppImage`
 
 ### macOS 首次打开
 
@@ -170,7 +172,7 @@ npm run pack
 本地产物：
 
 ```text
-electron/release/Q-Panel-1.3.0-mac-arm64.dmg
+electron/release/Q-Panel-1.3.1-mac-arm64.dmg
 electron/release/mac-arm64/Q-Panel.app
 ```
 
@@ -276,4 +278,4 @@ Q-Panel 的产品方向和部分交互思路参考了 [xiaopu-ai/TO-DO-Panel](ht
 
 [MIT](LICENSE) © 2026 **linfeng7z**
 
-Q-Panel · v1.3.0 · [GitHub](https://github.com/linfeng7z/Q-Panel)
+Q-Panel · v1.3.1 · [GitHub](https://github.com/linfeng7z/Q-Panel)

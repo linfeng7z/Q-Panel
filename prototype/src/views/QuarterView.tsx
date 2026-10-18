@@ -217,7 +217,7 @@ export function QuarterView({
                       {quarterRange(year, item.q)}
                     </div>
                   </div>
-                  <span className="year-status">{item.status}</span>
+                  <span className="year-status">{t(item.status)}</span>
                 </div>
                 <div className="year-stats">
                   <div className="year-stat">
@@ -242,7 +242,7 @@ export function QuarterView({
                 </div>
                 <div className="year-foot">
                   <span>{item.count} {t('项任务')}</span>
-                  <span>{item.available ? pct((item.allocated / item.available) * 100) : '—'} 容量占用</span>
+                  <span>{item.available ? pct((item.allocated / item.available) * 100) : '—'} {t('容量占用')}</span>
                 </div>
               </Card>
             </button>
@@ -342,7 +342,7 @@ export function QuarterView({
                     {segments.map((segment) => (
                       <span key={segment.category.id}>
                         <i style={{ background: `var(${segment.category.colorVar})` }} />
-                        {segment.category.name} {segment.days} 人日
+                        {t(segment.category.name)} {segment.days} {t('人日')}
                       </span>
                     ))}
                     <span>
@@ -448,7 +448,7 @@ export function QuarterView({
                               </div>
                               <div className="obj-sub">
                                 <StatusChip status={objective.status} />
-                                <span>开展 {fmtRange(objective.startDate ?? objective.dueDate, objective.endDate ?? objective.dueDate)}</span>
+                                <span>{t('开展')} {fmtRange(objective.startDate ?? objective.dueDate, objective.endDate ?? objective.dueDate)}</span>
                                 <span className="sep" />
                                 <span>
                                   {objective.reminder ? (
@@ -457,14 +457,14 @@ export function QuarterView({
                                       {objective.reminder}
                                     </>
                                   ) : (
-                                    '无提醒'
+                                    t('无提醒')
                                   )}
                                 </span>
                               </div>
                             </div>
                             <div className="obj-hours">
                               <b className="num">{objective.plannedDays}</b>
-                              <span>人日</span>
+                              <span>{t('人日')}</span>
                             </div>
                             <div className="obj-progress">
                               <div className="meter-row">

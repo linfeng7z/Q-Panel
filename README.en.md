@@ -1,6 +1,6 @@
 # Q-Panel
 
-[简体中文](README.md) · **English**
+[Chinese](README.md) · **English**
 
 > **A local-first personal workbench for quarterly goals, weekly must-dos and long-running projects.**
 >
@@ -15,7 +15,7 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB)
 [![Crafted by linfeng7z](https://img.shields.io/badge/crafted%20by-linfeng7z-6C5CE7?logo=github&style=flat-square)](https://github.com/linfeng7z)
 
-**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.0 · macOS first, Windows/Linux experimental
+**Crafted by [linfeng7z](https://github.com/linfeng7z)** · v1.3.1 · macOS first, Windows/Linux experimental
 
 [Desktop](#desktop-experience) · [Features](#features) · [Download](#download) · [Build from source](#build-from-source) · [GitHub Actions](#github-actions) · [Disclaimer](#disclaimer)
 
@@ -23,28 +23,30 @@
 
 ## Desktop experience
 
-![Q-Panel notch desktop](docs/screenshots/desktop-notch.png)
+![Q-Panel notch desktop](docs/desktop/desktop-notch-en.png)
 
 **Click the Mac notch at the top center of the screen and Q-Panel opens flush with the top edge.**
 
 It is not a normal window: it lives quietly in the menu bar/notch area, takes no Dock icon, and opens directly below the notch when you click the notch hot zone. Click the notch again, press `Esc`, or click outside to hide it.
 
-![Click the notch to open](docs/desktop-demo.gif)
+![Click the notch to open](docs/desktop/desktop-demo-en.gif)
+
+![Notch and top-edge panel close-up](docs/desktop/notch-detail-en.png)
 
 > Desktop mockup: system wallpaper + real Q-Panel UI; task content is demo data.
-> [Watch the MP4 demo](docs/desktop-demo.mp4)
+> [Watch the MP4 demo](docs/desktop/desktop-demo-en.mp4)
 
 ## UI close-ups
 
-![Q-Panel interface demo](docs/demo.gif)
+![Q-Panel interface demo](docs/demo-en.gif)
 
-| Quarterly planning | Weekly must-dos | Project detail |
+| Year overview | Quarterly planning | Weekly must-dos |
 | --- | --- | --- |
-| ![Quarterly planning](docs/screenshots/quarter-planning.png) | ![Weekly must-dos](docs/screenshots/week-must-do.png) | ![Project detail](docs/screenshots/project-detail.png) |
+| ![Year overview](docs/screenshots/year-overview-en.png) | ![Quarterly planning](docs/screenshots/quarter-planning-en.png) | ![Weekly must-dos](docs/screenshots/week-must-do-en.png) |
 
 ---
 
-> Screenshots show the Chinese interface. The app also includes an **English UI Beta** covering the core navigation, planning, weekly and project screens.
+> English screenshots use the English UI and synthetic demo data. Some advanced settings and edge-state copy may still be Chinese in the app.
 
 ## Features
 
@@ -132,10 +134,10 @@ The macOS app is the only officially supported target. Windows and Linux artifac
 
 Download the latest installer from [GitHub Releases](https://github.com/linfeng7z/Q-Panel/releases/latest):
 
-- macOS Apple Silicon: `Q-Panel-1.3.0-mac-arm64.dmg`
-- macOS Intel: `Q-Panel-1.3.0-mac-x64.dmg`
-- Windows x64 (experimental): `Q-Panel-1.3.0-win-x64-setup.exe`
-- Linux x64 (experimental): `Q-Panel-1.3.0-linux-x86_64.AppImage`
+- macOS Apple Silicon: `Q-Panel-1.3.1-mac-arm64.dmg`
+- macOS Intel: `Q-Panel-1.3.1-mac-x64.dmg`
+- Windows x64 (experimental): `Q-Panel-1.3.1-win-x64-setup.exe`
+- Linux x64 (experimental): `Q-Panel-1.3.1-linux-x86_64.AppImage`
 
 ### macOS first launch
 
@@ -169,7 +171,7 @@ npm run pack
 Local output:
 
 ```text
-electron/release/Q-Panel-1.3.0-mac-arm64.dmg
+electron/release/Q-Panel-1.3.1-mac-arm64.dmg
 electron/release/mac-arm64/Q-Panel.app
 ```
 
@@ -202,7 +204,7 @@ npm run pack:linux  Linux x64 AppImage (experimental)
 
 `.github/workflows/build.yml` builds on GitHub-hosted runners:
 
-- **Push a tag** like `v1.3.0` → build macOS, Windows and Linux artifacts, then create a GitHub Release with the installers.
+- **Push a tag** like `v1.3.1` → build macOS, Windows and Linux artifacts, then create a GitHub Release with the installers.
 - **Pull request / main push** → run the same build checks without publishing a release.
 - **Manual run** → trigger the workflow from the Actions tab.
 
@@ -275,4 +277,4 @@ If Q-Panel helps your work, a Star ⭐ helps more people find it.
 
 [MIT](LICENSE) © 2026 **linfeng7z**
 
-Q-Panel · v1.3.0 · [GitHub](https://github.com/linfeng7z/Q-Panel)
+Q-Panel · v1.3.1 · [GitHub](https://github.com/linfeng7z/Q-Panel)
