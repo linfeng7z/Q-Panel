@@ -744,6 +744,22 @@ export default function App() {
     setAiOpen(false)
   }
 
+  const deleteTask = (id: string) => {
+    setTasks((value) => value.filter((task) => task.id !== id))
+    showToast('已删除本周事项')
+  }
+
+  const deleteObjective = (id: string) => {
+    const key = quarterKey(year, quarter)
+    setObjectives((value) => ({ ...value, [key]: (value[key] ?? []).filter((item) => item.id !== id) }))
+    showToast('已删除季度任务')
+  }
+
+  const deleteProject = (id: string) => {
+    setProjects((value) => value.filter((project) => project.id !== id))
+    showToast('已删除长期项目')
+  }
+
   const toggleTask = (id: string) => {
     setTasks((value) =>
       value.map((task) => (task.id === id ? { ...task, done: !task.done } : task)),
@@ -995,6 +1011,7 @@ export default function App() {
             onOpenStats={() => setView('stats')}
             onManageCategories={manageCategories}
             onEditObjective={(item) => setEditingItem({ kind: 'objective', item })}
+            onDeleteObjective={deleteObjective}
           />
         )
       case 'week':
@@ -1014,6 +1031,7 @@ export default function App() {
             onToggleWorkItem={toggleProjectWorkItem}
             onManageCategories={manageCategories}
             onEditTask={(item) => setEditingItem({ kind: 'task', item })}
+            onDeleteTask={deleteTask}
           />
         )
       case 'projects':
@@ -1027,6 +1045,7 @@ export default function App() {
             onOpenCreate={setCreateMode}
             onToast={showToast}
             onChangeProjects={setProjects}
+            onDeleteProject={deleteProject}
             onOpenWeek={(key) => {
               changeWeek(key)
               setView('week')

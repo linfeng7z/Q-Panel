@@ -7,6 +7,7 @@ import {
   Plus,
   SquaresFour,
   PencilSimple,
+  Trash,
   Target,
   WarningCircle,
   X,
@@ -57,6 +58,7 @@ interface QuarterViewProps {
   onOpenStats: () => void
   onManageCategories: () => void
   onEditObjective: (objective: Objective) => void
+  onDeleteObjective: (id: string) => void
 }
 
 function monthName(month: number): string {
@@ -75,6 +77,7 @@ export function QuarterView({
   onOpenStats,
   onManageCategories,
   onEditObjective,
+  onDeleteObjective,
 }: QuarterViewProps) {
   const [yearOverview, setYearOverview] = useState(false)
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null)
@@ -607,6 +610,17 @@ export function QuarterView({
                   </div>
                 </div>
                 <div className="modal-foot">
+                  <button
+                    type="button"
+                    className="btn ghost danger-text"
+                    onClick={() => {
+                      onDeleteObjective(selectedObjective.id)
+                      setSelectedObjective(null)
+                    }}
+                  >
+                    <Trash size={12} /> 删除
+                  </button>
+                  <div className="modal-foot-spacer" />
                   <button type="button" className="btn ghost" onClick={() => setSelectedObjective(null)}>
                     关闭
                   </button>

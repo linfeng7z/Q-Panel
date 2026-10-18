@@ -1,4 +1,4 @@
-import { Clock, PencilSimple, Target } from '@phosphor-icons/react'
+import { Clock, PencilSimple, Target, Trash } from '@phosphor-icons/react'
 import type { Objective, Project, WeekTask } from '../types'
 import { TODAY, getCategory } from '../data/mock'
 import { cn, fmtDays, fmtRange, isOverdue } from '../utils'
@@ -11,6 +11,7 @@ interface TaskRowProps {
   objective?: Objective
   onToggle: (id: string) => void
   onEdit?: (task: WeekTask) => void
+  onDelete?: (id: string) => void
   onHover?: (task: WeekTask | null) => void
   related?: boolean
   dimmed?: boolean
@@ -20,7 +21,7 @@ function shortReminder(value?: string): string {
   return value ?? ''
 }
 
-export function TaskRow({ task, project, objective, onToggle, onEdit, onHover, related, dimmed }: TaskRowProps) {
+export function TaskRow({ task, project, objective, onToggle, onEdit, onDelete, onHover, related, dimmed }: TaskRowProps) {
   const category = getCategory(task.categoryId)
   const overdue = isOverdue(task)
   const today = task.dueDate === TODAY
@@ -76,6 +77,17 @@ export function TaskRow({ task, project, objective, onToggle, onEdit, onHover, r
           aria-label={`编辑 ${task.title}`}
         >
           <PencilSimple size={12} />
+        </button>
+      ) : null}
+      {onDelete ? (
+        <button
+          type="button"
+          className="task-edit-btn task-delete-btn"
+          onClick={() => onDelete(task.id)}
+          title="删除事项"
+          aria-label={`删除 ${task.title}`}
+        >
+          <Trash size={12} />
         </button>
       ) : null}
     </div>

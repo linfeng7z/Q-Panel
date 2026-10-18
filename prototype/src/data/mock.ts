@@ -139,7 +139,7 @@ export const QUARTER_STATS: Record<string, QuarterStats> = Object.fromEntries(
 
 export const OBJECTIVES: Record<string, Objective[]> = {
   '2026-Q1': [
-    { id: 'q1-o1', title: '安全运营值守体系升级', categoryId: 'secops', plannedDays: 15, progress: 100, status: 'done', dueDate: '2026-03-31', reminder: '提前 2 天 · 09:30' },
+    { id: 'q1-o1', title: '安全运营值守体系升级', categoryId: 'secops', plannedDays: 15, progress: 100, status: 'done', dueDate: '2026-03-31', reminder: '提前 2 天 · 09:00' },
     { id: 'q1-o2', title: '应用安全左移试点', categoryId: 'appsec', plannedDays: 12, progress: 100, status: 'done', dueDate: '2026-03-31' },
     { id: 'q1-o3', title: '团队技能矩阵 v1', categoryId: 'team', plannedDays: 6, progress: 100, status: 'done', dueDate: '2026-03-31' },
     { id: 'q1-o4', title: '年度预算与供应商评估', categoryId: 'other', plannedDays: 8, progress: 100, status: 'done', dueDate: '2026-03-31' },
@@ -157,11 +157,11 @@ export const OBJECTIVES: Record<string, Objective[]> = {
     { id: 'q3-o4', title: '安全运营值班优化', categoryId: 'secops', plannedDays: 8, progress: 100, status: 'done', dueDate: '2026-09-30' },
   ],
   '2026-Q4': [
-    { id: 'o1', title: '等保 2.0 差距分析闭环', categoryId: 'appsec', plannedDays: 15, progress: 45, status: 'in_progress', dueDate: '2026-10-31', projectId: 'p1', reminder: '提前 2 天 · 09:30' },
-    { id: 'o2', title: 'SOC 告警降噪专项', categoryId: 'secops', plannedDays: 10, progress: 60, status: 'in_progress', dueDate: '2026-11-30', projectId: 'p2', reminder: '提前 3 天 · 09:30' },
-    { id: 'o3', title: 'Q4 红蓝对抗演练', categoryId: 'secops', plannedDays: 12, progress: 15, status: 'risk', dueDate: '2026-12-18', projectId: 'p3', reminder: '提前 1 周 · 09:30' },
+    { id: 'o1', title: '等保 2.0 差距分析闭环', categoryId: 'appsec', plannedDays: 15, progress: 45, status: 'in_progress', dueDate: '2026-10-31', projectId: 'p1', reminder: '提前 2 天 · 09:00' },
+    { id: 'o2', title: 'SOC 告警降噪专项', categoryId: 'secops', plannedDays: 10, progress: 60, status: 'in_progress', dueDate: '2026-11-30', projectId: 'p2', reminder: '提前 3 天 · 09:00' },
+    { id: 'o3', title: 'Q4 红蓝对抗演练', categoryId: 'secops', plannedDays: 12, progress: 15, status: 'risk', dueDate: '2026-12-18', projectId: 'p3', reminder: '提前 1 周 · 09:00' },
     { id: 'o4', title: 'AI 安全治理基线', categoryId: 'appsec', plannedDays: 8, progress: 10, status: 'planned', dueDate: '2026-12-10', projectId: 'p4' },
-    { id: 'o5', title: '安全周报与复盘机制', categoryId: 'team', plannedDays: 3, progress: 100, status: 'done', dueDate: '2026-10-10', reminder: '提前 2 天 · 09:30' },
+    { id: 'o5', title: '安全周报与复盘机制', categoryId: 'team', plannedDays: 3, progress: 100, status: 'done', dueDate: '2026-10-10', reminder: '提前 2 天 · 09:00' },
   ],
   '2027-Q1': [
     { id: '27q1-o1', title: 'AI 安全治理年度路线图', categoryId: 'appsec', plannedDays: 8, progress: 0, status: 'planned', dueDate: '2027-03-31' },
@@ -316,22 +316,22 @@ export const WEEKS: Record<string, WeekMeta> = Object.fromEntries(
 export const WEEK_ORDER = Object.keys(WEEKS)
 
 export const INITIAL_TASKS: WeekTask[] = [
-  { id: 't-w41-1', weekKey: '2026-W41', title: '补充资产台账字段', categoryId: 'appsec', dueDate: '2026-10-10', estimateDays: 0.5, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 1 天 · 09:30' },
+  { id: 't-w41-1', weekKey: '2026-W41', title: '补充资产台账字段', categoryId: 'appsec', dueDate: '2026-10-10', estimateDays: 0.5, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 1 天 · 09:00' },
   { id: 't-w41-2', weekKey: '2026-W41', title: '等保整改启动会', categoryId: 'appsec', dueDate: '2026-10-09', estimateDays: 0.25, done: true, objectiveId: 'o1', projectId: 'p1' },
-  { id: 't1', weekKey: '2026-W42', title: '输出等保差距分析初稿', categoryId: 'appsec', dueDate: '2026-10-17', dueTime: '23:30', estimateDays: 0.75, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 2 天 · 09:30' },
+  { id: 't1', weekKey: '2026-W42', title: '输出等保差距分析初稿', categoryId: 'appsec', dueDate: '2026-10-17', dueTime: '23:30', estimateDays: 0.75, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 2 天 · 09:00' },
   { id: 't2', weekKey: '2026-W42', title: '梳理 12 个核心系统边界', categoryId: 'appsec', dueDate: '2026-10-16', estimateDays: 0.5, done: true, objectiveId: 'o1', projectId: 'p1' },
-  { id: 't3', weekKey: '2026-W42', title: '评审 SOC 降噪规则 v2', categoryId: 'secops', dueDate: '2026-10-17', dueTime: '15:00', estimateDays: 0.5, done: true, objectiveId: 'o2', projectId: 'p2', reminder: '提前 1 天 · 09:30' },
-  { id: 't4', weekKey: '2026-W42', title: '与 HR 对齐 Q4 安全培训计划', categoryId: 'team', dueDate: '2026-10-18', estimateDays: 0.25, done: false, reminder: '提前 1 天 · 09:30' },
+  { id: 't3', weekKey: '2026-W42', title: '评审 SOC 降噪规则 v2', categoryId: 'secops', dueDate: '2026-10-17', dueTime: '15:00', estimateDays: 0.5, done: true, objectiveId: 'o2', projectId: 'p2', reminder: '提前 1 天 · 09:00' },
+  { id: 't4', weekKey: '2026-W42', title: '与 HR 对齐 Q4 安全培训计划', categoryId: 'team', dueDate: '2026-10-18', estimateDays: 0.25, done: false, reminder: '提前 1 天 · 09:00' },
   { id: 't5', weekKey: '2026-W42', title: '更新安全周报模板', categoryId: 'other', dueDate: '2026-10-18', estimateDays: 0.25, done: false },
-  { id: 't6', weekKey: '2026-W42', title: '红蓝对抗攻击面初筛', categoryId: 'secops', dueDate: '2026-10-18', estimateDays: 0.5, done: false, objectiveId: 'o3', projectId: 'p3', reminder: '提前 2 天 · 09:30' },
+  { id: 't6', weekKey: '2026-W42', title: '红蓝对抗攻击面初筛', categoryId: 'secops', dueDate: '2026-10-18', estimateDays: 0.5, done: false, objectiveId: 'o3', projectId: 'p3', reminder: '提前 2 天 · 09:00' },
   { id: 't7', weekKey: '2026-W42', title: 'AI 安全治理厂商调研', categoryId: 'appsec', dueDate: '2026-10-18', estimateDays: 0.5, done: false, objectiveId: 'o4', projectId: 'p4' },
   { id: 't14', weekKey: '2026-W42', title: '回复安全委员会周报邮件', categoryId: 'other', dueDate: '2026-10-17', dueTime: '20:30', estimateDays: 0.25, done: false, reminder: '当天 · 18:00' },
-  { id: 't8', weekKey: '2026-W43', title: '差距分析评审会', categoryId: 'appsec', dueDate: '2026-10-20', dueTime: '10:00', estimateDays: 0.25, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 1 天 · 09:30' },
+  { id: 't8', weekKey: '2026-W43', title: '差距分析评审会', categoryId: 'appsec', dueDate: '2026-10-20', dueTime: '10:00', estimateDays: 0.25, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 1 天 · 09:00' },
   { id: 't9', weekKey: '2026-W43', title: 'SOC 降噪规则灰度', categoryId: 'secops', dueDate: '2026-10-22', estimateDays: 0.5, done: false, objectiveId: 'o2', projectId: 'p2' },
-  { id: 't10', weekKey: '2026-W43', title: '红蓝演练方案定稿', categoryId: 'secops', dueDate: '2026-10-23', estimateDays: 0.5, done: false, objectiveId: 'o3', projectId: 'p3', reminder: '提前 2 天 · 09:30' },
+  { id: 't10', weekKey: '2026-W43', title: '红蓝演练方案定稿', categoryId: 'secops', dueDate: '2026-10-23', estimateDays: 0.5, done: false, objectiveId: 'o3', projectId: 'p3', reminder: '提前 2 天 · 09:00' },
   { id: 't11', weekKey: '2026-W43', title: 'AI 治理资产清单 v0.1', categoryId: 'appsec', dueDate: '2026-10-24', estimateDays: 0.75, done: false, objectiveId: 'o4', projectId: 'p4' },
   { id: 't12', weekKey: '2026-W44', title: '制度修订启动', categoryId: 'appsec', dueDate: '2026-10-28', estimateDays: 0.5, done: false, objectiveId: 'o1', projectId: 'p1' },
-  { id: 't13', weekKey: '2026-W44', title: '等保差距分析报告评审', categoryId: 'appsec', dueDate: '2026-10-31', estimateDays: 0.5, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 2 天 · 09:30' },
+  { id: 't13', weekKey: '2026-W44', title: '等保差距分析报告评审', categoryId: 'appsec', dueDate: '2026-10-31', estimateDays: 0.5, done: false, objectiveId: 'o1', projectId: 'p1', reminder: '提前 2 天 · 09:00' },
 ]
 
 export const NOTES: Note[] = [

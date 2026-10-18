@@ -42,6 +42,7 @@ interface ProjectsViewProps {
   onOpenCreate: (mode: CreateMode) => void
   onToast: (message: string) => void
   onChangeProjects: (projects: Project[]) => void
+  onDeleteProject: (id: string) => void
   onOpenWeek: (weekKey: string) => void
   onManageCategories: () => void
 }
@@ -67,6 +68,7 @@ export function ProjectsView({
   onOpenCreate,
   onToast,
   onChangeProjects,
+  onDeleteProject,
   onOpenWeek,
   onManageCategories,
 }: ProjectsViewProps) {
@@ -89,6 +91,7 @@ export function ProjectsView({
         }
         onOpenWeek={onOpenWeek}
         onToast={onToast}
+        onDeleteProject={onDeleteProject}
       />
     )
   }
@@ -298,6 +301,7 @@ function ProjectDetail({
   onChange,
   onOpenWeek,
   onToast,
+  onDeleteProject,
 }: {
   project: Project
   year: number
@@ -306,6 +310,7 @@ function ProjectDetail({
   onChange: (project: Project) => void
   onOpenWeek: (weekKey: string) => void
   onToast: (message: string) => void
+  onDeleteProject: (id: string) => void
 }) {
   const reminderRule = parseReminder(project.reminder, { offsetDays: 2, time: '09:00' })
   const decomposed = projectDecomposedDays(project)
@@ -365,6 +370,30 @@ function ProjectDetail({
   const removeItem = (id: string) => {
     onChange({ ...project, workItems: project.workItems.filter((item) => item.id !== id) })
     onToast('已删除工作项，本周安排已同步')
+  }
+
+  const addMilestone = () => {
+    const stamp = Date.now()
+    onChange({
+      ...project,
+      milestones: [
+        ...project.milestones,
+        {
+          id: `m-${stamp}`,
+          title: '新里程碑',
+          targetDate: project.endDate,
+          startDate: project.startDate,
+          endDate: project.endDate,
+          status: 'todo',
+        },
+      ],
+    })
+    onToast('已添加里程碑')
+  }
+
+  const removeMilestone = (id: string) => {
+    onChange({ ...project, milestones: project.milestones.filter((milestone) => milestone.id !== id) })
+    onToast('已删除里程碑')
   }
 
   return (
@@ -433,6 +462,17 @@ function ProjectDetail({
           </div>
         </div>
         <div className="head-actions">
+          <button
+            type="button"
+            className="btn ghost danger-text"
+            onClick={() => {
+              onDeleteProject(project.id)
+              onBack()
+            }}
+          >
+            <Trash size={14} />
+            删除项目
+          </button>
           <button
             type="button"
             className="btn ghost"
@@ -543,20 +583,12 @@ function ProjectDetail({
                     onChange={(event) => updateItem(item.id, { title: event.target.value })}
                   />
                   <div className="workitem-range">
-                    <input
-                      type="date"
-                      className="workitem-date"
-                      aria-label={`${item.title} 开始日期`}
-                      value={item.startDate ?? WEEKS[item.weekKey]?.start ?? project.startDate}
-                      onChange={(event) => updateItem(item.id, { startDate: event.target.value })}
-                    />
-                    <span>–</span>
-                    <input
-                      type="date"
-                      className="workitem-date"
-                      aria-label={`${item.title} 结束日期`}
-                      value={item.endDate ?? WEEKS[item.weekKey]?.end ?? project.endDate}
-                      onChange={(event) => updateItem(item.id, { endDate: event.target.value })}
+                    <DateRangeField
+                      compact
+                      startDate={item.startDate ?? WEEKS[item.weekKey]?.start ?? project.startDate}
+                      endDate={item.endDate ?? WEEKS[item.weekKey]?.end ?? project.endDate}
+                      onChange={(nextStart, nextEnd) => updateItem(item.id, { startDate: nextStart, endDate: nextEnd })}
+                      label="工作项开展时间段"
                     />
                   </div>
                 </div>
@@ -688,9 +720,22 @@ function ProjectDetail({
                     <span className="timeline-dot" />
                     <span className="tl-title">{milestone.title}</span>
                     <span className="tl-date">{fmtRange(milestone.startDate ?? milestone.targetDate, milestone.endDate ?? milestone.targetDate)}</span>
+                    <button
+                      type="button"
+                      className="milestone-del"
+                      onClick={() => removeMilestone(milestone.id)}
+                      aria-label={`删除里程碑 ${milestone.title}`}
+                      title="删除里程碑"
+                    >
+                      <Trash size={11} />
+                    </button>
                   </div>
                 ))}
               </div>
+              <button type="button" className="add-row milestone-add" onClick={addMilestone}>
+                <Plus size={12} />
+                添加里程碑
+              </button>
             </div>
           </Card>
         </div>

@@ -37,6 +37,7 @@ interface WeekViewProps {
   onFilter: (filter: CategoryId | 'all') => void
   onToggleTask: (id: string) => void
   onEditTask: (task: WeekTask) => void
+  onDeleteTask: (id: string) => void
   onOpenCreate: (mode: CreateMode) => void
   onMoveOverdue: (ids: string[]) => void
   onOpenQuarter: () => void
@@ -63,6 +64,7 @@ export function WeekView({
   onFilter,
   onToggleTask,
   onEditTask,
+  onDeleteTask,
   onOpenCreate,
   onMoveOverdue,
   onOpenQuarter,
@@ -356,6 +358,7 @@ export function WeekView({
                     objective={objective}
                     onToggle={onToggleTask}
                     onEdit={onEditTask}
+                    onDelete={onDeleteTask}
                     onHover={(next) => setRelationTaskId(next?.id ?? null)}
                     related={isRelatedTask(task)}
                     dimmed={relationTask !== null && !isRelatedTask(task)}
@@ -380,6 +383,7 @@ export function WeekView({
                         objective={objective}
                         onToggle={onToggleTask}
                     onEdit={onEditTask}
+                    onDelete={onDeleteTask}
                         onHover={(next) => setRelationTaskId(next?.id ?? null)}
                         related={isRelatedTask(task)}
                         dimmed={relationTask !== null && !isRelatedTask(task)}
